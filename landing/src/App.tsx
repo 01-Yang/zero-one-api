@@ -32,7 +32,7 @@ export default function App() {
   const [settings, setSettings] = useState<PublicSettings>({ ...DEFAULT_PUBLIC_SETTINGS })
   const [menuOpen, setMenuOpen] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [logoFailed, setLogoFailed] = useState(false)
+  const [failedLogoUrl, setFailedLogoUrl] = useState('')
 
   useEffect(() => {
     let active = true
@@ -44,10 +44,6 @@ export default function App() {
     }
   }, [])
 
-  useEffect(() => {
-    setLogoFailed(false)
-  }, [settings.siteLogo])
-
   const handleCopy = async () => {
     const succeeded = await copyText(API_ENDPOINT)
     if (!succeeded) return
@@ -56,7 +52,7 @@ export default function App() {
   }
 
   const closeMenu = () => setMenuOpen(false)
-  const showLogo = Boolean(settings.siteLogo) && !logoFailed
+  const showLogo = Boolean(settings.siteLogo) && failedLogoUrl !== settings.siteLogo
 
   return (
     <div className="site-shell">
@@ -72,7 +68,7 @@ export default function App() {
                 className="wordmark-logo"
                 src={settings.siteLogo}
                 alt=""
-                onError={() => setLogoFailed(true)}
+                onError={() => setFailedLogoUrl(settings.siteLogo)}
               />
             ) : null}
             <span>{settings.siteName}</span>
