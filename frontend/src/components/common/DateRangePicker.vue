@@ -327,14 +327,14 @@ onUnmounted(() => {
   @apply bg-white dark:bg-dark-800;
   @apply border border-gray-200 dark:border-dark-600;
   @apply text-gray-700 dark:text-gray-300;
-  @apply transition-all duration-200;
-  @apply focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30;
+  @apply transition-colors duration-200;
+  @apply focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/20 dark:focus:border-white dark:focus:ring-white/20;
   @apply hover:border-gray-300 dark:hover:border-dark-500;
   @apply cursor-pointer;
 }
 
 .date-picker-trigger-open {
-  @apply border-primary-500 ring-2 ring-primary-500/30;
+  @apply border-gray-900 ring-2 ring-gray-900/20 dark:border-white dark:ring-white/20;
 }
 
 .date-picker-icon {
@@ -352,9 +352,9 @@ onUnmounted(() => {
 .date-picker-dropdown {
   @apply absolute left-0 z-[100] mt-2;
   @apply bg-white dark:bg-dark-800;
-  @apply rounded-xl;
+  @apply rounded-lg;
   @apply border border-gray-200 dark:border-dark-700;
-  @apply shadow-lg shadow-black/10 dark:shadow-black/30;
+  @apply shadow-card;
   @apply overflow-hidden;
   @apply min-w-[320px];
 }
@@ -396,7 +396,7 @@ onUnmounted(() => {
   @apply bg-gray-50 dark:bg-dark-700;
   @apply border border-gray-200 dark:border-dark-600;
   @apply text-gray-900 dark:text-gray-100;
-  @apply focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/30;
+  @apply focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/20 dark:focus:border-white dark:focus:ring-white/20;
 }
 
 .date-picker-input::-webkit-calendar-picker-indicator {

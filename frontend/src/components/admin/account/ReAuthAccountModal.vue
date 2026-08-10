@@ -11,21 +11,8 @@
         class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-dark-600 dark:bg-dark-700"
       >
         <div class="flex items-center gap-3">
-          <div
-            :class="[
-              'flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br',
-              isOpenAILike
-                ? 'from-green-500 to-green-600'
-                : isGemini
-                  ? 'from-blue-500 to-blue-600'
-                  : isAntigravity
-                    ? 'from-purple-500 to-purple-600'
-                    : isGrok
-                      ? 'from-zinc-700 to-zinc-900'
-                      : 'from-orange-500 to-orange-600'
-            ]"
-          >
-            <Icon name="sparkles" size="md" class="text-white" />
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-900 text-white dark:bg-white dark:text-dark-950">
+            <Icon name="sparkles" size="md" />
           </div>
           <div>
             <span class="block font-semibold text-gray-900 dark:text-white">{{
