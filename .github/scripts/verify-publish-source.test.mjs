@@ -1,8 +1,48 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { findSuccessfulRun, validateCommitSha } from './verify-publish-source.mjs'
+import {
+  findSuccessfulRun,
+  stableReleaseVersion,
+  validateCommitSha,
+} from './verify-publish-source.mjs'
 
 const commitSha = 'a'.repeat(40)
+const baseline = JSON.parse(
+  readFileSync(new URL('../upstream-baseline.json', import.meta.url), 'utf8'),
+)
+
+test('uses the pinned stable release as the published server version', () => {
+  assert.equal(stableReleaseVersion(baseline), baseline.release.slice(1))
+})
+
+test('rejects non-stable release identifiers', () => {
+  assert.throws(
+    () => stableReleaseVersion({ ...baseline, release: 'v0.1.174-rc.1' }),
+    /stable vMAJOR\.MINOR\.PATCH/,
+  )
+  assert.throws(
+    () => stableReleaseVersion({ ...baseline, release: '0.1.174' }),
+    /stable vMAJOR\.MINOR\.PATCH/,
+  )
+})
+
+test('passes the verified stable version to the Sub2API image build', () => {
+  const workflow = readFileSync(
+    new URL('../workflows/zero-one-publish.yml', import.meta.url),
+    'utf8',
+  )
+  assert.match(workflow, /VERSION=\$\{\{ steps\.source\.outputs\.source_version \}\}/)
+})
+
+test('checks the published Sub2API binary version', () => {
+  const workflow = readFileSync(
+    new URL('../workflows/zero-one-publish.yml', import.meta.url),
+    'utf8',
+  )
+  assert.match(workflow, /docker run --rm --platform linux\/amd64/)
+  assert.match(workflow, /Sub2API \$SOURCE_VERSION \(/)
+})
 
 test('requires a full lowercase commit SHA', () => {
   assert.equal(validateCommitSha(commitSha), commitSha)

@@ -120,6 +120,7 @@ jobs:
             org.opencontainers.image.revision=${{ steps.source.outputs.source_sha }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           build-args: |
+            VERSION=${{ steps.source.outputs.source_version }}
             COMMIT=${{ steps.source.outputs.source_sha }}
           sbom: true
           provenance: mode=max
@@ -144,6 +145,7 @@ jobs:
           CI_RUN_URL: ${{ steps.source.outputs.ci_run_url }}
           EDGE_DIGEST: ${{ steps.edge.outputs.digest }}
           SOURCE_SHA: ${{ steps.source.outputs.source_sha }}
+          SOURCE_VERSION: ${{ steps.source.outputs.source_version }}
           SUB2API_DIGEST: ${{ steps.sub2api.outputs.digest }}
         run: |
           printf '%s\n' "$SUB2API_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
@@ -153,10 +155,17 @@ jobs:
               | jq -e '[.manifests[]?.platform | select(.os == "linux") | .architecture]
                 | index("amd64") != null and index("arm64") != null' >/dev/null
           done
+          version_output="$(
+            docker run --rm --platform linux/amd64 \
+              "$SUB2API_IMAGE@$SUB2API_DIGEST" --version 2>&1
+          )"
+          printf '%s\n' "$version_output" | grep -F "Sub2API $SOURCE_VERSION (" >/dev/null
+          printf '%s\n' "$version_output"
           {
             echo '## Zero One immutable image release'
             echo
             echo "- Source: \`$SOURCE_SHA\`"
+            echo "- Version: \`$SOURCE_VERSION\`"
             echo "- Verified CI: $CI_RUN_URL"
             echo "- Sub2API: \`$SUB2API_IMAGE@$SUB2API_DIGEST\`"
             echo "- Edge: \`$EDGE_IMAGE@$EDGE_DIGEST\`"
