@@ -1,3 +1,11 @@
+> [!NOTE]
+> **零一 API** is the branded distribution maintained at
+> [01-Yang/zero-one-api](https://github.com/01-Yang/zero-one-api). Its technical
+> baseline is the stable upstream release
+> [Wei-Shaw/sub2api v0.1.173@29009f0b2ea14edf3b11ae2564fb617ff91a03b4](https://github.com/Wei-Shaw/sub2api/tree/29009f0b2ea14edf3b11ae2564fb617ff91a03b4).
+> Only stable upstream tags are synchronized. The original Sub2API documentation,
+> license, and disclaimer continue below unchanged.
+
 <div align="center">
 
 <img src="assets/logo.svg" alt="Sub2API Logo" width="128" />
