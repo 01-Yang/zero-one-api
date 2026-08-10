@@ -1,0 +1,165 @@
+name: Zero One Publish
+run-name: Publish Zero One images for ${{ inputs.commit_sha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Full 40-character commit SHA from zero-one/brand
+        required: true
+        type: string
+      confirmation:
+        description: Type PUBLISH to authorize the GHCR push
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  packages: write
+
+concurrency:
+  group: zero-one-publish-${{ inputs.commit_sha }}
+  cancel-in-progress: false
+
+env:
+  SUB2API_IMAGE: ghcr.io/01-yang/zero-one-sub2api
+  EDGE_IMAGE: ghcr.io/01-yang/zero-one-edge
+
+jobs:
+  publish:
+    name: Publish immutable GHCR images
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout trusted workflow revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+
+      - name: Validate manual authorization
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
+          test "$CONFIRMATION" = 'PUBLISH'
+
+      - name: Fetch brand branch
+        run: >-
+          git fetch --no-tags --force origin
+          refs/heads/zero-one/brand:refs/remotes/origin/zero-one/brand
+
+      - name: Test release guards
+        run: node --test .github/scripts/*.test.mjs
+
+      - name: Verify source commit and successful CI
+        id: source
+        env:
+          COMMIT_SHA: ${{ inputs.commit_sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/verify-publish-source.mjs
+
+      - name: Verify source uses the trusted release policy
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.source_sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          trusted_paths=(
+            .github/upstream-baseline.json
+            .github/scripts
+            .github/workflows/zero-one-ci.yml
+            .github/workflows/zero-one-publish.yml
+          )
+          if ! git diff --quiet "$GITHUB_SHA" "$SOURCE_SHA" -- "${trusted_paths[@]}"; then
+            echo 'Target commit does not use the trusted default-branch release policy:' >&2
+            git diff --name-status "$GITHUB_SHA" "$SOURCE_SHA" -- "${trusted_paths[@]}" >&2
+            exit 1
+          fi
+
+      - name: Checkout verified source commit
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.source_sha }}
+        run: |
+          git checkout --detach "$SOURCE_SHA"
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+      - name: Verify upstream boundary
+        run: node .github/scripts/verify-upstream-boundary.mjs
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build and push Sub2API image
+        id: sub2api
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.SUB2API_IMAGE }}:sha-${{ steps.source.outputs.source_sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ steps.source.outputs.source_sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          build-args: |
+            COMMIT=${{ steps.source.outputs.source_sha }}
+          sbom: true
+          provenance: mode=max
+
+      - name: Build and push edge image
+        id: edge
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: deploy/zero-one/Dockerfile.edge
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.EDGE_IMAGE }}:sha-${{ steps.source.outputs.source_sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ steps.source.outputs.source_sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          sbom: true
+          provenance: mode=max
+
+      - name: Verify published digests and write release summary
+        env:
+          CI_RUN_URL: ${{ steps.source.outputs.ci_run_url }}
+          EDGE_DIGEST: ${{ steps.edge.outputs.digest }}
+          SOURCE_SHA: ${{ steps.source.outputs.source_sha }}
+          SUB2API_DIGEST: ${{ steps.sub2api.outputs.digest }}
+        run: |
+          printf '%s\n' "$SUB2API_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          printf '%s\n' "$EDGE_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          for image in "$SUB2API_IMAGE@$SUB2API_DIGEST" "$EDGE_IMAGE@$EDGE_DIGEST"; do
+            docker buildx imagetools inspect --raw "$image" \
+              | jq -e '[.manifests[]?.platform | select(.os == "linux") | .architecture]
+                | index("amd64") != null and index("arm64") != null' >/dev/null
+          done
+          {
+            echo '## Zero One immutable image release'
+            echo
+            echo "- Source: \`$SOURCE_SHA\`"
+            echo "- Verified CI: $CI_RUN_URL"
+            echo "- Sub2API: \`$SUB2API_IMAGE@$SUB2API_DIGEST\`"
+            echo "- Edge: \`$EDGE_IMAGE@$EDGE_DIGEST\`"
+            echo
+            echo 'Both indexes contain linux/amd64 and linux/arm64 images with SBOM and provenance attestations.'
+          } >> "$GITHUB_STEP_SUMMARY"

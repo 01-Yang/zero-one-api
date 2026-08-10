@@ -1,0 +1,131 @@
+name: Zero One CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  upstream-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Test upstream-boundary policy
+        run: node --test .github/scripts/*.test.mjs
+      - name: Verify upstream boundary
+        run: node .github/scripts/verify-upstream-boundary.mjs
+
+  landing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: landing/package-lock.json
+      - name: Install landing dependencies
+        working-directory: landing
+        run: npm ci
+      - name: Audit landing build dependencies
+        working-directory: landing
+        run: npm audit --audit-level=high
+      - name: Typecheck landing
+        working-directory: landing
+        run: npm run typecheck
+      - name: Test landing
+        working-directory: landing
+        run: npm test
+      - name: Build landing
+        working-directory: landing
+        run: npm run build
+
+  console:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install console dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+      - name: Lint console
+        working-directory: frontend
+        run: pnpm run lint:check
+      - name: Typecheck console
+        working-directory: frontend
+        run: pnpm run typecheck
+      - name: Test console
+        working-directory: frontend
+        run: pnpm run test:run
+      - name: Build console
+        working-directory: frontend
+        run: pnpm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: backend/go.mod
+          check-latest: false
+          cache-dependency-path: backend/go.sum
+      - name: Verify Go version
+        run: go version | grep -q 'go1.26.5'
+      - name: Test backend
+        working-directory: backend
+        run: go test ./...
+
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check deployment script syntax
+        run: |
+          sh -n deploy/zero-one/backup-postgres.sh
+          sh -n deploy/zero-one/restore-drill.sh
+          sh -n deploy/zero-one/test-live-routing.sh
+          sh -n deploy/zero-one/test-routing.sh
+          node --check deploy/zero-one/test-upstream.mjs
+          node --check deploy/zero-one/verify-public-settings.mjs
+      - name: Verify Caddy routing contract
+        run: sh deploy/zero-one/test-routing.sh
+      - name: Verify public-settings release gate
+        run: |
+          printf '%s' '{"code":0,"data":{"site_name":"零一 API","site_subtitle":"从零到一，连接每一次模型调用。","api_base_url":"https://api.01yapi.com","registration_enabled":true,"payment_enabled":false,"promo_code_enabled":false,"invitation_code_enabled":false}}' \
+            | node deploy/zero-one/verify-public-settings.mjs -
+          if printf '%s' '{"code":0,"data":{"site_name":"Sub2API"}}' \
+            | node deploy/zero-one/verify-public-settings.mjs -; then
+            echo 'public-settings release gate accepted an invalid configuration' >&2
+            exit 1
+          fi
+      - name: Validate Compose interpolation
+        run: |
+          docker compose --env-file deploy/zero-one/.env.example -f deploy/zero-one/compose.yml config -q
+          docker compose --env-file deploy/zero-one/.env.example -f deploy/zero-one/compose.yml -f deploy/zero-one/compose.bootstrap.yml config -q
+          test "$(docker compose --env-file deploy/zero-one/.env.example -f deploy/zero-one/compose.yml -f deploy/zero-one/compose.bootstrap.yml config --format json | jq -r '.services.sub2api.ports[0].host_ip + ":" + (.services.sub2api.ports[0].published | tostring)')" = '127.0.0.1:18080'
+      - name: Build source-revision Sub2API image
+        run: docker build --file Dockerfile --tag zero-one-sub2api:sha-${{ github.sha }} .
+      - name: Build source-revision edge image
+        run: docker build --file deploy/zero-one/Dockerfile.edge --tag zero-one-edge:sha-${{ github.sha }} .
+      - name: Validate rendered Caddy configuration
+        run: >-
+          docker run --rm -e ACME_EMAIL=ci@example.invalid
+          zero-one-edge:sha-${{ github.sha }}
+          caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+      - name: Test live Caddy routing contract
+        run: sh deploy/zero-one/test-live-routing.sh zero-one-edge:sha-${{ github.sha }}

@@ -191,8 +191,8 @@ export default {
 
   // Setup Wizard
   setup: {
-    title: 'Sub2API Setup',
-    description: 'Configure your Sub2API instance',
+    title: '零一 API Setup',
+    description: 'Configure your 零一 API instance',
     database: {
       title: 'Database Configuration',
       description: 'Connect to your PostgreSQL database',

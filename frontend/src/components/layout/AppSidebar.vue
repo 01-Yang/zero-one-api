@@ -8,18 +8,20 @@
   >
     <!-- Logo/Brand -->
     <div class="sidebar-header" :class="{ 'sidebar-header-collapsed': sidebarCollapsed }">
-      <!-- Custom Logo or Default Logo -->
       <router-link
+        v-if="siteLogo || sidebarCollapsed"
         :to="homePath"
-        class="sidebar-logo flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-glow transition-opacity hover:opacity-80"
+        :aria-label="siteName"
+        class="sidebar-logo flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg transition-opacity duration-200 hover:opacity-80"
         @click="handleMenuItemClick(homePath)"
       >
-        <img v-if="settingsLoaded" :src="siteLogo || '/logo.svg'" alt="Logo" class="h-full w-full object-contain" />
+        <img v-if="siteLogo" :src="siteLogo" :alt="siteName" class="h-full w-full object-contain" />
+        <span v-else class="text-xs font-semibold text-gray-900 dark:text-white">零一</span>
       </router-link>
       <div class="sidebar-brand" :class="{ 'sidebar-brand-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">
         <router-link
           :to="homePath"
-          class="sidebar-brand-title text-lg font-bold text-gray-900 transition-colors hover:text-primary-600 dark:text-white dark:hover:text-primary-400"
+          class="sidebar-brand-title inline-flex min-h-11 items-center text-lg font-bold text-gray-900 transition-colors duration-200 hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
           @click="handleMenuItemClick(homePath)"
         >
           {{ siteName }}
@@ -259,7 +261,6 @@ const expandedGroups = ref<Set<string>>(new Set())
 const siteName = computed(() => appStore.siteName)
 const siteLogo = computed(() => sanitizeUrl(appStore.siteLogo || '', { allowRelative: true, allowDataUrl: true }))
 const siteVersion = computed(() => appStore.siteVersion)
-const settingsLoaded = computed(() => appStore.publicSettingsLoaded)
 
 // SVG Icon Components
 const DashboardIcon = {
@@ -912,15 +913,10 @@ function handleGroupClick(item: NavItem) {
   }
 }
 
-// Initialize theme
+// Default to dark while keeping an explicit user light/dark choice persistent.
 const savedTheme = localStorage.getItem('theme')
-if (
-  savedTheme === 'dark' ||
-  (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)
-) {
-  isDark.value = true
-  document.documentElement.classList.add('dark')
-}
+isDark.value = savedTheme !== 'light'
+document.documentElement.classList.toggle('dark', isDark.value)
 
 // Fetch admin settings (for feature-gated nav items like Ops).
 watch(

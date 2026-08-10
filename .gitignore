@@ -136,6 +136,10 @@ docs/*
 !docs/PAYMENT_CN.md
 !docs/ADMIN_PAYMENT_INTEGRATION_API.md
 !docs/ASYNC_IMAGE_TASKS.md
+!docs/TECHNICAL-PLAN.md
+!docs/OPERATIONS.md
+!docs/adr/
+!docs/adr/*.md
 !docs/legal/
 !docs/legal/*.md
 .serena/
@@ -143,6 +147,10 @@ docs/*
 frontend/coverage/
 aicodex
 output/
+
+# 零一 API 本地部署状态
+deploy/zero-one/.env
+deploy/zero-one/state/
 
 # Vitest / Vite cache at repo root
 .vite/

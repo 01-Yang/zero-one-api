@@ -62,16 +62,16 @@ const ACCENT: Record<Platform, string> = {
 }
 const ACCENT_DEFAULT = '#14b8a6' // primary-500 (teal)
 
-// ── Accent bar (gradient) ───────────────────────────────────────────
+// ── Accent bar (solid platform marker) ─────────────────────────────
 const ACCENT_BAR: Record<Platform, string> = {
-  anthropic: 'bg-gradient-to-r from-orange-400 to-orange-500',
-  openai: 'bg-gradient-to-r from-emerald-400 to-emerald-500',
-  antigravity: 'bg-gradient-to-r from-purple-400 to-purple-500',
-  gemini: 'bg-gradient-to-r from-blue-400 to-blue-500',
-  grok: 'bg-gradient-to-r from-zinc-700 to-zinc-900',
-  composite: 'bg-gradient-to-r from-slate-500 to-cyan-500',
+  anthropic: 'bg-orange-500',
+  openai: 'bg-emerald-500',
+  antigravity: 'bg-purple-500',
+  gemini: 'bg-blue-500',
+  grok: 'bg-zinc-800 dark:bg-zinc-500',
+  composite: 'bg-cyan-600',
 }
-const ACCENT_BAR_DEFAULT = 'bg-gradient-to-r from-primary-400 to-primary-500'
+const ACCENT_BAR_DEFAULT = 'bg-primary-500'
 
 // ── Text (price, icon) ─────────────────────────────────────────────
 const TEXT: Record<Platform, string> = {
