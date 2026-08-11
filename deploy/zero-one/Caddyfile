@@ -79,6 +79,15 @@ api.01yapi.com {
 
 app.01yapi.com {
 	import access_log
+
+	@public_home {
+		method GET HEAD
+		path /
+	}
+
+	header @public_home Cache-Control "no-store"
+	redir @public_home https://api.01yapi.com{uri} 307
+
 	header X-Robots-Tag "noindex, nofollow"
 	import sub2api_proxy
 }

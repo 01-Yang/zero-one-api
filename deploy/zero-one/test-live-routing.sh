@@ -108,6 +108,20 @@ for spoofed_ip in 8.8.8.8 8.8.4.4 1.1.1.1 9.9.9.9 208.67.222.222 208.67.220.220 
 	fi
 done
 
+console_root_get_headers=$(curl -fsS -D - -o /dev/null -H 'Host: app.01yapi.test' "$edge_url/?source=contract")
+assert_text "$console_root_get_headers" 'HTTP/1.1 307 Temporary Redirect' 'Console GET root redirect status changed'
+assert_text "$console_root_get_headers" 'Cache-Control: no-store' 'Console GET root redirect is cacheable'
+assert_text "$console_root_get_headers" 'Location: https://api.01yapi.com/?source=contract' 'Console GET root did not redirect to the public site'
+
+console_root_head_headers=$(curl -fsSI -H 'Host: app.01yapi.test' "$edge_url/?source=contract")
+assert_text "$console_root_head_headers" 'HTTP/1.1 307 Temporary Redirect' 'Console HEAD root redirect status changed'
+assert_text "$console_root_head_headers" 'Cache-Control: no-store' 'Console HEAD root redirect is cacheable'
+assert_text "$console_root_head_headers" 'Location: https://api.01yapi.com/?source=contract' 'Console HEAD root did not redirect to the public site'
+
+console_post_root=$(curl -fsS -X POST -H 'Host: app.01yapi.test' --data 'probe' "$edge_url/")
+assert_text "$console_post_root" '"method":"POST"' 'Console non-GET root did not reach Sub2API'
+assert_text "$console_post_root" '"url":"/"' 'Console proxied root path changed'
+
 console_response=$(curl -fsS -H 'Host: app.01yapi.test' "$edge_url/login")
 assert_text "$console_response" '"url":"/login"' 'Console host did not proxy unchanged'
 
