@@ -148,7 +148,7 @@ Rollback uses the previous image digests without rolling back the database unles
 
 - `GET https://api.01yapi.com/` returns the React page; `POST /v1/messages` reaches API authentication rather than HTML.
 - The public-settings release gate passes, and `/admin/settings` shows `frontend_url=https://app.01yapi.com`.
-- `GET https://app.01yapi.com/login` returns Vue; administrator and User redirects remain role-correct.
+- `GET` and `HEAD https://app.01yapi.com/` return a non-cacheable `307` to `https://api.01yapi.com/`; `POST /` and `GET /login` still reach Vue/Sub2API, and administrator and User redirects remain role-correct.
 - SSE sends its first event promptly and continues without buffering; `/responses` and administrator operations WebSockets upgrade successfully.
 - `api.01yapi.cc` accepts the same API Key, while its root returns no-store backup metadata.
 - Apex and `www` return `308` while preserving the path and query string.

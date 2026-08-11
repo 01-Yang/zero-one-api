@@ -18,7 +18,8 @@ Internet
   -> Caddy :80/:443
        -> React static files for exact api.01yapi.com/
        -> Sub2API :8080 for every other API-host request
-       -> Sub2API :8080 for app.01yapi.com
+       -> Public Site redirect for exact GET/HEAD app.01yapi.com/
+       -> Sub2API :8080 for every other app.01yapi.com request
        -> Sub2API :8080 for backup API requests
   -> Sub2API
        -> PostgreSQL
@@ -37,7 +38,8 @@ The React app lives in `landing/`, uses Vite with base `/_landing/`, and is buil
 | `api.01yapi.com/_landing/assets/*` | Immutable hashed React static assets |
 | `api.01yapi.com/_landing/THIRD_PARTY_NOTICES.txt` | No-cache third-party notice |
 | Every other `api.01yapi.com` request | Transparent Sub2API proxy |
-| Every `app.01yapi.com` request | Sub2API and embedded Vue Console |
+| `app.01yapi.com`, exact `GET/HEAD /` | Non-cacheable 307 redirect to `https://api.01yapi.com/` with URI retained |
+| Every other `app.01yapi.com` request | Sub2API and embedded Vue Console |
 | Exact `GET/HEAD api.01yapi.cc/` | No-store backup metadata JSON |
 | Every other `api.01yapi.cc` request | Transparent Sub2API proxy |
 | `01yapi.com` and `www.01yapi.com` | 308 redirect to the primary host with URI retained |
