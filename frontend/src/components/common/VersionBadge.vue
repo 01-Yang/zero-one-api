@@ -32,7 +32,7 @@
           v-if="dropdownOpen"
           ref="dropdownRef"
           class="absolute left-0 z-50 mt-2 overflow-hidden whitespace-normal rounded-xl border border-gray-200 bg-white shadow-lg transition-all duration-200 dark:border-dark-700 dark:bg-dark-800"
-          :class="rollbackPanelOpen && isReleaseBuild ? 'w-80' : 'w-64'"
+          :class="rollbackPanelOpen && isReleaseBuild && !isManagedRelease ? 'w-80' : 'w-64'"
         >
           <!-- Header with refresh button -->
           <div
@@ -291,7 +291,58 @@
                 </div>
               </div>
 
-              <!-- Priority 4: Update available for release build - show update button -->
+              <!-- Priority 4: Managed container release - deployment replaces the image -->
+              <div v-else-if="hasUpdate && isManagedRelease" class="space-y-2">
+                <div
+                  class="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-900/20"
+                >
+                  <div
+                    class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/50"
+                  >
+                    <Icon
+                      name="download"
+                      size="sm"
+                      :stroke-width="2"
+                      class="text-amber-600 dark:text-amber-400"
+                    />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-amber-700 dark:text-amber-300">
+                      {{ t('version.updateAvailable') }}
+                    </p>
+                    <p class="text-xs text-amber-600/70 dark:text-amber-400/70">
+                      v{{ latestVersion }}
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-2.5 dark:border-blue-800/50 dark:bg-blue-900/20"
+                >
+                  <Icon
+                    name="infoCircle"
+                    size="sm"
+                    :stroke-width="2"
+                    class="mt-0.5 flex-shrink-0 text-blue-500 dark:text-blue-400"
+                  />
+                  <p class="text-xs leading-4 text-blue-600 dark:text-blue-400">
+                    {{ t('version.managedUpdateHint') }}
+                  </p>
+                </div>
+
+                <a
+                  v-if="releaseInfo?.html_url && releaseInfo.html_url !== '#'"
+                  :href="releaseInfo.html_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="flex items-center justify-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-700 dark:text-dark-400 dark:hover:text-dark-200"
+                >
+                  {{ t('version.viewChangelog') }}
+                  <Icon name="externalLink" size="xs" :stroke-width="2" />
+                </a>
+              </div>
+
+              <!-- Priority 5: Update available for release build - show update button -->
               <div v-else-if="hasUpdate && isReleaseBuild" class="space-y-2">
                 <!-- Update info card -->
                 <div
@@ -355,7 +406,7 @@
                 </a>
               </div>
 
-              <!-- Priority 5: Up to date - GitHub link + version rollback -->
+              <!-- Priority 6: Up to date - GitHub link + version rollback -->
               <div v-else class="space-y-2">
                 <a
                   v-if="releaseInfo?.html_url && releaseInfo.html_url !== '#'"
@@ -395,9 +446,32 @@
 
                   <transition name="rollback">
                     <div v-if="rollbackPanelOpen" class="mt-2 space-y-2">
+                      <!-- Managed container release: rollback by switching the pinned image -->
+                      <div
+                        v-if="isManagedRelease"
+                        class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-2 dark:border-blue-800/50 dark:bg-blue-900/20"
+                      >
+                        <svg
+                          class="h-3.5 w-3.5 flex-shrink-0 text-blue-500 dark:text-blue-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <p class="min-w-0 flex-1 text-xs leading-4 text-blue-600 dark:text-blue-400">
+                          {{ t('version.managedRollbackHint') }}
+                        </p>
+                      </div>
+
                       <!-- Source build: online rollback unavailable, use git instead -->
                       <div
-                        v-if="!isReleaseBuild"
+                        v-else-if="!isReleaseBuild"
                         class="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-2 dark:border-blue-800/50 dark:bg-blue-900/20"
                       >
                         <svg
@@ -659,6 +733,7 @@ const { t } = useI18n()
 
 const props = defineProps<{
   version?: string
+  managed?: boolean
 }>()
 
 const authStore = useAuthStore()
@@ -676,6 +751,7 @@ const latestVersion = computed(() => appStore.latestVersion)
 const hasUpdate = computed(() => appStore.hasUpdate)
 const releaseInfo = computed(() => appStore.releaseInfo)
 const buildType = computed(() => appStore.buildType)
+const isManagedRelease = computed(() => props.managed === true)
 
 // Update process states (local to this component)
 const updating = ref(false)
@@ -752,7 +828,7 @@ async function refreshVersion(force = true) {
 }
 
 async function handleUpdate() {
-  if (updating.value) return
+  if (updating.value || isManagedRelease.value) return
 
   updating.value = true
   updateError.value = ''
@@ -788,6 +864,7 @@ async function toggleRollbackPanel() {
   // Source builds only show a hint, no version list to fetch
   if (
     rollbackPanelOpen.value &&
+    !isManagedRelease.value &&
     isReleaseBuild.value &&
     rollbackVersions.value.length === 0 &&
     !rollbackVersionsLoading.value
@@ -797,7 +874,7 @@ async function toggleRollbackPanel() {
 }
 
 async function loadRollbackVersions() {
-  if (!isAdmin.value) return
+  if (!isAdmin.value || isManagedRelease.value) return
   rollbackVersionsLoading.value = true
   rollbackVersionsError.value = ''
   try {

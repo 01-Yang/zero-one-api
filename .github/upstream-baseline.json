@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "repository": "Wei-Shaw/sub2api",
-  "release": "v0.1.173",
-  "commit": "29009f0b2ea14edf3b11ae2564fb617ff91a03b4",
+  "release": "v0.1.175",
+  "commit": "93c32fa1a2450351561abc46156d2e28cb5f74ca",
   "allowed_paths": [
     ".gitignore",
     ".github/.gitignore",
@@ -41,10 +41,12 @@
     "frontend/src/components/common/Select.vue",
     "frontend/src/components/common/SubscriptionProgressMini.vue",
     "frontend/src/components/common/Toast.vue",
+    "frontend/src/components/common/VersionBadge.vue",
     "frontend/src/components/layout/AppHeader.vue",
     "frontend/src/components/layout/AppLayout.vue",
     "frontend/src/components/layout/AppSidebar.vue",
     "frontend/src/components/layout/AuthLayout.vue",
+    "frontend/src/components/layout/__tests__/AppSidebar.spec.ts",
     "frontend/src/components/layout/TablePageLayout.vue",
     "frontend/src/components/modelPlaza/PlazaFilterBar.vue",
     "frontend/src/components/modelPlaza/PlazaNavBar.vue",

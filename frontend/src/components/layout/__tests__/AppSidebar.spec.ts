@@ -6,6 +6,11 @@ import { describe, expect, it } from 'vitest'
 
 const componentPath = resolve(dirname(fileURLToPath(import.meta.url)), '../AppSidebar.vue')
 const componentSource = readFileSync(componentPath, 'utf8')
+const versionBadgePath = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../common/VersionBadge.vue'
+)
+const versionBadgeSource = readFileSync(versionBadgePath, 'utf8')
 const stylePath = resolve(dirname(fileURLToPath(import.meta.url)), '../../../style.css')
 const styleSource = readFileSync(stylePath, 'utf8')
 
@@ -51,5 +56,27 @@ describe('AppSidebar header styles', () => {
     expect(sidebarBrandBlockMatch).not.toBeNull()
     expect(sidebarHeaderBlockMatch?.[0]).not.toContain('@apply overflow-hidden;')
     expect(sidebarBrandBlockMatch?.[0]).not.toContain('overflow: hidden;')
+  })
+})
+
+describe('AppSidebar managed release updates', () => {
+  it('marks the branded Docker release as externally managed', () => {
+    expect(componentSource).toContain('<VersionBadge managed :version="siteVersion" />')
+    expect(versionBadgeSource).toContain('managed?: boolean')
+    expect(versionBadgeSource).toContain('const isManagedRelease = computed(() => props.managed === true)')
+  })
+
+  it('shows managed guidance before the in-place release updater', () => {
+    const managedBranch = versionBadgeSource.indexOf(
+      'v-else-if="hasUpdate && isManagedRelease"'
+    )
+    const inPlaceBranch = versionBadgeSource.indexOf(
+      'v-else-if="hasUpdate && isReleaseBuild"'
+    )
+
+    expect(managedBranch).toBeGreaterThan(-1)
+    expect(inPlaceBranch).toBeGreaterThan(managedBranch)
+    expect(versionBadgeSource).toContain("t('version.managedUpdateHint')")
+    expect(versionBadgeSource).toContain("t('version.managedRollbackHint')")
   })
 })
