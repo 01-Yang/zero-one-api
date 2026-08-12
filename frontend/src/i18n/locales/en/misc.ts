@@ -31,6 +31,8 @@ export default {
     refresh: 'Refresh',
     sourceMode: 'Source Build',
     sourceModeHint: 'Source build, use git pull to update',
+    managedUpdateHint:
+      'Zero One uses a custom Docker image. Upgrade it through the release workflow; the console will not overwrite the binary inside the container.',
     updateNow: 'Update Now',
     updating: 'Updating...',
     updateComplete: 'Update Complete',
@@ -53,6 +55,8 @@ export default {
     noRollbackVersions: 'No versions available for rollback',
     loadVersionsFailed: 'Failed to load versions',
     rollbackSourceHint: 'Online rollback is not available for source builds',
+    managedRollbackHint:
+      'Zero One rolls back by switching the pinned image digest. Use the release workflow; the console does not replace the binary in place.',
     deployScript: 'Script',
     deployDocker: 'Docker',
     dockerEditCompose: 'Edit the image tag in docker-compose.yml',

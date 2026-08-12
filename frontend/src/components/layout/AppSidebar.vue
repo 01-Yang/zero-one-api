@@ -27,7 +27,7 @@
           {{ siteName }}
         </router-link>
         <!-- Version Badge -->
-        <VersionBadge :version="siteVersion" />
+        <VersionBadge managed :version="siteVersion" />
       </div>
     </div>
 
@@ -776,7 +776,6 @@ const adminNavItems = computed((): NavItem[] => {
       path: '/admin/security-audit',
       label: t('nav.securityAudit'),
       icon: ShieldIcon,
-      hideInSimpleMode: true,
       expandOnly: true,
       featureFlag: flagRiskControl,
       children: [

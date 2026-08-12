@@ -2,7 +2,7 @@
 > **零一 API** is the branded distribution maintained at
 > [01-Yang/zero-one-api](https://github.com/01-Yang/zero-one-api). Its technical
 > baseline is the stable upstream release
-> [Wei-Shaw/sub2api v0.1.173@29009f0b2ea14edf3b11ae2564fb617ff91a03b4](https://github.com/Wei-Shaw/sub2api/tree/29009f0b2ea14edf3b11ae2564fb617ff91a03b4).
+> [Wei-Shaw/sub2api v0.1.175@93c32fa1a2450351561abc46156d2e28cb5f74ca](https://github.com/Wei-Shaw/sub2api/tree/93c32fa1a2450351561abc46156d2e28cb5f74ca).
 > Only stable upstream tags are synchronized. The original Sub2API documentation,
 > license, and disclaimer continue below unchanged.
 
@@ -12,7 +12,7 @@
 
 # Sub2API
 
-[![Go](https://img.shields.io/badge/Go-1.25.7-00ADD8.svg)](https://golang.org/)
+[![Go](https://img.shields.io/badge/Go-1.26.5-00ADD8.svg)](https://golang.org/)
 [![Vue](https://img.shields.io/badge/Vue-3.4+-4FC08D.svg)](https://vuejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791.svg)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7+-DC382D.svg)](https://redis.io/)
@@ -204,7 +204,7 @@ Community projects that extend or integrate with Sub2API:
 
 | Component | Technology |
 |-----------|------------|
-| Backend | Go 1.25.7, Gin, Ent |
+| Backend | Go 1.26.5, Gin, Ent |
 | Frontend | Vue 3.4+, Vite 5+, TailwindCSS |
 | Database | PostgreSQL 15+ |
 | Cache/Queue | Redis 7+ |

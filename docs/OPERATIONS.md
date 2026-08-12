@@ -45,6 +45,12 @@ Never use `latest` as a production image reference. Caddy's ACME storage is
 part of the deployment state; preserve `deploy/zero-one/state/caddy-data` when
 migrating the host to avoid unnecessary certificate issuance.
 
+The version badge is informational for this managed Docker deployment. Do not
+use Sub2API's in-place binary update or rollback endpoints: the container runs
+as a non-root user, and an upstream binary would also discard the Zero One
+Console customizations. Upgrade and roll back only by switching the approved
+project-owned image digest through the release procedure below.
+
 ## Administrator Workflow
 
 The same login page serves users and administrators. An administrator is redirected to `/admin/dashboard`; `/admin/ops` is the operational monitor. User, group, channel, Provider Account, proxy, announcement, usage, risk and system settings remain under the existing `/admin/*` routes.
