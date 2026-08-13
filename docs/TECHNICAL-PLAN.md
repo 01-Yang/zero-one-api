@@ -3,7 +3,7 @@
 ## Baseline And Change Boundary
 
 项目的稳定技术基线为
-[`Wei-Shaw/sub2api v0.1.175@93c32fa1a2450351561abc46156d2e28cb5f74ca`](https://github.com/Wei-Shaw/sub2api/tree/93c32fa1a2450351561abc46156d2e28cb5f74ca)。
+[`Wei-Shaw/sub2api v0.1.176@e803e3851c0a7e222cfadeafad7b8636ab959d11`](https://github.com/Wei-Shaw/sub2api/tree/e803e3851c0a7e222cfadeafad7b8636ab959d11)。
 公开 fork [`01-Yang/zero-one-api`](https://github.com/01-Yang/zero-one-api)
 配置为 `origin`，官方仓库 `Wei-Shaw/sub2api` 配置为只读
 `upstream`。`zero-one/brand` 是零一 API 产品分支；`origin/main`

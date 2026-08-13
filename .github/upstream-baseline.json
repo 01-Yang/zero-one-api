@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "repository": "Wei-Shaw/sub2api",
-  "release": "v0.1.175",
-  "commit": "93c32fa1a2450351561abc46156d2e28cb5f74ca",
+  "release": "v0.1.176",
+  "commit": "e803e3851c0a7e222cfadeafad7b8636ab959d11",
   "allowed_paths": [
     ".gitignore",
     ".github/.gitignore",
