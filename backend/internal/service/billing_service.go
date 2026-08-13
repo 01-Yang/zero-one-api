@@ -1244,18 +1244,19 @@ func (s *BillingService) calculatePerRequestCost(resolved *ResolvedPricing, inpu
 	}
 
 	var unitPrice float64
+	configured := false
 
 	if input.SizeTier != "" {
-		unitPrice = input.Resolver.GetRequestTierPrice(resolved, input.SizeTier)
+		unitPrice, configured = input.Resolver.getRequestTierPrice(resolved, input.SizeTier)
 	}
 
-	if unitPrice == 0 {
+	if !configured {
 		totalContext := input.Tokens.InputTokens + input.Tokens.CacheCreationTokens + input.Tokens.CacheReadTokens
-		unitPrice = input.Resolver.GetRequestTierPriceByContext(resolved, totalContext)
+		unitPrice, configured = input.Resolver.getRequestTierPriceByContext(resolved, totalContext)
 	}
 
 	// 回退到默认按次价格
-	if unitPrice == 0 {
+	if !configured {
 		unitPrice = resolved.DefaultPerRequestPrice
 	}
 

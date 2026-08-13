@@ -987,11 +987,19 @@ func normalizeGroupModelPricing(platform string, pricing []ChannelModelPricing) 
 		out[i] = pricing[i].Clone()
 		out[i].ID = 0
 		out[i].ChannelID = 0
-		if strings.TrimSpace(out[i].Platform) == "" {
-			out[i].Platform = platform
+		// Group pricing is scoped by the owning group, and runtime matching does
+		// not consult the entry platform. Canonicalize it here so callers cannot
+		// partition overlapping patterns across fake platforms and bypass conflict
+		// detection.
+		out[i].Platform = platform
+		if !out[i].BillingMode.IsValid() {
+			return nil, infraerrors.New(http.StatusBadRequest, "INVALID_BILLING_MODE", "invalid group model pricing billing mode")
 		}
 		for j := range out[i].Models {
 			out[i].Models[j] = strings.TrimSpace(out[i].Models[j])
+			if out[i].Models[j] == "" {
+				return nil, infraerrors.New(http.StatusBadRequest, "GROUP_MODEL_PRICING_MODELS_REQUIRED", "group model pricing entry requires at least one model")
+			}
 		}
 		if len(out[i].Models) == 0 {
 			return nil, infraerrors.New(http.StatusBadRequest, "GROUP_MODEL_PRICING_MODELS_REQUIRED", "group model pricing entry requires at least one model")

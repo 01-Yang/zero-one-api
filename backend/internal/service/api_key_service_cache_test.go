@@ -456,20 +456,36 @@ func TestAPIKeyService_GetByKey_CacheMissStoresL2(t *testing.T) {
 
 func TestAPIKeyService_GetByKey_UsesL1Cache(t *testing.T) {
 	var calls int32
+	groupID := int64(9)
+	groupPrice := 0.08
 	cache := &authCacheStub{}
 	repo := &authRepoStub{
 		getByKeyForAuth: func(ctx context.Context, key string) (*APIKey, error) {
 			atomic.AddInt32(&calls, 1)
 			return &APIKey{
-				ID:     21,
-				UserID: 3,
-				Status: StatusActive,
+				ID:      21,
+				UserID:  3,
+				GroupID: &groupID,
+				Status:  StatusActive,
 				User: &User{
 					ID:          3,
 					Status:      StatusActive,
 					Role:        RoleUser,
 					Balance:     5,
 					Concurrency: 2,
+				},
+				Group: &Group{
+					ID:                        groupID,
+					Name:                      "priced",
+					Platform:                  PlatformGemini,
+					Status:                    StatusActive,
+					LongContextPricingEnabled: true,
+					ModelPricing: []ChannelModelPricing{{
+						Platform:        PlatformGemini,
+						Models:          []string{"gemini-image"},
+						BillingMode:     BillingModeImage,
+						PerRequestPrice: &groupPrice,
+					}},
 				},
 			}, nil
 		},
@@ -483,14 +499,20 @@ func TestAPIKeyService_GetByKey_UsesL1Cache(t *testing.T) {
 	svc := NewAPIKeyService(repo, nil, nil, nil, nil, cache, cfg)
 	require.NotNil(t, svc.authCacheL1)
 
-	_, err := svc.GetByKey(context.Background(), "k-l1")
+	first, err := svc.GetByKey(context.Background(), "k-l1")
 	require.NoError(t, err)
+	require.True(t, first.Group.LongContextPricingEnabled)
+	require.Len(t, first.Group.ModelPricing, 1)
+	require.InDelta(t, groupPrice, *first.Group.ModelPricing[0].PerRequestPrice, 1e-12)
 	svc.authCacheL1.Wait()
 	cacheKey := svc.authCacheKey("k-l1")
 	_, ok := svc.authCacheL1.Get(cacheKey)
 	require.True(t, ok)
-	_, err = svc.GetByKey(context.Background(), "k-l1")
+	second, err := svc.GetByKey(context.Background(), "k-l1")
 	require.NoError(t, err)
+	require.True(t, second.Group.LongContextPricingEnabled)
+	require.Len(t, second.Group.ModelPricing, 1)
+	require.InDelta(t, groupPrice, *second.Group.ModelPricing[0].PerRequestPrice, 1e-12)
 	require.Equal(t, int32(1), atomic.LoadInt32(&calls))
 }
 

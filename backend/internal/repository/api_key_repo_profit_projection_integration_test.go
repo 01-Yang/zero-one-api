@@ -10,6 +10,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -21,6 +22,7 @@ import (
 func TestGetByKeyForAuthCarriesProfitControlProjection(t *testing.T) {
 	ctx := context.Background()
 	suffix := time.Now().UnixNano()
+	groupInputPrice := 2.5e-6
 	group := mustCreateGroup(t, integrationEntClient, &service.Group{
 		Name:                 fmt.Sprintf("profit-proj-group-%d", suffix),
 		Platform:             service.PlatformOpenAI,
@@ -29,6 +31,21 @@ func TestGetByKeyForAuthCarriesProfitControlProjection(t *testing.T) {
 		ProfitMinMargin:      0.2,
 		ProfitSafetyBuffer:   0.05,
 	})
+	modelPricing := []service.ChannelModelPricing{{
+		Platform:    service.PlatformOpenAI,
+		Models:      []string{"gpt-5.4"},
+		BillingMode: service.BillingModeToken,
+		InputPrice:  &groupInputPrice,
+	}}
+	modelPricingJSON, err := json.Marshal(modelPricing)
+	require.NoError(t, err)
+	_, err = integrationDB.ExecContext(ctx, `
+UPDATE groups
+SET long_context_pricing_enabled = TRUE,
+    model_pricing = $2::jsonb
+WHERE id = $1
+`, group.ID, string(modelPricingJSON))
+	require.NoError(t, err)
 	user := mustCreateUser(t, integrationEntClient, &service.User{
 		Email: fmt.Sprintf("profit-proj-%d@example.com", suffix), Concurrency: 5,
 	})
@@ -57,4 +74,8 @@ func TestGetByKeyForAuthCarriesProfitControlProjection(t *testing.T) {
 	require.True(t, got.Group.ProfitControlEnabled, "profit_control_enabled 必须进入认证投影（投影漏列会让门静默失效）")
 	require.InDelta(t, 0.2, got.Group.ProfitMinMargin, 1e-9)
 	require.InDelta(t, 0.05, got.Group.ProfitSafetyBuffer, 1e-9)
+	require.True(t, got.Group.LongContextPricingEnabled, "long-context gate 必须进入认证投影")
+	require.Len(t, got.Group.ModelPricing, 1, "group model pricing 必须进入认证投影")
+	require.Equal(t, []string{"gpt-5.4"}, got.Group.ModelPricing[0].Models)
+	require.InDelta(t, groupInputPrice, *got.Group.ModelPricing[0].InputPrice, 1e-12)
 }

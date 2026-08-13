@@ -9,7 +9,7 @@
 `upstream`。`zero-one/brand` 是零一 API 产品分支；`origin/main`
 仅保留上游开发主线镜像，不作为产品发布基线。
 
-禁止修改 Go 业务逻辑、数据库结构、计费、鉴权、账号池、路由守卫和兑换码规则。允许的改动只有：独立 Public Site、Vue 全局主题与共享壳层、边缘代理和项目文档。
+默认边界禁止修改 Go 业务逻辑、数据库结构、计费、鉴权、账号池、路由守卫和兑换码规则；常规改动只有独立 Public Site、Vue 全局主题与共享壳层、边缘代理和项目文档。唯一例外是稳定 tag 中会阻断生产正确性的缺陷：必须有已合并的上游 PR/commit，或有可复现的本地根因；必须有回归测试、逐文件白名单和后续收敛计划；不得借此扩大产品范围。
 
 ## Runtime Architecture
 
@@ -44,7 +44,7 @@ The React app lives in `landing/`, uses Vite with base `/_landing/`, and is buil
 | Every other `api.01yapi.cc` request | Transparent Sub2API proxy |
 | `01yapi.com` and `www.01yapi.com` | 308 redirect to the primary host with URI retained |
 
-There are no new backend APIs or schemas. The Public Site reads the existing `GET /api/v1/settings/public` endpoint and falls back to compiled brand defaults when it is unavailable.
+The Zero One product overlay adds no new public product API. Stable upstream migrations and narrowly reviewed production-correctness backports may evolve the internal schema. The Public Site reads the existing `GET /api/v1/settings/public` endpoint and falls back to compiled brand defaults when it is unavailable.
 
 The Console keeps the server-provided site settings authoritative, but its compiled display fallback is also `零一 API` with the approved tagline. This prevents a settings timeout or first-paint race from exposing the upstream product name; it does not change the settings API or persistence behavior.
 
@@ -67,14 +67,17 @@ The proxy deliberately uses a catch-all rule. Sub2API exposes `/v1`, `/v1beta`, 
 5. Tag images with source revision and deploy by immutable digest. Do not deploy `latest`.
 6. Validate Compose and Caddy configuration before replacing running containers.
 
-上游同步只跟随 `Wei-Shaw/sub2api` 的正式稳定 tag，不直接合并
-`upstream/main` 或单独抽取未发布提交。更新时获取 `upstream` tags，从
+上游同步以 `Wei-Shaw/sub2api` 正式稳定 tag 为唯一 baseline，不直接合并
+`upstream/main`。只有符合上述生产正确性例外的已审核提交才可临时 cherry-pick，且不得将它伪装成 stable tag baseline。更新时获取 `upstream` tags，从
 `zero-one/brand` 创建 `codex/sync-sub2api-vX.Y.Z` 短期集成分支，
 合并新的稳定 tag，运行全部测试、构建和视觉验收后，再通过 PR
 合回 `zero-one/brand`。每次同步同时更新本节的 tag 与完整提交 SHA。
 主题改动保持集中，使新增上游页面继承设计系统，避免逐页分叉。
 
-The repository's dedicated Zero One CI job validates React, Vue, Go, Compose,
+`v0.1.176` 当前携带一组临时 production-correctness backport：官方已合并的 [PR #5573](https://github.com/Wei-Shaw/sub2api/pull/5573) 中的 Grok 长上下文与媒体模型计费修复，以及本地验证的分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复。后端权限仅限 `.github/upstream-baseline.json` 中列出的精确路径。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应后端白名单，不得将临时权限永久化。
+
+The repository's dedicated Zero One CI job validates React, Vue, Go unit and
+integration suites, Compose,
 the root Sub2API Docker build and the Caddy edge Docker build independently.
 It uses source-revision image tags as build artifacts only. The manual
 `Zero One Publish` workflow is the sole registry publisher: it accepts a full

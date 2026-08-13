@@ -371,19 +371,31 @@ func intervalToModelPricing(iv *PricingInterval, supportsCacheBreakdown bool, ch
 
 // GetRequestTierPrice 根据层级标签获取按次价格
 func (r *ModelPricingResolver) GetRequestTierPrice(resolved *ResolvedPricing, tierLabel string) float64 {
+	price, _ := r.getRequestTierPrice(resolved, tierLabel)
+	return price
+}
+
+// getRequestTierPrice preserves the distinction between an absent tier and an
+// explicitly configured zero price. The latter is a valid free-price override.
+func (r *ModelPricingResolver) getRequestTierPrice(resolved *ResolvedPricing, tierLabel string) (float64, bool) {
 	for _, tier := range resolved.RequestTiers {
 		if tier.TierLabel == tierLabel && tier.PerRequestPrice != nil {
-			return *tier.PerRequestPrice
+			return *tier.PerRequestPrice, true
 		}
 	}
-	return 0
+	return 0, false
 }
 
 // GetRequestTierPriceByContext 根据 context token 数获取按次价格
 func (r *ModelPricingResolver) GetRequestTierPriceByContext(resolved *ResolvedPricing, totalContextTokens int) float64 {
+	price, _ := r.getRequestTierPriceByContext(resolved, totalContextTokens)
+	return price
+}
+
+func (r *ModelPricingResolver) getRequestTierPriceByContext(resolved *ResolvedPricing, totalContextTokens int) (float64, bool) {
 	iv := FindMatchingInterval(resolved.RequestTiers, totalContextTokens)
 	if iv != nil && iv.PerRequestPrice != nil {
-		return *iv.PerRequestPrice
+		return *iv.PerRequestPrice, true
 	}
-	return 0
+	return 0, false
 }

@@ -2,7 +2,7 @@
 
 package repository
 
-// migration 193 回归：groups 触发器的 durable 失效监视清单必须覆盖利润控制
+// migrations 193/222 回归：groups 触发器的 durable 失效监视清单必须覆盖计费字段
 // 配置及 D 依赖的分组计价字段（正常后台保存走 InvalidateAuthCacheByGroupID 即时失效，触发器兜底
 // 直改 SQL / 更新与失效之间崩溃等 out-of-band 场景）。
 
@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAuthCacheInvalidationTrigger_ProfitControlColumns(t *testing.T) {
+func TestAuthCacheInvalidationTrigger_BillingColumns(t *testing.T) {
 	ctx := context.Background()
 	suffix := time.Now().UnixNano()
 	group := mustCreateGroup(t, integrationEntClient, &service.Group{
@@ -80,13 +80,15 @@ func TestAuthCacheInvalidationTrigger_ProfitControlColumns(t *testing.T) {
 	require.Zero(t, count(), "利润字段无实际变化的 UPDATE 不得入队")
 
 	for name, update := range map[string]string{
-		"platform":             "platform = 'anthropic'",
-		"subscription_type":    "subscription_type = 'subscription'",
-		"rate_multiplier":      "rate_multiplier = 0.9",
-		"peak_rate_enabled":    "peak_rate_enabled = true",
-		"peak_start":           "peak_start = '08:00'",
-		"peak_end":             "peak_end = '09:00'",
-		"peak_rate_multiplier": "peak_rate_multiplier = 1.2",
+		"platform":                     "platform = 'anthropic'",
+		"subscription_type":            "subscription_type = 'subscription'",
+		"rate_multiplier":              "rate_multiplier = 0.9",
+		"peak_rate_enabled":            "peak_rate_enabled = true",
+		"peak_start":                   "peak_start = '08:00'",
+		"peak_end":                     "peak_end = '09:00'",
+		"peak_rate_multiplier":         "peak_rate_multiplier = 1.2",
+		"long_context_pricing_enabled": "long_context_pricing_enabled = NOT long_context_pricing_enabled",
+		"model_pricing":                `model_pricing = '[{"platform":"openai","models":["gpt-5.4"],"billing_mode":"token"}]'::jsonb`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			clear()
