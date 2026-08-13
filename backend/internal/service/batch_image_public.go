@@ -618,11 +618,18 @@ func (s *BatchImagePublicService) ListModels(ctx context.Context, owner BatchIma
 	if !s.enabled() {
 		return nil, ErrBatchImageDisabled
 	}
-	if s.Pricing == nil {
-		return nil, ErrBatchImageSettlementPricingMissing
-	}
 	if err := s.ensureGroupAllowsBatchImage(ctx, owner.GroupID); err != nil {
 		return nil, err
+	}
+	var pricingGroup *Group
+	if owner.GroupID != nil && *owner.GroupID > 0 {
+		var err error
+		pricingGroup, err = s.GroupRepo.GetByIDLite(ctx, *owner.GroupID)
+		if err != nil || pricingGroup == nil {
+			return nil, ErrBatchImageSettlementPricingMissing
+		}
+	} else if s.Pricing == nil {
+		return nil, ErrBatchImageSettlementPricingMissing
 	}
 
 	modelsByProvider := make(map[string]map[string]struct{})
@@ -641,8 +648,19 @@ func (s *BatchImagePublicService) ListModels(ctx context.Context, owner BatchIma
 				continue
 			}
 			for _, model := range batchImageModelsFromAccountMapping(&account) {
-				if _, err := s.Pricing.BatchImageUnitPrice(ctx, &BatchImageJob{Provider: providerName, Model: model}); err != nil {
-					continue
+				_, groupConfigured := batchImageGroupModelUnitPrice(pricingGroup, model, s.defaultImageSize())
+				if !groupConfigured && pricingGroup != nil {
+					if legacy := pricingGroup.GetImagePrice(s.defaultImageSize()); legacy != nil && *legacy >= 0 {
+						groupConfigured = true
+					}
+				}
+				if !groupConfigured {
+					if s.Pricing == nil {
+						continue
+					}
+					if _, err := s.Pricing.BatchImageUnitPrice(ctx, &BatchImageJob{Provider: providerName, Model: model}); err != nil {
+						continue
+					}
 				}
 				if !account.IsModelSupported(model) {
 					continue
@@ -1040,7 +1058,9 @@ func (s *BatchImagePublicService) resolvePricingSnapshot(ctx context.Context, ow
 		if group.BatchImageHoldMultiplier >= 0 {
 			holdMultiplier = group.BatchImageHoldMultiplier
 		}
-		if configuredUnit := group.GetImagePrice(req.ImageSize); configuredUnit != nil && *configuredUnit >= 0 {
+		if configuredUnit, configured := batchImageGroupModelUnitPrice(group, req.Model, req.ImageSize); configured {
+			unit = configuredUnit
+		} else if configuredUnit := group.GetImagePrice(req.ImageSize); configuredUnit != nil && *configuredUnit >= 0 {
 			unit = *configuredUnit
 		}
 	}
@@ -1085,6 +1105,24 @@ func (s *BatchImagePublicService) resolvePricingSnapshot(ctx context.Context, ow
 		EstimatedCost:           billableUnitPrice * float64(len(req.Items)),
 		HoldAmount:              holdUnitPrice * float64(len(req.Items)),
 	}, nil
+}
+
+// batchImageGroupModelUnitPrice applies the same group-card precedence used by
+// synchronous image billing. Batch jobs freeze this value at submission time,
+// so the group card must be resolved before legacy group and global prices.
+func batchImageGroupModelUnitPrice(group *Group, model, imageSize string) (float64, bool) {
+	pricing := matchGroupModelPricing(group, model)
+	if pricing == nil || (pricing.BillingMode != BillingModeImage && pricing.BillingMode != BillingModePerRequest) {
+		return 0, false
+	}
+	tier := pricing.GetTierByLabel(NormalizeImageBillingTierOrDefault(imageSize))
+	if tier != nil && tier.PerRequestPrice != nil && *tier.PerRequestPrice >= 0 {
+		return *tier.PerRequestPrice, true
+	}
+	if pricing.PerRequestPrice != nil && *pricing.PerRequestPrice >= 0 {
+		return *pricing.PerRequestPrice, true
+	}
+	return 0, false
 }
 
 func (s *BatchImagePublicService) enabled() bool {

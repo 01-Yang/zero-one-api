@@ -132,6 +132,44 @@ func TestBatchImagePublicService_Submit(t *testing.T) {
 		require.InDelta(t, 0.1608, *job.HoldAmount, 1e-12)
 	})
 
+	t.Run("group model pricing overrides legacy image and fallback prices", func(t *testing.T) {
+		svc, repo, _, _, _ := newTestBatchImagePublicService(true)
+		groupID := int64(7)
+		legacyPrice := 0.134
+		groupModelPrice := 0.08
+		svc.GroupRepo = &publicBatchImageGroupRepo{groups: map[int64]*Group{
+			groupID: {
+				ID:                           groupID,
+				Platform:                     PlatformGemini,
+				RateMultiplier:               1,
+				AllowImageGeneration:         true,
+				AllowBatchImageGeneration:    true,
+				ImagePrice1K:                 &legacyPrice,
+				BatchImageDiscountMultiplier: 0.5,
+				BatchImageHoldMultiplier:     0.6,
+				ModelPricing: []ChannelModelPricing{{
+					Platform:    PlatformGemini,
+					Models:      []string{"gemini-2.5-flash-image"},
+					BillingMode: BillingModeImage,
+					Intervals: []PricingInterval{{
+						TierLabel:       "1K",
+						PerRequestPrice: &groupModelPrice,
+					}},
+				}},
+			},
+		}}
+
+		got, err := svc.Submit(ctx, BatchImageOwner{UserID: 11, APIKeyID: 22, GroupID: &groupID}, validBatchImageSubmitRequest(), "")
+		require.NoError(t, err)
+		require.InDelta(t, 0.08, got.EstimatedCost, 1e-12)
+
+		job := repo.jobs[got.ID]
+		require.InDelta(t, 0.08, job.BaseUnitPrice, 1e-12)
+		require.InDelta(t, 0.04, job.BillableUnitPrice, 1e-12)
+		require.InDelta(t, 0.048, job.HoldUnitPrice, 1e-12)
+		require.InDelta(t, 0.096, *job.HoldAmount, 1e-12)
+	})
+
 	t.Run("pricing missing rejects before provider submit", func(t *testing.T) {
 		svc, repo, queue, gemini, _ := newTestBatchImagePublicService(true)
 		svc.Pricing = &fakeBatchImagePricingResolver{err: ErrBatchImageSettlementPricingMissing}
@@ -552,6 +590,71 @@ func TestBatchImagePublicService_ListModels(t *testing.T) {
 		require.NotContains(t, ids, "gemini-3.1-flash-lite-image")
 	})
 
+	t.Run("group model pricing makes an otherwise unpriced model available", func(t *testing.T) {
+		svc, _, _, _, _ := newTestBatchImagePublicService(true)
+		groupID := int64(7)
+		groupModelPrice := 0.08
+		svc.GroupRepo = &publicBatchImageGroupRepo{groups: map[int64]*Group{
+			groupID: {
+				ID:                        groupID,
+				Platform:                  PlatformGemini,
+				AllowImageGeneration:      true,
+				AllowBatchImageGeneration: true,
+				ModelPricing: []ChannelModelPricing{{
+					Platform:        PlatformGemini,
+					Models:          []string{"gemini-3.1-flash-lite-image"},
+					BillingMode:     BillingModeImage,
+					PerRequestPrice: &groupModelPrice,
+				}},
+			},
+		}}
+		svc.Pricing = &fakeBatchImagePricingResolver{
+			unitPrice:     0.25,
+			missingModels: map[string]bool{"gemini-3.1-flash-lite-image": true},
+		}
+		accountRepo := svc.AccountRepo.(*publicBatchImageAccountRepo)
+		accountRepo.accounts = []Account{testBatchImageMappedAccount(303, AccountTypeAPIKey, map[string]any{
+			"gemini-3.1-flash-lite-image": "gemini-3.1-flash-lite-image",
+		})}
+
+		got, err := svc.ListModels(ctx, BatchImageOwner{UserID: 11, APIKeyID: 22, GroupID: &groupID})
+		require.NoError(t, err)
+		ids := make([]string, 0, len(got.Data))
+		for _, model := range got.Data {
+			ids = append(ids, model.ID)
+		}
+		require.Contains(t, ids, "gemini-3.1-flash-lite-image")
+	})
+
+	t.Run("group-only pricing does not require the fallback resolver", func(t *testing.T) {
+		svc, _, _, _, _ := newTestBatchImagePublicService(true)
+		groupID := int64(7)
+		price := 0.08
+		svc.GroupRepo = &publicBatchImageGroupRepo{groups: map[int64]*Group{
+			groupID: {
+				ID:                        groupID,
+				Platform:                  PlatformGemini,
+				AllowBatchImageGeneration: true,
+				ModelPricing: []ChannelModelPricing{{
+					Platform:        PlatformGemini,
+					Models:          []string{"gemini-2.5-flash-image"},
+					BillingMode:     BillingModeImage,
+					PerRequestPrice: &price,
+				}},
+			},
+		}}
+		svc.Pricing = nil
+		accountRepo := svc.AccountRepo.(*publicBatchImageAccountRepo)
+		accountRepo.accounts = []Account{testBatchImageMappedAccount(303, AccountTypeAPIKey, map[string]any{
+			"gemini-2.5-flash-image": "gemini-2.5-flash-image",
+		})}
+
+		got, err := svc.ListModels(ctx, BatchImageOwner{UserID: 11, APIKeyID: 22, GroupID: &groupID})
+
+		require.NoError(t, err)
+		require.NotEmpty(t, got.Data)
+	})
+
 	t.Run("rejects when group disables batch image", func(t *testing.T) {
 		svc, _, _, _, _ := newTestBatchImagePublicService(true)
 		groupID := int64(7)
@@ -562,6 +665,42 @@ func TestBatchImagePublicService_ListModels(t *testing.T) {
 		_, err := svc.ListModels(ctx, BatchImageOwner{UserID: 11, APIKeyID: 22, GroupID: &groupID})
 		require.ErrorIs(t, err, ErrBatchImageGroupDisabled)
 	})
+}
+
+func TestBatchImageGroupModelUnitPrice_ExplicitZeroIsConfigured(t *testing.T) {
+	free := 0.0
+	group := &Group{ModelPricing: []ChannelModelPricing{{
+		Platform:    PlatformGemini,
+		Models:      []string{"gemini-2.5-flash-image"},
+		BillingMode: BillingModeImage,
+		Intervals: []PricingInterval{{
+			TierLabel:       "1K",
+			PerRequestPrice: &free,
+		}},
+	}}}
+
+	price, configured := batchImageGroupModelUnitPrice(group, "gemini-2.5-flash-image", "1k")
+
+	require.True(t, configured)
+	require.Zero(t, price)
+}
+
+func TestBatchImageGroupModelUnitPrice_DefaultAndUnsupportedMode(t *testing.T) {
+	defaultPrice := 0.07
+	group := &Group{ModelPricing: []ChannelModelPricing{{
+		Platform:        PlatformGemini,
+		Models:          []string{"gemini-*"},
+		BillingMode:     BillingModePerRequest,
+		PerRequestPrice: &defaultPrice,
+	}}}
+
+	price, configured := batchImageGroupModelUnitPrice(group, "gemini-2.5-flash-image", "1K")
+	require.True(t, configured)
+	require.InDelta(t, defaultPrice, price, 1e-12)
+
+	group.ModelPricing[0].BillingMode = BillingModeToken
+	_, configured = batchImageGroupModelUnitPrice(group, "gemini-2.5-flash-image", "1K")
+	require.False(t, configured)
 }
 
 func TestBatchImagePublicService_StatusItemsAndCancel(t *testing.T) {

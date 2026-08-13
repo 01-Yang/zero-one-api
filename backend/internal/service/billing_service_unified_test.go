@@ -251,6 +251,52 @@ func TestCalculateCostUnified_UsesPreResolvedPricing(t *testing.T) {
 	require.Equal(t, string(BillingModePerRequest), cost.BillingMode)
 }
 
+func TestCalculateCostUnified_ExplicitZeroRequestTierDoesNotFallBack(t *testing.T) {
+	bs := newTestBillingService()
+	resolver := NewModelPricingResolver(nil, bs)
+	free := 0.0
+	maxTokens := 200000
+
+	for _, tc := range []struct {
+		name     string
+		sizeTier string
+		tokens   UsageTokens
+		tier     PricingInterval
+	}{
+		{
+			name:     "image size tier",
+			sizeTier: "1K",
+			tier:     PricingInterval{TierLabel: "1K", PerRequestPrice: &free},
+		},
+		{
+			name:   "context tier",
+			tokens: UsageTokens{InputTokens: 1000},
+			tier:   PricingInterval{MinTokens: 0, MaxTokens: &maxTokens, PerRequestPrice: &free},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cost, err := bs.CalculateCostUnified(CostInput{
+				Ctx:            context.Background(),
+				Model:          "explicit-free",
+				Tokens:         tc.tokens,
+				RequestCount:   2,
+				SizeTier:       tc.sizeTier,
+				RateMultiplier: 1,
+				Resolver:       resolver,
+				Resolved: &ResolvedPricing{
+					Mode:                   BillingModePerRequest,
+					DefaultPerRequestPrice: 0.25,
+					RequestTiers:           []PricingInterval{tc.tier},
+				},
+			})
+
+			require.NoError(t, err)
+			require.Zero(t, cost.TotalCost)
+			require.Zero(t, cost.ActualCost)
+		})
+	}
+}
+
 // ---------------------------------------------------------------------------
 // helpers
 // ---------------------------------------------------------------------------

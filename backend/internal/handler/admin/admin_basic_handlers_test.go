@@ -266,6 +266,41 @@ func TestGroupHandlerEndpoints(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 }
 
+func TestGroupHandlerCreateDefaultsLongContextPricingEnabled(t *testing.T) {
+	router, adminSvc := setupAdminRouter()
+
+	post := func(body map[string]any) *httptest.ResponseRecorder {
+		payload, err := json.Marshal(body)
+		require.NoError(t, err)
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/admin/groups", bytes.NewReader(payload))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(rec, req)
+		return rec
+	}
+
+	rec := post(map[string]any{
+		"name":              "legacy-client-default",
+		"platform":          "openai",
+		"subscription_type": "standard",
+	})
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.NotNil(t, adminSvc.lastCreateGroupInput)
+	require.True(t, adminSvc.lastCreateGroupInput.LongContextPricingEnabled,
+		"omitting the new field must preserve the pre-v0.1.176 long-context billing behavior")
+
+	rec = post(map[string]any{
+		"name":                         "explicitly-disabled",
+		"platform":                     "openai",
+		"subscription_type":            "standard",
+		"long_context_pricing_enabled": false,
+	})
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.NotNil(t, adminSvc.lastCreateGroupInput)
+	require.False(t, adminSvc.lastCreateGroupInput.LongContextPricingEnabled,
+		"an explicit false remains a supported administrator choice")
+}
+
 func TestProxyHandlerEndpoints(t *testing.T) {
 	router, _ := setupAdminRouter()
 

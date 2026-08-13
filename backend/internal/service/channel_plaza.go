@@ -55,8 +55,8 @@ type PlazaGroup struct {
 // 平台隔离），仅把顶层从渠道换成分组：
 //   - 渠道按 lower(name) 排序后遍历，保证同名模型去重结果确定；
 //   - 同分组同名模型「先见者胜」，仅当已存条目无定价而新条目有定价时升级替换；
-//   - 图片计费模型的档位价按实收口径合成（分组图片价 > 渠道档位价 > 渠道默认按次价，
-//     见 plazaImageDisplayPricing）；
+//   - 展示定价与实收解析链一致：分组模型价卡 > 旧分组图片价 > 渠道价；
+//     关闭长上下文时渠道 token 阶梯只展示最低档；
 //   - 每个模型附带 LiteLLM 官方参考价（查不到为 nil）；
 //   - 只返回 Models 非空的分组；分组按 RateMultiplier 升序（同倍率按名称），
 //     组内模型按名称排序。
@@ -134,7 +134,8 @@ func (s *ChannelService) ListPlazaGroups(ctx context.Context) ([]PlazaGroup, err
 				} else if m.Platform != pg.Platform {
 					continue
 				}
-				pricing := plazaImageDisplayPricing(m.Pricing, groupEnt[gid])
+				group := groupEnt[gid]
+				pricing := plazaGroupDisplayPricing(m.Pricing, group, m.Name)
 				key := modelKey{platform: m.Platform, name: m.Name}
 				if at, seen := idx[key]; seen {
 					// 先见者胜；仅当已存条目无定价而新条目有定价时升级。
@@ -179,6 +180,48 @@ func (s *ChannelService) ListPlazaGroups(ctx context.Context) ([]PlazaGroup, err
 		return out[i].Name < out[j].Name
 	})
 	return out, nil
+}
+
+// plazaGroupDisplayPricing projects the same effective custom pricing shape
+// that ModelPricingResolver uses at billing time. Official fallback prices are
+// still returned separately by the plaza API.
+func plazaGroupDisplayPricing(channelPricing *ChannelModelPricing, group *Group, model string) *ChannelModelPricing {
+	if groupPricing := matchGroupModelPricing(group, model); groupPricing != nil {
+		if groupPricing.BillingMode == "" || groupPricing.BillingMode == BillingModeToken {
+			// Group token-card intervals are deliberately ignored by the runtime;
+			// official long-context ladders are gated by the group toggle instead.
+			groupPricing.Intervals = nil
+		}
+		return groupPricing
+	}
+
+	pricing := plazaImageDisplayPricing(channelPricing, group)
+	if pricing == nil || group == nil || group.LongContextPricingEnabled ||
+		(pricing.BillingMode != "" && pricing.BillingMode != BillingModeToken) || len(pricing.Intervals) == 0 {
+		return pricing
+	}
+
+	first := pricing.Intervals[0]
+	for _, interval := range pricing.Intervals[1:] {
+		if interval.MinTokens < first.MinTokens {
+			first = interval
+		}
+	}
+	clone := pricing.Clone()
+	clone.Intervals = nil
+	clone.InputPrice = plazaEffectiveIntervalPrice(first.InputPrice)
+	clone.OutputPrice = plazaEffectiveIntervalPrice(first.OutputPrice)
+	clone.CacheWritePrice = plazaEffectiveIntervalPrice(first.CacheWritePrice)
+	clone.CacheReadPrice = plazaEffectiveIntervalPrice(first.CacheReadPrice)
+	return &clone
+}
+
+func plazaEffectiveIntervalPrice(price *float64) *float64 {
+	value := 0.0
+	if price != nil {
+		value = *price
+	}
+	return &value
 }
 
 // plazaImageDisplayPricing 为图片计费模型合成展示定价，使档位价与实收口径一致：

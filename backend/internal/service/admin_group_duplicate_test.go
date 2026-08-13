@@ -49,6 +49,7 @@ func cloneGroupForDuplicateTest(group *Group) *Group {
 	cloned.DailyLimitUSD = cloneGroupValuePointer(group.DailyLimitUSD)
 	cloned.WeeklyLimitUSD = cloneGroupValuePointer(group.WeeklyLimitUSD)
 	cloned.MonthlyLimitUSD = cloneGroupValuePointer(group.MonthlyLimitUSD)
+	cloned.ModelPricing = cloneGroupModelPricing(group.ModelPricing)
 	cloned.ImagePrice1K = cloneGroupValuePointer(group.ImagePrice1K)
 	cloned.ImagePrice2K = cloneGroupValuePointer(group.ImagePrice2K)
 	cloned.ImagePrice4K = cloneGroupValuePointer(group.ImagePrice4K)
@@ -121,22 +122,32 @@ func groupDuplicateTestPointer[T any](value T) *T { return &value }
 func TestDuplicateGroupCopiesConfigurationDeeplyAndResetsRuntimeState(t *testing.T) {
 	createdAt := time.Date(2026, time.July, 1, 2, 3, 4, 0, time.UTC)
 	source := &Group{
-		ID:                           41,
-		Name:                         "高级订阅",
-		Description:                  "configuration",
-		Platform:                     PlatformOpenAI,
-		RateMultiplier:               1.75,
-		PeakRateEnabled:              true,
-		PeakStart:                    "09:00",
-		PeakEnd:                      "18:00",
-		PeakRateMultiplier:           1.2,
-		IsExclusive:                  true,
-		Status:                       StatusActive,
-		Hydrated:                     true,
-		SubscriptionType:             SubscriptionTypeSubscription,
-		DailyLimitUSD:                groupDuplicateTestPointer(11.0),
-		WeeklyLimitUSD:               groupDuplicateTestPointer(22.0),
-		MonthlyLimitUSD:              groupDuplicateTestPointer(33.0),
+		ID:                        41,
+		Name:                      "高级订阅",
+		Description:               "configuration",
+		Platform:                  PlatformOpenAI,
+		RateMultiplier:            1.75,
+		PeakRateEnabled:           true,
+		PeakStart:                 "09:00",
+		PeakEnd:                   "18:00",
+		PeakRateMultiplier:        1.2,
+		IsExclusive:               true,
+		Status:                    StatusActive,
+		Hydrated:                  true,
+		SubscriptionType:          SubscriptionTypeSubscription,
+		DailyLimitUSD:             groupDuplicateTestPointer(11.0),
+		WeeklyLimitUSD:            groupDuplicateTestPointer(22.0),
+		MonthlyLimitUSD:           groupDuplicateTestPointer(33.0),
+		LongContextPricingEnabled: true,
+		ModelPricing: []ChannelModelPricing{{
+			Platform:    PlatformOpenAI,
+			Models:      []string{"gpt-5.4"},
+			BillingMode: BillingModeToken,
+			Intervals: []PricingInterval{{
+				MinTokens: 200_000,
+				TierLabel: "long-context",
+			}},
+		}},
 		DefaultValidityDays:          91,
 		AllowImageGeneration:         true,
 		AllowBatchImageGeneration:    true,
@@ -205,6 +216,8 @@ func TestDuplicateGroupCopiesConfigurationDeeplyAndResetsRuntimeState(t *testing
 	require.Equal(t, source.Platform, duplicate.Platform)
 	require.Equal(t, source.RateMultiplier, duplicate.RateMultiplier)
 	require.Equal(t, source.PeakRateMultiplier, duplicate.PeakRateMultiplier)
+	require.Equal(t, source.LongContextPricingEnabled, duplicate.LongContextPricingEnabled)
+	require.Equal(t, source.ModelPricing, duplicate.ModelPricing)
 	require.Equal(t, source.DefaultValidityDays, duplicate.DefaultValidityDays)
 	require.Equal(t, source.ImagePrice4K, duplicate.ImagePrice4K)
 	require.Equal(t, source.VideoModelPrices, duplicate.VideoModelPrices)
@@ -231,8 +244,12 @@ func TestDuplicateGroupCopiesConfigurationDeeplyAndResetsRuntimeState(t *testing
 	duplicate.MessagesDispatchModelConfig.ExactModelMappings["claude-special"] = "changed"
 	duplicate.ModelsListConfig.Models[0] = "changed"
 	duplicate.ReasoningEffortMappings[0].To = "changed"
+	duplicate.ModelPricing[0].Models[0] = "changed"
+	duplicate.ModelPricing[0].Intervals[0].TierLabel = "changed"
 	*duplicate.DailyLimitUSD = 999
 	require.Equal(t, int64(13), source.ModelRouting["gpt-*"][0])
+	require.Equal(t, "gpt-5.4", source.ModelPricing[0].Models[0])
+	require.Equal(t, "long-context", source.ModelPricing[0].Intervals[0].TierLabel)
 	require.Equal(t, 0.14, source.VideoModelPrices[VideoPriceFamilyGrokImagineVideo15][VideoBillingResolution720P])
 	require.Equal(t, "claude", source.SupportedModelScopes[0])
 	require.Equal(t, "gpt-special", source.MessagesDispatchModelConfig.ExactModelMappings["claude-special"])

@@ -152,6 +152,10 @@ Rollback uses the previous image digests without rolling back the database unles
 
 ## Required Smoke Tests
 
+- For releases based on v0.1.176, confirm `schema_migrations` contains both `221_group_model_pricing.sql` and `222_group_pricing_auth_cache_invalidation.sql`; verify `groups.long_context_pricing_enabled` is non-null with default `true`, `groups.model_pricing` is nullable `jsonb`, and the group auth-cache trigger function compares both columns.
+- Exercise one dedicated probe API Key after deploy, then verify its hashed Redis `apikey:auth:` entry reports snapshot `version: 20` and carries `long_context_pricing_enabled` plus `model_pricing`. Never print or store the raw API Key or the complete cache document.
+- Confirm an omitted `long_context_pricing_enabled` field on a disposable admin group create defaults to `true`, while an explicit `false` remains false; delete the disposable group afterward.
+- For any enabled group-level model card, compare the configured price with one low-cost usage record. Include a long-context boundary check and, when Batch Image or Model Plaza is enabled, verify group-card precedence and an explicit zero-price tier without using a production customer key.
 - `GET https://api.01yapi.com/` returns the React page; `POST /v1/messages` reaches API authentication rather than HTML.
 - The public-settings release gate passes, and `/admin/settings` shows `frontend_url=https://app.01yapi.com`.
 - `GET` and `HEAD https://app.01yapi.com/` return a non-cacheable `307` to `https://api.01yapi.com/`; `POST /` and `GET /login` still reach Vue/Sub2API, and administrator and User redirects remain role-correct.

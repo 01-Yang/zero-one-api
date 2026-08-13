@@ -14,7 +14,49 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-const apiKeyAuthSnapshotVersion = 19 // v19: group search/audio/video_model_prices billing fields (force refresh of pre-fix snapshots)
+const apiKeyAuthSnapshotVersion = 20 // v20: group long-context toggle and per-model pricing (force refresh of v19 snapshots)
+
+func cloneAPIKeyAuthModelPricing(pricing []ChannelModelPricing) []ChannelModelPricing {
+	if pricing == nil {
+		return nil
+	}
+	cloned := make([]ChannelModelPricing, len(pricing))
+	for i := range pricing {
+		cloned[i] = pricing[i].Clone()
+		cloned[i].InputPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].InputPrice)
+		cloned[i].OutputPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].OutputPrice)
+		cloned[i].CacheWritePrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].CacheWritePrice)
+		cloned[i].CacheReadPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].CacheReadPrice)
+		cloned[i].ImageInputPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].ImageInputPrice)
+		cloned[i].ImageOutputPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].ImageOutputPrice)
+		cloned[i].PerRequestPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].PerRequestPrice)
+		for j := range pricing[i].Intervals {
+			cloned[i].Intervals[j].MaxTokens = cloneAPIKeyAuthIntPtr(pricing[i].Intervals[j].MaxTokens)
+			cloned[i].Intervals[j].InputPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].Intervals[j].InputPrice)
+			cloned[i].Intervals[j].OutputPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].Intervals[j].OutputPrice)
+			cloned[i].Intervals[j].CacheWritePrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].Intervals[j].CacheWritePrice)
+			cloned[i].Intervals[j].CacheReadPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].Intervals[j].CacheReadPrice)
+			cloned[i].Intervals[j].PerRequestPrice = cloneAPIKeyAuthFloat64Ptr(pricing[i].Intervals[j].PerRequestPrice)
+		}
+	}
+	return cloned
+}
+
+func cloneAPIKeyAuthFloat64Ptr(value *float64) *float64 {
+	if value == nil {
+		return nil
+	}
+	cloned := *value
+	return &cloned
+}
+
+func cloneAPIKeyAuthIntPtr(value *int) *int {
+	if value == nil {
+		return nil
+	}
+	cloned := *value
+	return &cloned
+}
 
 type apiKeyAuthCacheConfig struct {
 	l1Size        int
@@ -406,6 +448,8 @@ func (s *APIKeyService) snapshotFromAPIKey(ctx context.Context, apiKey *APIKey) 
 			AudioRealtimePricePerMin:        apiKey.Group.AudioRealtimePricePerMin,
 			AudioTTSPricePerMillionChars:    apiKey.Group.AudioTTSPricePerMillionChars,
 			AudioSTTPricePerHour:            apiKey.Group.AudioSTTPricePerHour,
+			LongContextPricingEnabled:       apiKey.Group.LongContextPricingEnabled,
+			ModelPricing:                    cloneAPIKeyAuthModelPricing(apiKey.Group.ModelPricing),
 			ClaudeCodeOnly:                  apiKey.Group.ClaudeCodeOnly,
 			FallbackGroupID:                 apiKey.Group.FallbackGroupID,
 			FallbackGroupIDOnInvalidRequest: apiKey.Group.FallbackGroupIDOnInvalidRequest,
@@ -501,6 +545,8 @@ func (s *APIKeyService) snapshotToAPIKey(key string, snapshot *APIKeyAuthSnapsho
 			AudioRealtimePricePerMin:        snapshot.Group.AudioRealtimePricePerMin,
 			AudioTTSPricePerMillionChars:    snapshot.Group.AudioTTSPricePerMillionChars,
 			AudioSTTPricePerHour:            snapshot.Group.AudioSTTPricePerHour,
+			LongContextPricingEnabled:       snapshot.Group.LongContextPricingEnabled,
+			ModelPricing:                    cloneAPIKeyAuthModelPricing(snapshot.Group.ModelPricing),
 			ClaudeCodeOnly:                  snapshot.Group.ClaudeCodeOnly,
 			FallbackGroupID:                 snapshot.Group.FallbackGroupID,
 			FallbackGroupIDOnInvalidRequest: snapshot.Group.FallbackGroupIDOnInvalidRequest,
