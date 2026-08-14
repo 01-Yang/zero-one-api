@@ -84,6 +84,39 @@ The Compose overlay caps each container's Docker JSON logs at five 100 MB files.
 Monitor both Docker storage and application data volumes; rotation limits disk
 growth but does not replace centralized logs when longer retention is required.
 
+### SuperAPI direct-tunnel rollout
+
+`sub2api` resolves the stable name `superapi-direct` through Docker's
+`host-gateway` mapping. A host-local SuperAPI tunnel on port `18181` must be
+configured in Provider Accounts as `http://superapi-direct:18181` with no
+account proxy. Never pin a Docker bridge IP in the database: its subnet is an
+implementation detail and can change after Compose network recreation.
+
+Verify the tunnel from inside the production container before editing an
+account. This request carries no Provider credential:
+
+```bash
+docker compose --env-file deploy/zero-one/.env -f deploy/zero-one/compose.yml \
+  exec -T sub2api wget -qO- -T 5 http://superapi-direct:18181/health
+```
+
+For a safe canary, duplicate the target Provider Account, leave the duplicate
+unschedulable, change only its Base URL, and run three same-model connectivity
+tests. Delete the duplicate after the test. Then change one production account
+and observe at least 50 comparable native `/v1/responses` requests before
+moving another account. Compare the same model, reasoning effort and time
+window; use these initial acceptance thresholds unless a newer incident
+baseline is recorded:
+
+- TTFT P50 at most 12 seconds and P90 at most 25 seconds.
+- Provider-owned `/v1/responses` 5xx attempt rate at most 2 percent.
+
+Record the previous Base URL as the per-account rollback value. If either
+threshold regresses, restore that value immediately and keep the remaining
+accounts on their current route while investigating the upstream credential
+pool. A passing `/health` check proves reachability only; it does not replace
+the canary model calls or usage-log comparison.
+
 ## Backup And Recovery
 
 - Run an encrypted PostgreSQL logical backup every day and retain 7 daily plus 4 weekly copies outside the server.

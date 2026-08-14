@@ -101,12 +101,15 @@ jobs:
         run: |
           sh -n deploy/zero-one/backup-postgres.sh
           sh -n deploy/zero-one/restore-drill.sh
+          sh -n deploy/zero-one/test-direct-upstream.sh
           sh -n deploy/zero-one/test-live-routing.sh
           sh -n deploy/zero-one/test-routing.sh
           node --check deploy/zero-one/test-upstream.mjs
           node --check deploy/zero-one/verify-public-settings.mjs
       - name: Verify Caddy routing contract
         run: sh deploy/zero-one/test-routing.sh
+      - name: Verify direct-upstream contract
+        run: sh deploy/zero-one/test-direct-upstream.sh
       - name: Verify public-settings release gate
         run: |
           printf '%s' '{"code":0,"data":{"site_name":"零一 API","site_subtitle":"从零到一，连接每一次模型调用。","api_base_url":"https://api.01yapi.com","registration_enabled":true,"payment_enabled":false,"promo_code_enabled":false,"invitation_code_enabled":false}}' \
@@ -120,6 +123,7 @@ jobs:
         run: |
           docker compose --env-file deploy/zero-one/.env.example -f deploy/zero-one/compose.yml config -q
           docker compose --env-file deploy/zero-one/.env.example -f deploy/zero-one/compose.yml -f deploy/zero-one/compose.bootstrap.yml config -q
+          test "$(docker compose --env-file deploy/zero-one/.env.example -f deploy/zero-one/compose.yml config --format json | jq -r '.services.sub2api.extra_hosts["superapi-direct"]')" = 'host-gateway'
           test "$(docker compose --env-file deploy/zero-one/.env.example -f deploy/zero-one/compose.yml -f deploy/zero-one/compose.bootstrap.yml config --format json | jq -r '.services.sub2api.ports[0].host_ip + ":" + (.services.sub2api.ports[0].published | tostring)')" = '127.0.0.1:18080'
       - name: Build source-revision Sub2API image
         run: docker build --file Dockerfile --tag zero-one-sub2api:sha-${{ github.sha }} .

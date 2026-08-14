@@ -58,10 +58,35 @@ settings, backup, monitoring, recovery and smoke-test procedure is in
 [`../../docs/OPERATIONS.md`](../../docs/OPERATIONS.md).
 
 The static repository check is available locally without Docker as
-`sh deploy/zero-one/test-routing.sh`. When Docker is available, run
+`sh deploy/zero-one/test-routing.sh` and
+`sh deploy/zero-one/test-direct-upstream.sh`. When Docker is available, run
 `sh deploy/zero-one/test-live-routing.sh IMAGE` against a built edge image.
 CI validates the rendered Caddy configuration and runs that live contract
 against a disposable upstream service.
+
+## Host-local SuperAPI direct tunnel
+
+The production overlay maps the stable name `superapi-direct` to Docker's host
+gateway. When the SuperAPI direct tunnel is listening on host port `18181`, use
+`http://superapi-direct:18181` as the OpenAI Provider Account Base URL and keep
+the account proxy unset. Do not store a bridge address such as `172.x.x.x` in a
+Provider Account: Docker can allocate a different bridge subnet whenever the
+Compose network is recreated.
+
+Before moving production traffic, verify the tunnel from the same network
+namespace as Sub2API, duplicate the Provider Account (duplicates start with
+scheduling paused), change only the duplicate's Base URL, and run at least
+three account connectivity tests. The host-side listener must accept traffic
+from the Docker bridge; it does not need a public firewall rule.
+
+```bash
+docker compose --env-file deploy/zero-one/.env -f deploy/zero-one/compose.yml \
+  exec -T sub2api wget -qO- -T 5 http://superapi-direct:18181/health
+```
+
+Roll out one Provider Account at a time. Record its previous Base URL before
+the change, then compare same-model, same-reasoning-effort native Responses
+traffic. Roll back that Base URL if TTFT P50/P90 or provider 5xx does not improve.
 
 ## Encrypted Backups
 

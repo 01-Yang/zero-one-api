@@ -49,6 +49,11 @@ services:
         hard: 100000
     volumes:
       - ./state/sub2api:/app/data
+    # Stable container-side name for host-local upstream tunnels. Provider
+    # Accounts should use http://superapi-direct:<port>, never a Docker bridge
+    # address such as 172.x.x.x which can change after a network recreate.
+    extra_hosts:
+      superapi-direct: host-gateway
     environment:
       AUTO_SETUP: "true"
       SERVER_HOST: 0.0.0.0
