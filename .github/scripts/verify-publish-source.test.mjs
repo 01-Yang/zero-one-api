@@ -12,17 +12,24 @@ const baseline = JSON.parse(
   readFileSync(new URL('../upstream-baseline.json', import.meta.url), 'utf8'),
 )
 
+function baselineForRelease(release) {
+  const value = structuredClone(baseline)
+  value.release = release
+  for (const backport of value.approved_backports) backport.valid_for_release = release
+  return value
+}
+
 test('uses the pinned stable release as the published server version', () => {
   assert.equal(stableReleaseVersion(baseline), baseline.release.slice(1))
 })
 
 test('rejects non-stable release identifiers', () => {
   assert.throws(
-    () => stableReleaseVersion({ ...baseline, release: 'v0.1.174-rc.1' }),
+    () => stableReleaseVersion(baselineForRelease('v0.1.174-rc.1')),
     /stable vMAJOR\.MINOR\.PATCH/,
   )
   assert.throws(
-    () => stableReleaseVersion({ ...baseline, release: '0.1.174' }),
+    () => stableReleaseVersion(baselineForRelease('0.1.174')),
     /stable vMAJOR\.MINOR\.PATCH/,
   )
 })

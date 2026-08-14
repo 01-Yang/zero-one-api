@@ -1,11 +1,26 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { lstatSync, readFileSync } from 'node:fs'
 import test from 'node:test'
-import { evaluateChangedPaths, validateBaseline } from './verify-upstream-boundary.mjs'
+import {
+  evaluateApprovedBackportContents,
+  evaluateChangedPaths,
+  validateBaseline,
+} from './verify-upstream-boundary.mjs'
 
 const baseline = validateBaseline(
   JSON.parse(readFileSync(new URL('../upstream-baseline.json', import.meta.url), 'utf8')),
 )
+const repositoryRoot = new URL('../../', import.meta.url)
+
+function readRepositoryPath(path) {
+  const url = new URL(path, repositoryRoot)
+  const stat = lstatSync(url)
+  return {
+    content: readFileSync(url),
+    isRegularFile: stat.isFile(),
+    mode: stat.mode & 0o111 ? '100755' : '100644',
+  }
+}
 
 const approvedBackendHotfixPaths = [
   'backend/internal/handler/admin/admin_basic_handlers_test.go',
@@ -94,4 +109,90 @@ test('rejects immutable frontend contracts inside the otherwise allowed frontend
       'frontend/vite.config.ts modifies immutable upstream path frontend/vite.config.ts',
     ],
   )
+})
+
+test('allows only exact-content upstream security backports', () => {
+  const approvedPaths = baseline.approved_backports.flatMap((backport) => Object.keys(backport.files))
+
+  assert.deepEqual(evaluateChangedPaths(approvedPaths, baseline), [])
+  assert.deepEqual(evaluateApprovedBackportContents(baseline, readRepositoryPath), [])
+  assert.ok(baseline.immutable_paths.includes('frontend/pnpm-lock.yaml'))
+  assert.ok(!baseline.allowed_paths.includes('frontend/pnpm-lock.yaml'))
+})
+
+test('rejects changed, missing, and non-regular approved backport files', () => {
+  const changed = evaluateApprovedBackportContents(baseline, (path) => {
+    const file = readRepositoryPath(path)
+    return path === 'frontend/pnpm-lock.yaml'
+      ? { ...file, content: Buffer.concat([file.content, Buffer.from('\n')]) }
+      : file
+  })
+  assert.equal(changed.length, 1)
+  assert.match(changed[0], /frontend\/pnpm-lock\.yaml content mismatch/)
+
+  const missing = evaluateApprovedBackportContents(baseline, (path) => {
+    if (path === 'backend/go.mod') throw new Error('missing')
+    return readRepositoryPath(path)
+  })
+  assert.deepEqual(missing, ['approved backport backend/go.mod is missing'])
+
+  const nonRegular = evaluateApprovedBackportContents(baseline, (path) => {
+    const file = readRepositoryPath(path)
+    return path === 'Dockerfile' ? { ...file, isRegularFile: false } : file
+  })
+  assert.deepEqual(nonRegular, ['approved backport Dockerfile is not a regular file'])
+
+  const executable = evaluateApprovedBackportContents(baseline, (path) => {
+    const file = readRepositoryPath(path)
+    return path === 'Dockerfile' ? { ...file, mode: '100755' } : file
+  })
+  assert.deepEqual(executable, [
+    'approved backport Dockerfile mode mismatch: expected 100644, got 100755',
+  ])
+})
+
+test('rejects stale or malformed approved backport metadata', () => {
+  const clone = () => structuredClone(baseline)
+
+  const stale = clone()
+  stale.release = 'v0.1.177'
+  assert.throws(() => validateBaseline(stale), /valid_for_release must match/)
+
+  const wrongRepository = clone()
+  wrongRepository.approved_backports[0].source_repository = 'example/other'
+  assert.throws(() => validateBaseline(wrongRepository), /source_repository must match/)
+
+  const badPullRequest = clone()
+  badPullRequest.approved_backports[0].source_pull_request = 0
+  assert.throws(() => validateBaseline(badPullRequest), /source_pull_request must be a positive integer/)
+
+  const badCommit = clone()
+  badCommit.approved_backports[0].source_commit = 'ABC'
+  assert.throws(() => validateBaseline(badCommit), /source_commit must be a lowercase 40-character SHA/)
+
+  const badHash = clone()
+  badHash.approved_backports[0].files['backend/go.mod'].sha256 = '0'
+  assert.throws(() => validateBaseline(badHash), /sha256 is invalid: backend\/go\.mod/)
+
+  const badMode = clone()
+  badMode.approved_backports[0].files['backend/go.mod'].mode = '100600'
+  assert.throws(() => validateBaseline(badMode), /mode is invalid: backend\/go\.mod/)
+
+  const duplicate = clone()
+  duplicate.approved_backports.push(structuredClone(duplicate.approved_backports[0]))
+  assert.throws(() => validateBaseline(duplicate), /duplicate approved backport path/)
+
+  const traversal = clone()
+  traversal.approved_backports[0].files['../backend/go.mod'] = {
+    sha256: '0'.repeat(64),
+    mode: '100644',
+  }
+  assert.throws(() => validateBaseline(traversal), /approved backport path is invalid/)
+
+  const alreadyAllowed = clone()
+  alreadyAllowed.approved_backports[0].files['README.md'] = {
+    sha256: '0'.repeat(64),
+    mode: '100644',
+  }
+  assert.throws(() => validateBaseline(alreadyAllowed), /already allowed by the brand overlay/)
 })
