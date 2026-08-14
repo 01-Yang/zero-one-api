@@ -73,11 +73,38 @@ the account proxy unset. Do not store a bridge address such as `172.x.x.x` in a
 Provider Account: Docker can allocate a different bridge subnet whenever the
 Compose network is recreated.
 
+Resolve `superapi-direct` inside the running `sub2api` container; do not infer
+its address from the Compose network subnet or an earlier deployment. The
+host-side bridge's `BRIDGE_LISTEN` value and the UFW `to` address must both
+equal that resolved address. The production unit reads `BRIDGE_LISTEN` from
+`/etc/01yapi-bridge/client.env`:
+
+```bash
+resolved_host_gateway="$(
+  docker compose --env-file deploy/zero-one/.env -f deploy/zero-one/compose.yml \
+    exec -T sub2api getent hosts superapi-direct | awk 'NR == 1 { print $1 }'
+)"
+bridge_listen="$(
+  sudo sh -eu -c \
+    '. /etc/01yapi-bridge/client.env; printf "%s\n" "$BRIDGE_LISTEN"'
+)"
+test -n "$resolved_host_gateway"
+test "${resolved_host_gateway}:18181" = "$bridge_listen"
+sudo ss -lntp | grep -F "${resolved_host_gateway}:18181"
+sudo ufw status numbered | grep -F "$resolved_host_gateway" | \
+  grep -F '18181/tcp' | grep -F '01yapi bridge via host-gateway'
+```
+
+If either comparison fails, keep the Provider Account off the new route and
+follow the replacement procedure in `docs/OPERATIONS.md`; a successful health
+request to an old listener is not sufficient.
+
 Before moving production traffic, verify the tunnel from the same network
 namespace as Sub2API, duplicate the Provider Account (duplicates start with
 scheduling paused), change only the duplicate's Base URL, and run at least
 three account connectivity tests. The host-side listener must accept traffic
-from the Docker bridge; it does not need a public firewall rule.
+only from the current Compose gateway subnet; port `18181` must not have a
+public firewall rule.
 
 ```bash
 docker compose --env-file deploy/zero-one/.env -f deploy/zero-one/compose.yml \
