@@ -9,7 +9,7 @@
 `upstream`。`zero-one/brand` 是零一 API 产品分支；`origin/main`
 仅保留上游开发主线镜像，不作为产品发布基线。
 
-默认边界禁止修改 Go 业务逻辑、数据库结构、计费、鉴权、账号池、路由守卫和兑换码规则；常规改动只有独立 Public Site、Vue 全局主题与共享壳层、边缘代理和项目文档。唯一例外是稳定 tag 中会阻断生产正确性的缺陷：必须有已合并的上游 PR/commit，或有可复现的本地根因；必须有回归测试、逐文件白名单和后续收敛计划；不得借此扩大产品范围。
+默认边界禁止修改 Go 业务逻辑、数据库结构、计费、鉴权、账号池、路由守卫和兑换码规则；常规改动只有独立 Public Site、Vue 全局主题与共享壳层、边缘代理和项目文档。例外仅限稳定 tag 中会阻断生产正确性的缺陷，或基线依赖中可达的高危/严重供应链漏洞：必须有已合并的上游 PR/commit，或有可复现的本地根因；必须有回归测试、逐文件边界和后续收敛计划；不可变文件的临时安全 backport 还必须锁定文件 SHA-256 与 Git mode；不得借此扩大产品范围。
 
 ## Runtime Architecture
 
@@ -75,6 +75,8 @@ The proxy deliberately uses a catch-all rule. Sub2API exposes `/v1`, `/v1beta`, 
 主题改动保持集中，使新增上游页面继承设计系统，避免逐页分叉。
 
 `v0.1.176` 当前携带一组临时 production-correctness backport：官方已合并的 [PR #5573](https://github.com/Wei-Shaw/sub2api/pull/5573) 中的 Grok 长上下文与媒体模型计费修复，以及本地验证的分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复。后端权限仅限 `.github/upstream-baseline.json` 中列出的精确路径。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应后端白名单，不得将临时权限永久化。
+
+`v0.1.176` 还携带两项临时供应链安全 backport：上游 [PR #5639](https://github.com/Wei-Shaw/sub2api/pull/5639) 将 Go `1.26.5` 升级至 `1.26.6`，消除 `govulncheck` 确认可达的六项标准库漏洞；上游 [PR #5638](https://github.com/Wei-Shaw/sub2api/pull/5638) 将 PostCSS 传递依赖 `nanoid` 升级至修复版 `3.3.18`。两个 PR 的源 commit、适用的稳定基线、退出条件以及每个最终文件的 SHA-256/Git mode 都由 `.github/upstream-baseline.json` 精确锁定；它们不会将未发布的 `upstream/main` 伪装成稳定 baseline。首个包含等价修复的稳定 tag 成为新 baseline 时，必须删除对应 backport 记录。
 
 The repository's dedicated Zero One CI job validates React, Vue, Go unit and
 integration suites, Compose,
