@@ -84,6 +84,115 @@ The Compose overlay caps each container's Docker JSON logs at five 100 MB files.
 Monitor both Docker storage and application data volumes; rotation limits disk
 growth but does not replace centralized logs when longer retention is required.
 
+### SuperAPI direct-tunnel rollout
+
+`sub2api` resolves the stable name `superapi-direct` through Docker's
+`host-gateway` mapping. A host-local SuperAPI tunnel on port `18181` must be
+configured in Provider Accounts as `http://superapi-direct:18181` with no
+account proxy. Never pin a Docker bridge IP in the database: its subnet is an
+implementation detail and can change after Compose network recreation.
+
+Docker's resolved `host-gateway` address is not necessarily the gateway of the
+`zero-one-api_gateway` network. It can also change when Docker or its networks
+are recreated. Always resolve it inside the current `sub2api` container and
+compare it with the effective host listener configuration. Production uses
+`01yapi-bridge-client.service`, whose environment file is
+`/etc/01yapi-bridge/client.env`:
+
+```bash
+resolved_host_gateway="$(
+  docker compose --env-file deploy/zero-one/.env -f deploy/zero-one/compose.yml \
+    exec -T sub2api getent hosts superapi-direct | awk 'NR == 1 { print $1 }'
+)"
+bridge_listen="$(
+  sudo sh -eu -c \
+    '. /etc/01yapi-bridge/client.env; printf "%s\n" "$BRIDGE_LISTEN"'
+)"
+test -n "$resolved_host_gateway"
+test -n "$bridge_listen"
+printf 'superapi-direct=%s BRIDGE_LISTEN=%s\n' \
+  "$resolved_host_gateway" "$bridge_listen"
+test "${resolved_host_gateway}:18181" = "$bridge_listen"
+```
+
+Do not proceed if the last command fails. To replace a stale binding safely:
+
+1. Keep the affected Provider Accounts unschedulable or on their previous Base
+   URL. Resolve and review the current IPv4 gateway network subnet; do not
+   reuse a subnet from an earlier deployment:
+
+   ```bash
+   gateway_subnet="$(
+     docker network inspect zero-one-api_gateway \
+       --format '{{range .IPAM.Config}}{{println .Subnet}}{{end}}' | \
+       awk 'index($0, ":") == 0 && NF { print; exit }'
+   )"
+   test -n "$gateway_subnet"
+   printf 'gateway subnet=%s host-gateway=%s\n' \
+     "$gateway_subnet" "$resolved_host_gateway"
+   ```
+
+2. Run `sudo ufw status numbered` and identify the single rule with comment
+   `01yapi bridge via host-gateway`. Add its narrowly scoped replacement first:
+
+   ```bash
+   sudo ufw allow in proto tcp from "$gateway_subnet" \
+     to "$resolved_host_gateway" port 18181 \
+     comment '01yapi bridge via host-gateway'
+   ```
+
+   It must be an `ALLOW IN` from the current gateway subnet to
+   `$resolved_host_gateway` on `18181/tcp`. Never use `Anywhere`, the public
+   interface, an address copied from an earlier deployment, or the network's
+   gateway by assumption.
+3. Run `sudoedit /etc/01yapi-bridge/client.env`, set `BRIDGE_LISTEN` to the
+   exact `${resolved_host_gateway}:18181` value, then restart and verify the
+   unit:
+
+   ```bash
+   sudo systemctl restart 01yapi-bridge-client.service
+   sudo systemctl is-active --quiet 01yapi-bridge-client.service
+   ```
+
+4. Re-run the equality check above. Confirm the listener and replacement UFW
+   rule target the same address:
+
+   ```bash
+   sudo ss -lntp | grep -F "${resolved_host_gateway}:18181"
+   sudo ufw status numbered | grep -F "$resolved_host_gateway" | \
+     grep -F '18181/tcp' | grep -F '01yapi bridge via host-gateway'
+   ```
+
+5. After the container health check and an external check confirming that
+   `PUBLIC_IP:18181` is still unreachable, list the numbered UFW rules again
+   and delete only the stale rule. UFW renumbers rules after changes, so never
+   reuse an earlier rule number.
+
+Verify the tunnel from inside the production container before editing an
+account. This request carries no Provider credential:
+
+```bash
+docker compose --env-file deploy/zero-one/.env -f deploy/zero-one/compose.yml \
+  exec -T sub2api wget -qO- -T 5 http://superapi-direct:18181/health
+```
+
+For a safe canary, duplicate the target Provider Account, leave the duplicate
+unschedulable, change only its Base URL, and run three same-model connectivity
+tests. Delete the duplicate after the test. Then change one production account
+and observe at least 50 comparable native `/v1/responses` requests before
+moving another account. Compare the same model, reasoning effort and time
+window; use these initial acceptance thresholds unless a newer incident
+baseline is recorded:
+
+- TTFT P50 at most 12 seconds and P90 at most 25 seconds.
+- Provider-owned `/v1/responses` 5xx attempt rate at most 2 percent.
+
+Record the previous Base URL as the per-account rollback value. If either
+threshold regresses, restore that value immediately and keep the remaining
+accounts on their current route while investigating the upstream credential
+pool. A passing `/health` check proves reachability only; it does not replace
+the canary model calls or usage-log comparison.
+
 ## Backup And Recovery
 
 - Run an encrypted PostgreSQL logical backup every day and retain 7 daily plus 4 weekly copies outside the server.
