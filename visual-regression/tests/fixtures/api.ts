@@ -52,7 +52,7 @@ export function publicSettings(mode: 'v1' | 'v2' = 'v2') {
     github_oauth_enabled: false,
     google_oauth_enabled: false,
     backend_mode_enabled: false,
-    version: '0.1.176',
+    version: '0.1.177',
     server_utc_offset: '+08:00',
     balance_low_notify_enabled: false,
     account_quota_notify_enabled: false,

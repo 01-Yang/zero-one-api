@@ -1,28 +1,16 @@
 {
   "schema_version": 3,
   "repository": "Wei-Shaw/sub2api",
-  "release": "v0.1.176",
-  "commit": "e803e3851c0a7e222cfadeafad7b8636ab959d11",
+  "release": "v0.1.177",
+  "commit": "073e92d17178a1ccdb0a27017f572f10c9c7ab62",
   "approved_backports": [
     {
       "source_repository": "Wei-Shaw/sub2api",
       "source_pull_request": 5639,
       "source_commit": "f278c067a03e1730a00ac6358381113cc289206f",
-      "valid_for_release": "v0.1.176",
-      "exit_condition": "Remove this backport when the first stable upstream release containing the equivalent Go security fixes becomes the baseline.",
+      "valid_for_release": "v0.1.177",
+      "exit_condition": "Remove the remaining Docker build-file backport when the first stable upstream release containing the equivalent Go 1.26.6 build-image fixes becomes the baseline.",
       "files": {
-        ".github/workflows/backend-ci.yml": {
-          "sha256": "1584726053f066ab146fce6eea7b1a9773eaac7ac286a54e1b8143eb667611f4",
-          "mode": "100644"
-        },
-        ".github/workflows/release.yml": {
-          "sha256": "a4da9dafc0fd82c10d452752ef782b0f3359bd63cfefe72ab8042f688f81d194",
-          "mode": "100644"
-        },
-        ".github/workflows/security-scan.yml": {
-          "sha256": "8a57e344ce13edcf5ffbcecbe5e432b8dee6010011855c266820239889fd2d14",
-          "mode": "100644"
-        },
         "Dockerfile": {
           "sha256": "41c750711dc576cd1c7cc085218b5705adab94965ec69ea167c32fd598b461bb",
           "mode": "100644"
@@ -31,25 +19,8 @@
           "sha256": "d238e59a1c5d1bf928997ace001cd1e26b7751a4a9212d7cf3ca20bee884417f",
           "mode": "100644"
         },
-        "backend/go.mod": {
-          "sha256": "9415183aec208e8d04fcc01feac56a6488f1422ade52ed9ef1f83727760f5232",
-          "mode": "100644"
-        },
         "deploy/Dockerfile": {
           "sha256": "05923334a46abac80723f3e83431166762aacb9b3e1aea40b2f8f5fb4cd1d241",
-          "mode": "100644"
-        }
-      }
-    },
-    {
-      "source_repository": "Wei-Shaw/sub2api",
-      "source_pull_request": 5638,
-      "source_commit": "fc8cd13bc7ed78fb26b407386cc38f4b1b93deb5",
-      "valid_for_release": "v0.1.176",
-      "exit_condition": "Remove this backport when the first stable upstream release containing the equivalent nanoid fix becomes the baseline.",
-      "files": {
-        "frontend/pnpm-lock.yaml": {
-          "sha256": "7b9a6a4459baf170f56183cdb428f95c6de4696149195829829bd7f9e8ddddc9",
           "mode": "100644"
         }
       }
@@ -57,8 +28,8 @@
   ],
   "legacy_hotfixes": [
     {
-      "name": "approved-v0.1.176-production-correctness",
-      "valid_for_release": "v0.1.176",
+      "name": "approved-v0.1.177-production-correctness",
+      "valid_for_release": "v0.1.177",
       "exit_condition": "Remove each path when the first stable upstream release containing its equivalent production-correctness fix becomes the baseline; remove the entire block when no listed path remains.",
       "paths": [
         "backend/internal/handler/admin/admin_basic_handlers_test.go",
@@ -79,16 +50,10 @@
         "backend/internal/service/batch_image_public.go",
         "backend/internal/service/batch_image_public_test.go",
         "backend/internal/service/billing_service.go",
-        "backend/internal/service/billing_service_test.go",
         "backend/internal/service/billing_service_unified_test.go",
         "backend/internal/service/channel_plaza.go",
         "backend/internal/service/channel_plaza_test.go",
         "backend/internal/service/model_pricing_resolver.go",
-        "backend/internal/service/openai_alpha_search_billing_test.go",
-        "backend/internal/service/openai_gateway_record_usage_test.go",
-        "backend/internal/service/openai_gateway_search_surcharge_test.go",
-        "backend/internal/service/openai_gateway_usage.go",
-        "backend/internal/service/response_model_billing_test.go",
         "backend/migrations/222_group_pricing_auth_cache_invalidation.sql",
         "backend/migrations/group_pricing_auth_cache_migration_test.go"
       ]

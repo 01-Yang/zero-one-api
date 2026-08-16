@@ -42,16 +42,10 @@ const approvedBackendHotfixPaths = [
   'backend/internal/service/batch_image_public.go',
   'backend/internal/service/batch_image_public_test.go',
   'backend/internal/service/billing_service.go',
-  'backend/internal/service/billing_service_test.go',
   'backend/internal/service/billing_service_unified_test.go',
   'backend/internal/service/channel_plaza.go',
   'backend/internal/service/channel_plaza_test.go',
   'backend/internal/service/model_pricing_resolver.go',
-  'backend/internal/service/openai_alpha_search_billing_test.go',
-  'backend/internal/service/openai_gateway_record_usage_test.go',
-  'backend/internal/service/openai_gateway_search_surcharge_test.go',
-  'backend/internal/service/openai_gateway_usage.go',
-  'backend/internal/service/response_model_billing_test.go',
   'backend/migrations/222_group_pricing_auth_cache_invalidation.sql',
   'backend/migrations/group_pricing_auth_cache_migration_test.go',
 ].sort()
@@ -181,18 +175,18 @@ test('rejects duplicate owners, overlapping paths, and unbound immutable excepti
 test('rejects changed, missing, and non-regular approved backport files', () => {
   const changed = evaluateApprovedBackportContents(baseline, (path) => {
     const file = readRepositoryPath(path)
-    return path === 'frontend/pnpm-lock.yaml'
+    return path === 'backend/Dockerfile'
       ? { ...file, content: Buffer.concat([file.content, Buffer.from('\n')]) }
       : file
   })
   assert.equal(changed.length, 1)
-  assert.match(changed[0], /frontend\/pnpm-lock\.yaml content mismatch/)
+  assert.match(changed[0], /backend\/Dockerfile content mismatch/)
 
   const missing = evaluateApprovedBackportContents(baseline, (path) => {
-    if (path === 'backend/go.mod') throw new Error('missing')
+    if (path === 'deploy/Dockerfile') throw new Error('missing')
     return readRepositoryPath(path)
   })
-  assert.deepEqual(missing, ['approved backport backend/go.mod is missing'])
+  assert.deepEqual(missing, ['approved backport deploy/Dockerfile is missing'])
 
   const nonRegular = evaluateApprovedBackportContents(baseline, (path) => {
     const file = readRepositoryPath(path)
@@ -213,7 +207,7 @@ test('rejects stale or malformed approved backport metadata', () => {
   const clone = () => structuredClone(baseline)
 
   const stale = clone()
-  stale.release = 'v0.1.177'
+  stale.release = 'v0.1.176'
   assert.throws(() => validateBaseline(stale), /valid_for_release must match/)
 
   const wrongRepository = clone()
@@ -229,12 +223,12 @@ test('rejects stale or malformed approved backport metadata', () => {
   assert.throws(() => validateBaseline(badCommit), /source_commit must be a lowercase 40-character SHA/)
 
   const badHash = clone()
-  badHash.approved_backports[0].files['backend/go.mod'].sha256 = '0'
-  assert.throws(() => validateBaseline(badHash), /sha256 is invalid: backend\/go\.mod/)
+  badHash.approved_backports[0].files['backend/Dockerfile'].sha256 = '0'
+  assert.throws(() => validateBaseline(badHash), /sha256 is invalid: backend\/Dockerfile/)
 
   const badMode = clone()
-  badMode.approved_backports[0].files['backend/go.mod'].mode = '100600'
-  assert.throws(() => validateBaseline(badMode), /mode is invalid: backend\/go\.mod/)
+  badMode.approved_backports[0].files['backend/Dockerfile'].mode = '100600'
+  assert.throws(() => validateBaseline(badMode), /mode is invalid: backend\/Dockerfile/)
 
   const duplicate = clone()
   duplicate.approved_backports.push(structuredClone(duplicate.approved_backports[0]))

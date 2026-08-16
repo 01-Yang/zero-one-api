@@ -3,7 +3,7 @@
 ## Baseline And Change Boundary
 
 项目的稳定技术基线为
-[`Wei-Shaw/sub2api v0.1.176@e803e3851c0a7e222cfadeafad7b8636ab959d11`](https://github.com/Wei-Shaw/sub2api/tree/e803e3851c0a7e222cfadeafad7b8636ab959d11)。
+[`Wei-Shaw/sub2api v0.1.177@073e92d17178a1ccdb0a27017f572f10c9c7ab62`](https://github.com/Wei-Shaw/sub2api/tree/073e92d17178a1ccdb0a27017f572f10c9c7ab62)。
 公开 fork [`01-Yang/zero-one-api`](https://github.com/01-Yang/zero-one-api)
 配置为 `origin`，官方仓库 `Wei-Shaw/sub2api` 配置为只读
 `upstream`。`zero-one/brand` 是零一 API 产品分支；`origin/main`
@@ -113,9 +113,9 @@ edge image. Image rollback does not reverse a database migration; see
 合回 `zero-one/brand`。每次同步同时更新本节的 tag 与完整提交 SHA。
 主题改动保持集中，使新增上游页面继承设计系统，避免逐页分叉。
 
-`v0.1.176` 当前携带一组临时 production-correctness backport：官方已合并的 [PR #5573](https://github.com/Wei-Shaw/sub2api/pull/5573) 中的 Grok 长上下文与媒体模型计费修复，以及本地验证的分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复。后端权限仅限 `.github/upstream-baseline.json` 的 `legacy_hotfixes` 区块所列精确文件。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应 legacy path，不得将临时权限永久化。
+`v0.1.177` 已包含上游 [PR #5573](https://github.com/Wei-Shaw/sub2api/pull/5573) 中 Grok 长上下文与媒体模型计费的等价修复，因此对应的六个 legacy path 已退出。Zero One 仍携带本地验证的分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复；`billing_service.go` 还保留本 Tag 未包含的分组定价传播加固。后端权限仅限 `.github/upstream-baseline.json` 的 `legacy_hotfixes` 区块所列精确文件。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应 legacy path，不得将临时权限永久化。
 
-`v0.1.176` 还携带两项临时供应链安全 backport：上游 [PR #5639](https://github.com/Wei-Shaw/sub2api/pull/5639) 将 Go `1.26.5` 升级至 `1.26.6`，消除 `govulncheck` 确认可达的六项标准库漏洞；上游 [PR #5638](https://github.com/Wei-Shaw/sub2api/pull/5638) 将 PostCSS 传递依赖 `nanoid` 升级至修复版 `3.3.18`。两个 PR 的源 commit、适用的稳定基线、退出条件以及每个最终文件的 SHA-256/Git mode 都由 `.github/upstream-baseline.json` 精确锁定；它们不会将未发布的 `upstream/main` 伪装成稳定 baseline。首个包含等价修复的稳定 tag 成为新 baseline 时，必须删除对应 backport 记录。
+`v0.1.177` 已包含 `nanoid 3.3.18` 锁文件修复，也在 `backend/go.mod` 和 CI workflow 中包含 Go `1.26.6` 的等价更新，因此 [PR #5638](https://github.com/Wei-Shaw/sub2api/pull/5638) backport 已整体退出，[PR #5639](https://github.com/Wei-Shaw/sub2api/pull/5639) backport 只保留尚未进入 Tag 的 `Dockerfile`、`backend/Dockerfile` 和 `deploy/Dockerfile`。两个 source commit 都不是 `v0.1.177` 的祖先；退出判定依据是稳定 Tag 中的等价内容，而不是将精确 commit 误记为已合并。保留文件的 SHA-256、Git mode、适用基线与退出条件继续由 `.github/upstream-baseline.json` 精确锁定。
 
 The repository's dedicated Zero One CI job validates React, Vue, Go unit and
 integration suites, Compose,
