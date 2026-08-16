@@ -57,6 +57,14 @@
         "backend/migrations/222_group_pricing_auth_cache_invalidation.sql",
         "backend/migrations/group_pricing_auth_cache_migration_test.go"
       ]
+    },
+    {
+      "name": "approved-v0.1.177-ci-timezone-correctness",
+      "valid_for_release": "v0.1.177",
+      "exit_condition": "Remove this test-only hotfix when the first stable upstream release makes the group usage rollup trigger tests session-timezone relative.",
+      "paths": [
+        "backend/internal/repository/group_usage_rollup_trigger_integration_test.go"
+      ]
     }
   ],
   "overlays": [

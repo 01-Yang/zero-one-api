@@ -117,6 +117,8 @@ edge image. Image rollback does not reverse a database migration; see
 
 `v0.1.177` 已包含 `nanoid 3.3.18` 锁文件修复，也在 `backend/go.mod` 和 CI workflow 中包含 Go `1.26.6` 的等价更新，因此 [PR #5638](https://github.com/Wei-Shaw/sub2api/pull/5638) backport 已整体退出，[PR #5639](https://github.com/Wei-Shaw/sub2api/pull/5639) backport 只保留尚未进入 Tag 的 `Dockerfile`、`backend/Dockerfile` 和 `deploy/Dockerfile`。两个 source commit 都不是 `v0.1.177` 的祖先；退出判定依据是稳定 Tag 中的等价内容，而不是将精确 commit 误记为已合并。保留文件的 SHA-256、Git mode、适用基线与退出条件继续由 `.github/upstream-baseline.json` 精确锁定。
 
+`v0.1.177` 新增的分组用量汇总触发器测试曾将集成连接的 UTC session 与上海日历日混用，在 UTC 16:00–23:59 会稳定误报水位回退。Zero One 只将这两项测试的“今日”改为 DB session 的 `CURRENT_DATE`，不修改 migration 或运行时语义。该精确测试路径位于独立的 CI timezone legacy hotfix 区块，下一个包含等价修复的稳定 Tag 必须将其移除。
+
 The repository's dedicated Zero One CI job validates React, Vue, Go unit and
 integration suites, Compose,
 the root Sub2API Docker build and the Caddy edge Docker build independently.

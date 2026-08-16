@@ -23,13 +23,14 @@ function readRepositoryPath(path) {
   }
 }
 
-const approvedBackendHotfixPaths = [
+const approvedLegacyHotfixPaths = [
   'backend/internal/handler/admin/admin_basic_handlers_test.go',
   'backend/internal/handler/admin/admin_service_stub_test.go',
   'backend/internal/handler/admin/group_handler.go',
   'backend/internal/repository/api_key_repo_profit_projection_integration_test.go',
   'backend/internal/repository/auth_cache_invalidation_profit_integration_test.go',
   'backend/internal/repository/migrations_schema_integration_test.go',
+  'backend/internal/repository/group_usage_rollup_trigger_integration_test.go',
   'backend/internal/service/admin_group.go',
   'backend/internal/service/admin_group_duplicate.go',
   'backend/internal/service/admin_group_duplicate_test.go',
@@ -68,13 +69,15 @@ test('assigns additive surfaces to the five named overlays', () => {
   )
 })
 
-test('keeps production-correctness files in an expiring legacy hotfix block', () => {
-  assert.deepEqual(evaluateChangedPaths(approvedBackendHotfixPaths, baseline), [])
+test('keeps temporary correctness files in expiring legacy hotfix blocks', () => {
+  assert.deepEqual(evaluateChangedPaths(approvedLegacyHotfixPaths, baseline), [])
   assert.deepEqual(
     baseline.legacy_hotfixes.flatMap((hotfix) => hotfix.paths).sort(),
-    approvedBackendHotfixPaths,
+    approvedLegacyHotfixPaths,
   )
-  assert.match(baseline.legacy_hotfixes[0].exit_condition, /stable upstream release/)
+  for (const hotfix of baseline.legacy_hotfixes) {
+    assert.match(hotfix.exit_condition, /stable upstream release/)
+  }
 })
 
 test('rejects adjacent backend and unrelated upstream changes', () => {
