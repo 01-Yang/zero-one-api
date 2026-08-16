@@ -71,6 +71,9 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		SiteName:                            settings.SiteName,
 		SiteLogo:                            settings.SiteLogo,
 		SiteSubtitle:                        settings.SiteSubtitle,
+		LandingNoticeEnabled:                settings.LandingNoticeEnabled,
+		LandingNoticeText:                   settings.LandingNoticeText,
+		LandingNoticeURL:                    settings.LandingNoticeURL,
 		APIBaseURL:                          settings.APIBaseURL,
 		ContactInfo:                         settings.ContactInfo,
 		DocURL:                              settings.DocURL,
@@ -104,6 +107,7 @@ func (h *SettingHandler) GetPublicSettings(c *gin.Context) {
 		BalanceLowNotifyRechargeURL:         settings.BalanceLowNotifyRechargeURL,
 
 		ChannelMonitorEnabled:                settings.ChannelMonitorEnabled,
+		PublicChannelStatusEnabled:           settings.PublicChannelStatusEnabled,
 		ChannelMonitorMode:                   settings.ChannelMonitorMode,
 		ChannelMonitorDefaultIntervalSeconds: settings.ChannelMonitorDefaultIntervalSeconds,
 		ChannelMonitorHideThroughput:         settings.ChannelMonitorHideThroughput,

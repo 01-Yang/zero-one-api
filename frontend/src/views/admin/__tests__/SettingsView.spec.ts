@@ -378,6 +378,9 @@ const baseSettingsResponse = {
   site_name: "Sub2API",
   site_logo: "",
   site_subtitle: "",
+  landing_notice_enabled: false,
+  landing_notice_text: "",
+  landing_notice_url: "",
   api_base_url: "",
   contact_info: "",
   doc_url: "",
@@ -387,6 +390,7 @@ const baseSettingsResponse = {
   table_default_page_size: 20,
   table_page_size_options: [10, 20, 50, 100],
   backend_mode_enabled: false,
+	public_channel_status_enabled: false,
   custom_menu_items: [],
   custom_endpoints: [],
   frontend_url: "",
@@ -620,6 +624,25 @@ describe("admin SettingsView email domain quota copy", () => {
   });
 });
 
+describe("admin SettingsView landing notice copy", () => {
+  it("documents the notice length and URL constraints in both locales", () => {
+    expect(zhSettings.settings.site.landingNotice.textPlaceholder).toBe(
+      "请输入简短的首页公告",
+    );
+    expect(zhSettings.settings.site.landingNotice.urlPlaceholder).toBe("/keys");
+    expect(zhSettings.settings.site.landingNotice.textHint).toContain("160");
+    expect(zhSettings.settings.site.landingNotice.urlHint).toContain("http(s)");
+    expect(zhSettings.settings.site.landingNotice.urlInvalid).toContain("格式无效");
+    expect(enSettings.settings.site.landingNotice.textPlaceholder).toBe(
+      "Enter a short landing page notice",
+    );
+    expect(enSettings.settings.site.landingNotice.urlPlaceholder).toBe("/keys");
+    expect(enSettings.settings.site.landingNotice.textHint).toContain("160");
+    expect(enSettings.settings.site.landingNotice.urlHint).toContain("http(s)");
+    expect(enSettings.settings.site.landingNotice.urlInvalid).toContain("Invalid");
+  });
+});
+
 describe("admin SettingsView payment visible method controls", () => {
   beforeEach(() => {
     getSettings.mockReset();
@@ -728,6 +751,87 @@ describe("admin SettingsView payment visible method controls", () => {
     expect(updateSettings).toHaveBeenCalledWith(
       expect.objectContaining({ compact_home_enabled: true }),
     );
+  });
+
+  it("loads and submits the independent public channel status toggle", async () => {
+    const wrapper = mountView();
+    await flushPromises();
+
+    const toggle = wrapper.get('[data-testid="public-channel-status-toggle"]');
+    expect((toggle.element as HTMLInputElement).checked).toBe(false);
+
+    await toggle.setValue(true);
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+
+    expect(updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ public_channel_status_enabled: true }),
+    );
+  });
+
+  it("loads and submits the public landing page notice settings", async () => {
+    const wrapper = mountView();
+    await flushPromises();
+
+    const toggle = wrapper.get('[data-testid="landing-notice-toggle"]');
+    const textInput = wrapper.get('[data-testid="landing-notice-text"]');
+    const urlInput = wrapper.get('[data-testid="landing-notice-url"]');
+
+    expect((toggle.element as HTMLInputElement).checked).toBe(false);
+    expect(textInput.element.tagName).toBe("INPUT");
+    expect(textInput.attributes("type")).toBe("text");
+    expect(textInput.attributes("maxlength")).toBe("160");
+    expect((textInput.element as HTMLInputElement).value).toBe("");
+    expect(urlInput.attributes("type")).toBe("text");
+    expect(urlInput.attributes("inputmode")).toBe("url");
+    expect((urlInput.element as HTMLInputElement).value).toBe("");
+
+    await toggle.setValue(true);
+    await textInput.setValue("配置说明已更新，请在控制台查看。");
+    await urlInput.setValue("/keys?from=landing");
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+
+    expect(updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({
+        landing_notice_enabled: true,
+        landing_notice_text: "配置说明已更新，请在控制台查看。",
+        landing_notice_url: "/keys?from=landing",
+      }),
+    );
+
+    updateSettings.mockClear();
+    await urlInput.setValue("javascript:alert(1)");
+    expect(urlInput.attributes("aria-invalid")).toBe("true");
+    expect(wrapper.text()).toContain("admin.settings.site.landingNotice.urlInvalid");
+    await wrapper.find("form").trigger("submit.prevent");
+    await flushPromises();
+
+    expect(updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ landing_notice_url: "" }),
+    );
+  });
+
+  it("fails closed when landing notice fields are omitted", async () => {
+    const response: Record<string, unknown> = { ...baseSettingsResponse };
+    delete response.landing_notice_enabled;
+    delete response.landing_notice_text;
+    delete response.landing_notice_url;
+    getSettings.mockResolvedValueOnce(response);
+
+    const wrapper = mountView();
+    await flushPromises();
+
+    expect(
+      (wrapper.get('[data-testid="landing-notice-toggle"]').element as HTMLInputElement)
+        .checked,
+    ).toBe(false);
+    expect(
+      (wrapper.get('[data-testid="landing-notice-text"]').element as HTMLInputElement).value,
+    ).toBe("");
+    expect(
+      (wrapper.get('[data-testid="landing-notice-url"]').element as HTMLInputElement).value,
+    ).toBe("");
   });
 
   it("renders panel rate limit card and saves settings", async () => {

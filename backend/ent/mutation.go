@@ -5573,29 +5573,30 @@ func (m *AccountGroupMutation) ResetEdge(name string) error {
 // AnnouncementMutation represents an operation that mutates the Announcement nodes in the graph.
 type AnnouncementMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int64
-	title         *string
-	content       *string
-	status        *string
-	notify_mode   *string
-	targeting     *domain.AnnouncementTargeting
-	starts_at     *time.Time
-	ends_at       *time.Time
-	created_by    *int64
-	addcreated_by *int64
-	updated_by    *int64
-	addupdated_by *int64
-	created_at    *time.Time
-	updated_at    *time.Time
-	clearedFields map[string]struct{}
-	reads         map[int64]struct{}
-	removedreads  map[int64]struct{}
-	clearedreads  bool
-	done          bool
-	oldValue      func(context.Context) (*Announcement, error)
-	predicates    []predicate.Announcement
+	op             Op
+	typ            string
+	id             *int64
+	title          *string
+	content        *string
+	status         *string
+	notify_mode    *string
+	public_visible *bool
+	targeting      *domain.AnnouncementTargeting
+	starts_at      *time.Time
+	ends_at        *time.Time
+	created_by     *int64
+	addcreated_by  *int64
+	updated_by     *int64
+	addupdated_by  *int64
+	created_at     *time.Time
+	updated_at     *time.Time
+	clearedFields  map[string]struct{}
+	reads          map[int64]struct{}
+	removedreads   map[int64]struct{}
+	clearedreads   bool
+	done           bool
+	oldValue       func(context.Context) (*Announcement, error)
+	predicates     []predicate.Announcement
 }
 
 var _ ent.Mutation = (*AnnouncementMutation)(nil)
@@ -5838,6 +5839,42 @@ func (m *AnnouncementMutation) OldNotifyMode(ctx context.Context) (v string, err
 // ResetNotifyMode resets all changes to the "notify_mode" field.
 func (m *AnnouncementMutation) ResetNotifyMode() {
 	m.notify_mode = nil
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (m *AnnouncementMutation) SetPublicVisible(b bool) {
+	m.public_visible = &b
+}
+
+// PublicVisible returns the value of the "public_visible" field in the mutation.
+func (m *AnnouncementMutation) PublicVisible() (r bool, exists bool) {
+	v := m.public_visible
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPublicVisible returns the old "public_visible" field's value of the Announcement entity.
+// If the Announcement object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AnnouncementMutation) OldPublicVisible(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPublicVisible is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPublicVisible requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPublicVisible: %w", err)
+	}
+	return oldValue.PublicVisible, nil
+}
+
+// ResetPublicVisible resets all changes to the "public_visible" field.
+func (m *AnnouncementMutation) ResetPublicVisible() {
+	m.public_visible = nil
 }
 
 // SetTargeting sets the "targeting" field.
@@ -6287,7 +6324,7 @@ func (m *AnnouncementMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AnnouncementMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 12)
 	if m.title != nil {
 		fields = append(fields, announcement.FieldTitle)
 	}
@@ -6299,6 +6336,9 @@ func (m *AnnouncementMutation) Fields() []string {
 	}
 	if m.notify_mode != nil {
 		fields = append(fields, announcement.FieldNotifyMode)
+	}
+	if m.public_visible != nil {
+		fields = append(fields, announcement.FieldPublicVisible)
 	}
 	if m.targeting != nil {
 		fields = append(fields, announcement.FieldTargeting)
@@ -6337,6 +6377,8 @@ func (m *AnnouncementMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case announcement.FieldNotifyMode:
 		return m.NotifyMode()
+	case announcement.FieldPublicVisible:
+		return m.PublicVisible()
 	case announcement.FieldTargeting:
 		return m.Targeting()
 	case announcement.FieldStartsAt:
@@ -6368,6 +6410,8 @@ func (m *AnnouncementMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldStatus(ctx)
 	case announcement.FieldNotifyMode:
 		return m.OldNotifyMode(ctx)
+	case announcement.FieldPublicVisible:
+		return m.OldPublicVisible(ctx)
 	case announcement.FieldTargeting:
 		return m.OldTargeting(ctx)
 	case announcement.FieldStartsAt:
@@ -6418,6 +6462,13 @@ func (m *AnnouncementMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetNotifyMode(v)
+		return nil
+	case announcement.FieldPublicVisible:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPublicVisible(v)
 		return nil
 	case announcement.FieldTargeting:
 		v, ok := value.(domain.AnnouncementTargeting)
@@ -6588,6 +6639,9 @@ func (m *AnnouncementMutation) ResetField(name string) error {
 		return nil
 	case announcement.FieldNotifyMode:
 		m.ResetNotifyMode()
+		return nil
+	case announcement.FieldPublicVisible:
+		m.ResetPublicVisible()
 		return nil
 	case announcement.FieldTargeting:
 		m.ResetTargeting()

@@ -90,6 +90,52 @@ describe('RegisterView invitation layout', () => {
     registerMock.mockResolvedValue({})
   })
 
+  it('places the optional username field before email and submits a trimmed value', async () => {
+    getPublicSettingsMock.mockResolvedValueOnce({
+      ...publicSettings,
+      turnstile_enabled: false,
+    })
+
+    const wrapper = mountRegister()
+    await flushPromises()
+
+    const username = wrapper.get('#username')
+    const email = wrapper.get('#email')
+    expect(username.attributes('required')).toBeUndefined()
+    expect(
+      username.element.compareDocumentPosition(email.element) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+
+    await username.setValue('  zero-one  ')
+    await email.setValue('first@custom.example')
+    await wrapper.get('#password').setValue('secret-123')
+    await wrapper.get('form').trigger('submit.prevent')
+    await flushPromises()
+
+    expect(registerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ username: 'zero-one' })
+    )
+  })
+
+  it('omits a blank optional username from direct registration', async () => {
+    getPublicSettingsMock.mockResolvedValueOnce({
+      ...publicSettings,
+      turnstile_enabled: false,
+    })
+
+    const wrapper = mountRegister()
+    await flushPromises()
+    await wrapper.get('#username').setValue('   ')
+    await wrapper.get('#email').setValue('blank-name@example.com')
+    await wrapper.get('#password').setValue('secret-123')
+    await wrapper.get('form').trigger('submit.prevent')
+    await flushPromises()
+
+    expect(registerMock).toHaveBeenCalled()
+    expect(registerMock.mock.calls[0]?.[0]).not.toHaveProperty('username')
+  })
+
   it('keeps the optional affiliate invitation field before Turnstile', async () => {
     const wrapper = mountRegister()
     await flushPromises()
@@ -128,6 +174,7 @@ describe('RegisterView invitation layout', () => {
 
     const wrapper = mountRegister()
     await flushPromises()
+    await wrapper.get('#username').setValue('zero-one')
     await wrapper.get('#email').setValue('first@custom.example')
     await wrapper.get('#password').setValue('secret-123')
     await wrapper.get('form').trigger('submit.prevent')
@@ -153,6 +200,7 @@ describe('RegisterView invitation layout', () => {
 
     const wrapper = mountRegister()
     await flushPromises()
+    await wrapper.get('#username').setValue('zero-one')
     await wrapper.get('#email').setValue('second@custom.example')
     await wrapper.get('#password').setValue('secret-123')
     await wrapper.get('form').trigger('submit.prevent')
@@ -173,6 +221,7 @@ describe('RegisterView invitation layout', () => {
 
     const wrapper = mountRegister()
     await flushPromises()
+    await wrapper.get('#username').setValue('zero-one')
     await wrapper.get('#email').setValue('first@custom.example')
     await wrapper.get('#password').setValue('secret-123')
     await wrapper.get('form').trigger('submit.prevent')
@@ -193,6 +242,7 @@ describe('RegisterView invitation layout', () => {
 
     const wrapper = mountRegister()
     await flushPromises()
+    await wrapper.get('#username').setValue('zero-one')
     await wrapper.get('#email').setValue('user@allowed.com')
     await wrapper.get('#password').setValue('secret-123')
     await wrapper.get('form').trigger('submit.prevent')

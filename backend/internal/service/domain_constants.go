@@ -297,6 +297,9 @@ const (
 	SettingKeySiteName                    = "site_name"                     // 网站名称
 	SettingKeySiteLogo                    = "site_logo"                     // 网站Logo (base64)
 	SettingKeySiteSubtitle                = "site_subtitle"                 // 网站副标题
+	SettingKeyLandingNoticeEnabled        = "landing_notice_enabled"        // 首页公告是否启用
+	SettingKeyLandingNoticeText           = "landing_notice_text"           // 首页公告纯文本
+	SettingKeyLandingNoticeURL            = "landing_notice_url"            // 首页公告跳转地址
 	SettingKeyAPIBaseURL                  = "api_base_url"                  // API端点地址（用于客户端配置和导入）
 	SettingKeyContactInfo                 = "contact_info"                  // 客服联系方式
 	SettingKeyDocURL                      = "doc_url"                       // 文档链接
@@ -406,6 +409,11 @@ const (
 	// SettingKeyChannelMonitorEnabled is a DB-backed soft switch for the channel monitor feature.
 	// When false: runner skips scheduling and user-facing endpoints return an empty list.
 	SettingKeyChannelMonitorEnabled = "channel_monitor_enabled"
+
+	// SettingKeyPublicChannelStatusEnabled controls anonymous access to the
+	// aggregate-only channel status endpoint. It is opt-in and independent from
+	// the authenticated channel monitor feature switch.
+	SettingKeyPublicChannelStatusEnabled = "public_channel_status_enabled"
 
 	// SettingKeyChannelMonitorMode selects exclusive implementation:
 	// "v1" active probes, "v2" passive aggregation. Default "v1" (opt-in to v2).

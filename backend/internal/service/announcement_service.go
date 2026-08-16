@@ -33,25 +33,27 @@ func NewAnnouncementService(
 }
 
 type CreateAnnouncementInput struct {
-	Title      string
-	Content    string
-	Status     string
-	NotifyMode string
-	Targeting  AnnouncementTargeting
-	StartsAt   *time.Time
-	EndsAt     *time.Time
-	ActorID    *int64 // 管理员用户ID
+	Title         string
+	Content       string
+	Status        string
+	NotifyMode    string
+	PublicVisible bool
+	Targeting     AnnouncementTargeting
+	StartsAt      *time.Time
+	EndsAt        *time.Time
+	ActorID       *int64 // 管理员用户ID
 }
 
 type UpdateAnnouncementInput struct {
-	Title      *string
-	Content    *string
-	Status     *string
-	NotifyMode *string
-	Targeting  *AnnouncementTargeting
-	StartsAt   **time.Time
-	EndsAt     **time.Time
-	ActorID    *int64 // 管理员用户ID
+	Title         *string
+	Content       *string
+	Status        *string
+	NotifyMode    *string
+	PublicVisible *bool
+	Targeting     *AnnouncementTargeting
+	StartsAt      **time.Time
+	EndsAt        **time.Time
+	ActorID       *int64 // 管理员用户ID
 }
 
 type UserAnnouncement struct {
@@ -110,13 +112,14 @@ func (s *AnnouncementService) Create(ctx context.Context, input *CreateAnnouncem
 	}
 
 	a := &Announcement{
-		Title:      title,
-		Content:    content,
-		Status:     status,
-		NotifyMode: notifyMode,
-		Targeting:  targeting,
-		StartsAt:   input.StartsAt,
-		EndsAt:     input.EndsAt,
+		Title:         title,
+		Content:       content,
+		Status:        status,
+		NotifyMode:    notifyMode,
+		PublicVisible: input.PublicVisible,
+		Targeting:     targeting,
+		StartsAt:      input.StartsAt,
+		EndsAt:        input.EndsAt,
 	}
 	if input.ActorID != nil && *input.ActorID > 0 {
 		a.CreatedBy = input.ActorID
@@ -168,6 +171,9 @@ func (s *AnnouncementService) Update(ctx context.Context, id int64, input *Updat
 		}
 		a.NotifyMode = notifyMode
 	}
+	if input.PublicVisible != nil {
+		a.PublicVisible = *input.PublicVisible
+	}
 
 	if input.Targeting != nil {
 		targeting, err := domain.AnnouncementTargeting(*input.Targeting).NormalizeAndValidate()
@@ -213,6 +219,30 @@ func (s *AnnouncementService) GetByID(ctx context.Context, id int64) (*Announcem
 
 func (s *AnnouncementService) List(ctx context.Context, params pagination.PaginationParams, filters AnnouncementListFilters) ([]Announcement, *pagination.PaginationResult, error) {
 	return s.announcementRepo.List(ctx, params, filters)
+}
+
+// ListPublic returns only announcements explicitly approved for the public
+// website. Public visibility is deliberately independent from Targeting, whose
+// rules are evaluated only for authenticated users.
+func (s *AnnouncementService) ListPublic(ctx context.Context) ([]Announcement, error) {
+	now := time.Now()
+	anns, err := s.announcementRepo.ListPublic(ctx, now)
+	if err != nil {
+		return nil, fmt.Errorf("list public announcements: %w", err)
+	}
+
+	// The repository performs the same filtering in SQL. Keep this guard in the
+	// service so an alternate repository implementation cannot expose a draft,
+	// expired, or non-public announcement by accident.
+	visible := make([]Announcement, 0, len(anns))
+	for i := range anns {
+		a := anns[i]
+		if !a.PublicVisible || !a.IsActiveAt(now) {
+			continue
+		}
+		visible = append(visible, a)
+	}
+	return visible, nil
 }
 
 func (s *AnnouncementService) ListForUser(ctx context.Context, userID int64, unreadOnly bool) ([]UserAnnouncement, error) {

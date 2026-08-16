@@ -183,6 +183,9 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeySiteName,
 		SettingKeySiteLogo,
 		SettingKeySiteSubtitle,
+		SettingKeyLandingNoticeEnabled,
+		SettingKeyLandingNoticeText,
+		SettingKeyLandingNoticeURL,
 		SettingKeyAPIBaseURL,
 		SettingKeyContactInfo,
 		SettingKeyDocURL,
@@ -228,6 +231,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SettingKeyBalanceLowNotifyRechargeURL,
 		SettingKeyAccountQuotaNotifyEnabled,
 		SettingKeyChannelMonitorEnabled,
+		SettingKeyPublicChannelStatusEnabled,
 		SettingKeyChannelMonitorMode,
 		SettingKeyChannelMonitorDefaultIntervalSeconds,
 		SettingKeyChannelMonitorHideThroughput,
@@ -293,6 +297,22 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 	if v, err := strconv.ParseFloat(settings[SettingKeyBalanceLowNotifyThreshold], 64); err == nil && v >= 0 {
 		balanceLowNotifyThreshold = v
 	}
+	storedLandingNoticeEnabled := settings[SettingKeyLandingNoticeEnabled] == "true"
+	landingNoticeEnabled := storedLandingNoticeEnabled
+	landingNoticeText, textErr := normalizeLandingNoticeText(
+		landingNoticeSettingOrDefault(settings, SettingKeyLandingNoticeText, DefaultLandingNoticeText),
+	)
+	if textErr != nil {
+		slog.Warn("invalid persisted landing notice text; hiding notice body", "error", textErr)
+		landingNoticeText = ""
+	}
+	landingNoticeURL, urlErr := normalizeLandingNoticeURL(
+		landingNoticeSettingOrDefault(settings, SettingKeyLandingNoticeURL, DefaultLandingNoticeURL),
+	)
+	if urlErr != nil {
+		slog.Warn("invalid persisted landing notice URL; hiding notice link", "error", urlErr)
+		landingNoticeURL = ""
+	}
 
 	return &PublicSettings{
 		RegistrationEnabled:                 settings[SettingKeyRegistrationEnabled] == "true",
@@ -322,6 +342,9 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		SiteName:                            s.getStringOrDefault(settings, SettingKeySiteName, "Sub2API"),
 		SiteLogo:                            settings[SettingKeySiteLogo],
 		SiteSubtitle:                        s.getStringOrDefault(settings, SettingKeySiteSubtitle, "Subscription to API Conversion Platform"),
+		LandingNoticeEnabled:                landingNoticeEnabled,
+		LandingNoticeText:                   landingNoticeText,
+		LandingNoticeURL:                    landingNoticeURL,
 		APIBaseURL:                          settings[SettingKeyAPIBaseURL],
 		ContactInfo:                         settings[SettingKeyContactInfo],
 		DocURL:                              settings[SettingKeyDocURL],
@@ -352,6 +375,7 @@ func (s *SettingService) GetPublicSettings(ctx context.Context) (*PublicSettings
 		BalanceLowNotifyRechargeURL:         settings[SettingKeyBalanceLowNotifyRechargeURL],
 
 		ChannelMonitorEnabled:                !isFalseSettingValue(settings[SettingKeyChannelMonitorEnabled]),
+		PublicChannelStatusEnabled:           settings[SettingKeyPublicChannelStatusEnabled] == "true",
 		ChannelMonitorMode:                   normalizeChannelMonitorMode(settings[SettingKeyChannelMonitorMode]),
 		ChannelMonitorDefaultIntervalSeconds: parseChannelMonitorInterval(settings[SettingKeyChannelMonitorDefaultIntervalSeconds]),
 		ChannelMonitorHideThroughput:         !isFalseSettingValue(settings[SettingKeyChannelMonitorHideThroughput]),
@@ -467,6 +491,27 @@ func (s *SettingService) GetChannelMonitorRuntime(ctx context.Context) ChannelMo
 	}
 }
 
+// GetPublicChannelStatusRuntime reads only the monitor settings needed by the
+// anonymous status aggregate. Unlike the runner runtime, it fails closed so a
+// temporary settings-store outage can never disclose a status summary that an
+// operator has turned off.
+func (s *SettingService) GetPublicChannelStatusRuntime(ctx context.Context) ChannelMonitorRuntime {
+	if s == nil || s.settingRepo == nil {
+		return ChannelMonitorRuntime{}
+	}
+	vals, err := s.settingRepo.GetMultiple(ctx, []string{
+		SettingKeyPublicChannelStatusEnabled,
+		SettingKeyChannelMonitorMode,
+	})
+	if err != nil {
+		return ChannelMonitorRuntime{}
+	}
+	return ChannelMonitorRuntime{
+		Enabled: vals[SettingKeyPublicChannelStatusEnabled] == "true",
+		Mode:    normalizeChannelMonitorMode(vals[SettingKeyChannelMonitorMode]),
+	}
+}
+
 // AvailableChannelsRuntime is the lightweight view of the available-channels feature
 // switch consumed by the user-facing handler.
 type AvailableChannelsRuntime struct {
@@ -564,6 +609,9 @@ type PublicSettingsInjectionPayload struct {
 	SiteName                            string                   `json:"site_name"`
 	SiteLogo                            string                   `json:"site_logo"`
 	SiteSubtitle                        string                   `json:"site_subtitle"`
+	LandingNoticeEnabled                bool                     `json:"landing_notice_enabled"`
+	LandingNoticeText                   string                   `json:"landing_notice_text"`
+	LandingNoticeURL                    string                   `json:"landing_notice_url"`
 	APIBaseURL                          string                   `json:"api_base_url"`
 	ContactInfo                         string                   `json:"contact_info"`
 	DocURL                              string                   `json:"doc_url"`
@@ -601,6 +649,7 @@ type PublicSettingsInjectionPayload struct {
 	// frontend/src/utils/featureFlags.ts. Missing a field here is the bug
 	// that hid the "可用渠道" menu on page refresh.
 	ChannelMonitorEnabled                bool   `json:"channel_monitor_enabled"`
+	PublicChannelStatusEnabled           bool   `json:"public_channel_status_enabled"`
 	ChannelMonitorMode                   string `json:"channel_monitor_mode"`
 	ChannelMonitorDefaultIntervalSeconds int    `json:"channel_monitor_default_interval_seconds"`
 	// ChannelMonitorHideThroughput is public so the user UI can hide RPM/TPM
@@ -649,6 +698,9 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		SiteName:                            settings.SiteName,
 		SiteLogo:                            settings.SiteLogo,
 		SiteSubtitle:                        settings.SiteSubtitle,
+		LandingNoticeEnabled:                settings.LandingNoticeEnabled,
+		LandingNoticeText:                   settings.LandingNoticeText,
+		LandingNoticeURL:                    settings.LandingNoticeURL,
 		APIBaseURL:                          settings.APIBaseURL,
 		ContactInfo:                         settings.ContactInfo,
 		DocURL:                              settings.DocURL,
@@ -682,6 +734,7 @@ func (s *SettingService) GetPublicSettingsForInjection(ctx context.Context) (any
 		BalanceLowNotifyRechargeURL:         settings.BalanceLowNotifyRechargeURL,
 
 		ChannelMonitorEnabled:                settings.ChannelMonitorEnabled,
+		PublicChannelStatusEnabled:           settings.PublicChannelStatusEnabled,
 		ChannelMonitorMode:                   settings.ChannelMonitorMode,
 		ChannelMonitorDefaultIntervalSeconds: settings.ChannelMonitorDefaultIntervalSeconds,
 		ChannelMonitorHideThroughput:         settings.ChannelMonitorHideThroughput,

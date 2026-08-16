@@ -469,6 +469,9 @@ export interface SystemSettings {
   site_name: string;
   site_logo: string;
   site_subtitle: string;
+  landing_notice_enabled: boolean;
+  landing_notice_text: string;
+  landing_notice_url: string;
   api_base_url: string;
   contact_info: string;
   doc_url: string;
@@ -709,6 +712,7 @@ export interface SystemSettings {
 
   // Channel Monitor feature switch
   channel_monitor_enabled: boolean;
+  public_channel_status_enabled: boolean;
   channel_monitor_mode?: 'v1' | 'v2';
   channel_monitor_default_interval_seconds: number;
   channel_monitor_hide_throughput?: boolean;
@@ -806,6 +810,9 @@ export interface UpdateSettingsRequest {
   site_name?: string;
   site_logo?: string;
   site_subtitle?: string;
+  landing_notice_enabled?: boolean;
+  landing_notice_text?: string;
+  landing_notice_url?: string;
   api_base_url?: string;
   contact_info?: string;
   doc_url?: string;
@@ -1007,6 +1014,7 @@ export interface UpdateSettingsRequest {
 
   // Channel Monitor feature switch
   channel_monitor_enabled?: boolean;
+  public_channel_status_enabled?: boolean;
   channel_monitor_mode?: 'v1' | 'v2';
   channel_monitor_default_interval_seconds?: number;
   channel_monitor_hide_throughput?: boolean;

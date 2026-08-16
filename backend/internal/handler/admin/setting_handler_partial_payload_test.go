@@ -4,6 +4,7 @@ package admin
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/Wei-Shaw/sub2api/internal/service"
@@ -76,6 +77,115 @@ func TestUpdateSettingsGrokDefaultBaseURLModeIsWritable(t *testing.T) {
 	}, nil)
 	require.Equal(t, http.StatusOK, rec.Code)
 	require.Equal(t, service.GrokDefaultBaseURLModeEUWest1, repo.values[service.SettingKeyGrokDefaultBaseURLMode])
+}
+
+func TestUpdateSettingsLandingNoticePartialUpdateKeepsUnsentFields(t *testing.T) {
+	h, repo := newStepUpSwitchTestHandler(t, map[string]string{
+		service.SettingKeyLandingNoticeEnabled: "false",
+		service.SettingKeyLandingNoticeText:    "Old notice",
+		service.SettingKeyLandingNoticeURL:     "/old-target",
+	})
+
+	rec := doUpdateSettings(t, h, map[string]any{
+		"landing_notice_text": "  New notice  ",
+	}, nil)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "false", repo.values[service.SettingKeyLandingNoticeEnabled])
+	require.Equal(t, "New notice", repo.values[service.SettingKeyLandingNoticeText])
+	require.Equal(t, "/old-target", repo.values[service.SettingKeyLandingNoticeURL])
+	require.Contains(t, rec.Body.String(), `"landing_notice_enabled":false`)
+	require.Contains(t, rec.Body.String(), `"landing_notice_text":"New notice"`)
+	require.Contains(t, rec.Body.String(), `"landing_notice_url":"/old-target"`)
+}
+
+func TestUpdateSettingsPublicChannelStatusSwitchIsIndependentAndPartialSafe(t *testing.T) {
+	h, repo := newStepUpSwitchTestHandler(t, map[string]string{
+		service.SettingKeyChannelMonitorEnabled:      "false",
+		service.SettingKeyPublicChannelStatusEnabled: "false",
+	})
+
+	rec := doUpdateSettings(t, h, map[string]any{
+		"public_channel_status_enabled": true,
+	}, nil)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "false", repo.values[service.SettingKeyChannelMonitorEnabled])
+	require.Equal(t, "true", repo.values[service.SettingKeyPublicChannelStatusEnabled])
+}
+
+func TestUpdateSettingsLandingNoticeAcceptsSafeRelativeURL(t *testing.T) {
+	h, repo := newStepUpSwitchTestHandler(t, map[string]string{})
+
+	rec := doUpdateSettings(t, h, map[string]any{
+		"landing_notice_url": "/keys?from=notice",
+	}, nil)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "/keys?from=notice", repo.values[service.SettingKeyLandingNoticeURL])
+}
+
+func TestUpdateSettingsLandingNoticeAllowsExplicitClear(t *testing.T) {
+	h, repo := newStepUpSwitchTestHandler(t, map[string]string{
+		service.SettingKeyLandingNoticeEnabled: "true",
+		service.SettingKeyLandingNoticeText:    "Existing notice",
+		service.SettingKeyLandingNoticeURL:     "/existing",
+	})
+
+	rec := doUpdateSettings(t, h, map[string]any{
+		"landing_notice_text": "",
+		"landing_notice_url":  "",
+	}, nil)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.Equal(t, "true", repo.values[service.SettingKeyLandingNoticeEnabled])
+	require.Empty(t, repo.values[service.SettingKeyLandingNoticeText])
+	require.Empty(t, repo.values[service.SettingKeyLandingNoticeURL])
+	require.Contains(t, rec.Body.String(), `"landing_notice_text":""`)
+	require.Contains(t, rec.Body.String(), `"landing_notice_url":""`)
+}
+
+func TestUpdateSettingsLandingNoticeRejectsInvalidInput(t *testing.T) {
+	for name, body := range map[string]map[string]any{
+		"text over 160 characters": {"landing_notice_text": strings.Repeat("界", service.LandingNoticeTextMaxRunes+1)},
+		"multiline text":           {"landing_notice_text": "line one\nline two"},
+		"protocol relative URL":    {"landing_notice_url": "//evil.example/keys"},
+		"javascript URL":           {"landing_notice_url": "javascript:alert(1)"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h, repo := newStepUpSwitchTestHandler(t, map[string]string{
+				service.SettingKeyLandingNoticeText: "Existing notice",
+				service.SettingKeyLandingNoticeURL:  "/existing",
+			})
+
+			rec := doUpdateSettings(t, h, body, nil)
+
+			require.Equal(t, http.StatusBadRequest, rec.Code)
+			require.Equal(t, "Existing notice", repo.values[service.SettingKeyLandingNoticeText])
+			require.Equal(t, "/existing", repo.values[service.SettingKeyLandingNoticeURL])
+		})
+	}
+}
+
+func TestDiffSettingsIncludesLandingNoticeFields(t *testing.T) {
+	before := &service.SystemSettings{
+		LandingNoticeEnabled: true,
+		LandingNoticeText:    "Old notice",
+		LandingNoticeURL:     "/old",
+	}
+	after := &service.SystemSettings{
+		LandingNoticeEnabled: false,
+		LandingNoticeText:    "New notice",
+		LandingNoticeURL:     "https://example.com/new",
+	}
+
+	changed := diffSettings(before, after, nil, nil, UpdateSettingsRequest{})
+
+	require.ElementsMatch(t, []string{
+		service.SettingKeyLandingNoticeEnabled,
+		service.SettingKeyLandingNoticeText,
+		service.SettingKeyLandingNoticeURL,
+	}, changed)
 }
 
 func TestUpdateSettingsRejectsTwoCaptchaProviders(t *testing.T) {

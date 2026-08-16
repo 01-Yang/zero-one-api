@@ -10,7 +10,9 @@ import (
 )
 
 type announcementRepoStub struct {
-	item *Announcement
+	item        *Announcement
+	publicItems []Announcement
+	publicErr   error
 }
 
 func (s *announcementRepoStub) Create(_ context.Context, a *Announcement) error {
@@ -40,6 +42,10 @@ func (*announcementRepoStub) List(context.Context, pagination.PaginationParams, 
 
 func (*announcementRepoStub) ListActive(context.Context, time.Time) ([]Announcement, error) {
 	return nil, nil
+}
+
+func (s *announcementRepoStub) ListPublic(context.Context, time.Time) ([]Announcement, error) {
+	return s.publicItems, s.publicErr
 }
 
 func TestAnnouncementServiceCreateRejectsEqualStartEndTimes(t *testing.T) {
@@ -78,4 +84,46 @@ func TestAnnouncementServiceUpdateRejectsEqualStartEndTimes(t *testing.T) {
 		EndsAt:   &endsAt,
 	})
 	require.ErrorIs(t, err, ErrAnnouncementInvalidSchedule)
+}
+
+func TestAnnouncementServiceListPublicFailsClosedForNonPublicOrInactiveItems(t *testing.T) {
+	now := time.Now()
+	started := now.Add(-time.Minute)
+	expired := now.Add(-time.Second)
+	future := now.Add(time.Minute)
+	repo := &announcementRepoStub{
+		publicItems: []Announcement{
+			{ID: 1, Title: "公开有效", Content: "内容", Status: AnnouncementStatusActive, PublicVisible: true, StartsAt: &started},
+			{ID: 2, Title: "未公开", Content: "内容", Status: AnnouncementStatusActive, PublicVisible: false},
+			{ID: 3, Title: "已过期", Content: "内容", Status: AnnouncementStatusActive, PublicVisible: true, EndsAt: &expired},
+			{ID: 4, Title: "尚未开始", Content: "内容", Status: AnnouncementStatusActive, PublicVisible: true, StartsAt: &future},
+			{ID: 5, Title: "草稿", Content: "内容", Status: AnnouncementStatusDraft, PublicVisible: true},
+		},
+	}
+
+	items, err := NewAnnouncementService(repo, nil, nil, nil).ListPublic(context.Background())
+	require.NoError(t, err)
+	require.Len(t, items, 1)
+	require.Equal(t, int64(1), items[0].ID)
+}
+
+func TestAnnouncementServiceUpdateCanDisablePublicVisibility(t *testing.T) {
+	repo := &announcementRepoStub{
+		item: &Announcement{
+			ID:            1,
+			Title:         "官网公告",
+			Content:       "内容",
+			Status:        AnnouncementStatusActive,
+			NotifyMode:    AnnouncementNotifyModeSilent,
+			PublicVisible: true,
+		},
+	}
+	publicVisible := false
+
+	updated, err := NewAnnouncementService(repo, nil, nil, nil).Update(context.Background(), 1, &UpdateAnnouncementInput{
+		PublicVisible: &publicVisible,
+	})
+
+	require.NoError(t, err)
+	require.False(t, updated.PublicVisible)
 }

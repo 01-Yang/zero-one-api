@@ -99,6 +99,18 @@ func (s *SettingService) refreshCachedSettingsAfterWrite(ctx context.Context, se
 }
 
 func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, settings *SystemSettings) (map[string]string, error) {
+	landingNoticeEnabled, landingNoticeText, landingNoticeURL, err := NormalizeLandingNoticeSettings(
+		settings.LandingNoticeEnabled,
+		settings.LandingNoticeText,
+		settings.LandingNoticeURL,
+	)
+	if err != nil {
+		return nil, infraerrors.BadRequest("INVALID_LANDING_NOTICE", err.Error())
+	}
+	settings.LandingNoticeEnabled = landingNoticeEnabled
+	settings.LandingNoticeText = landingNoticeText
+	settings.LandingNoticeURL = landingNoticeURL
+
 	if err := s.validateDefaultSubscriptionGroups(ctx, settings.DefaultSubscriptions); err != nil {
 		return nil, err
 	}
@@ -339,6 +351,9 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 	updates[SettingKeySiteName] = settings.SiteName
 	updates[SettingKeySiteLogo] = settings.SiteLogo
 	updates[SettingKeySiteSubtitle] = settings.SiteSubtitle
+	updates[SettingKeyLandingNoticeEnabled] = strconv.FormatBool(settings.LandingNoticeEnabled)
+	updates[SettingKeyLandingNoticeText] = settings.LandingNoticeText
+	updates[SettingKeyLandingNoticeURL] = settings.LandingNoticeURL
 	updates[SettingKeyAPIBaseURL] = settings.APIBaseURL
 	updates[SettingKeyContactInfo] = settings.ContactInfo
 	updates[SettingKeyDocURL] = settings.DocURL
@@ -412,6 +427,7 @@ func (s *SettingService) buildSystemSettingsUpdates(ctx context.Context, setting
 
 	// Channel monitor feature switch
 	updates[SettingKeyChannelMonitorEnabled] = strconv.FormatBool(settings.ChannelMonitorEnabled)
+	updates[SettingKeyPublicChannelStatusEnabled] = strconv.FormatBool(settings.PublicChannelStatusEnabled)
 	updates[SettingKeyChannelMonitorMode] = normalizeChannelMonitorMode(settings.ChannelMonitorMode)
 	if v := clampChannelMonitorInterval(settings.ChannelMonitorDefaultIntervalSeconds); v > 0 {
 		updates[SettingKeyChannelMonitorDefaultIntervalSeconds] = strconv.Itoa(v)

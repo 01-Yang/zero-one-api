@@ -28,6 +28,7 @@ func (r *announcementRepository) Create(ctx context.Context, a *service.Announce
 		SetContent(a.Content).
 		SetStatus(a.Status).
 		SetNotifyMode(a.NotifyMode).
+		SetPublicVisible(a.PublicVisible).
 		SetTargeting(a.Targeting)
 
 	if a.StartsAt != nil {
@@ -69,6 +70,7 @@ func (r *announcementRepository) Update(ctx context.Context, a *service.Announce
 		SetContent(a.Content).
 		SetStatus(a.Status).
 		SetNotifyMode(a.NotifyMode).
+		SetPublicVisible(a.PublicVisible).
 		SetTargeting(a.Targeting)
 
 	if a.StartsAt != nil {
@@ -214,6 +216,23 @@ func (r *announcementRepository) ListActive(ctx context.Context, now time.Time) 
 	return announcementEntitiesToService(items), nil
 }
 
+func (r *announcementRepository) ListPublic(ctx context.Context, now time.Time) ([]service.Announcement, error) {
+	items, err := r.client.Announcement.Query().
+		Where(
+			announcement.PublicVisibleEQ(true),
+			announcement.StatusEQ(service.AnnouncementStatusActive),
+			announcement.Or(announcement.StartsAtIsNil(), announcement.StartsAtLTE(now)),
+			announcement.Or(announcement.EndsAtIsNil(), announcement.EndsAtGT(now)),
+		).
+		Order(dbent.Desc(announcement.FieldID)).
+		Limit(20).
+		All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return announcementEntitiesToService(items), nil
+}
+
 func applyAnnouncementEntityToService(dst *service.Announcement, src *dbent.Announcement) {
 	if dst == nil || src == nil {
 		return
@@ -228,18 +247,19 @@ func announcementEntityToService(m *dbent.Announcement) *service.Announcement {
 		return nil
 	}
 	return &service.Announcement{
-		ID:         m.ID,
-		Title:      m.Title,
-		Content:    m.Content,
-		Status:     m.Status,
-		NotifyMode: m.NotifyMode,
-		Targeting:  m.Targeting,
-		StartsAt:   m.StartsAt,
-		EndsAt:     m.EndsAt,
-		CreatedBy:  m.CreatedBy,
-		UpdatedBy:  m.UpdatedBy,
-		CreatedAt:  m.CreatedAt,
-		UpdatedAt:  m.UpdatedAt,
+		ID:            m.ID,
+		Title:         m.Title,
+		Content:       m.Content,
+		Status:        m.Status,
+		NotifyMode:    m.NotifyMode,
+		PublicVisible: m.PublicVisible,
+		Targeting:     m.Targeting,
+		StartsAt:      m.StartsAt,
+		EndsAt:        m.EndsAt,
+		CreatedBy:     m.CreatedBy,
+		UpdatedBy:     m.UpdatedBy,
+		CreatedAt:     m.CreatedAt,
+		UpdatedAt:     m.UpdatedAt,
 	}
 }
 

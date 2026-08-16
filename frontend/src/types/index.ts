@@ -131,6 +131,7 @@ export interface ActionCaptchaRequestProof extends Partial<TencentCaptchaRequest
 }
 
 export interface RegisterRequest {
+  username?: string
   email: string
   password: string
   verify_code?: string
@@ -263,6 +264,7 @@ export interface PublicSettings {
   account_quota_notify_enabled: boolean
   balance_low_notify_threshold: number
   channel_monitor_enabled: boolean
+  public_channel_status_enabled: boolean
   /** Exclusive mode: v1 active probes or v2 passive aggregation. Default v2. */
   channel_monitor_mode?: 'v1' | 'v2'
   channel_monitor_default_interval_seconds: number
@@ -349,6 +351,7 @@ export interface Announcement {
   content: string
   status: AnnouncementStatus
   notify_mode: AnnouncementNotifyMode
+  public_visible: boolean
   targeting: AnnouncementTargeting
   starts_at?: string
   ends_at?: string
@@ -375,6 +378,7 @@ export interface CreateAnnouncementRequest {
   content: string
   status?: AnnouncementStatus
   notify_mode?: AnnouncementNotifyMode
+  public_visible?: boolean
   targeting: AnnouncementTargeting
   starts_at?: number
   ends_at?: number
@@ -385,6 +389,7 @@ export interface UpdateAnnouncementRequest {
   content?: string
   status?: AnnouncementStatus
   notify_mode?: AnnouncementNotifyMode
+  public_visible?: boolean
   targeting?: AnnouncementTargeting
   starts_at?: number
   ends_at?: number

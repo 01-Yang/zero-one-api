@@ -69,6 +69,9 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 		settingKeyForwardedClientIPModeV2:                   "true",
 		SettingKeySiteName:                                  "Sub2API",
 		SettingKeySiteLogo:                                  "",
+		SettingKeyLandingNoticeEnabled:                      "false",
+		SettingKeyLandingNoticeText:                         DefaultLandingNoticeText,
+		SettingKeyLandingNoticeURL:                          DefaultLandingNoticeURL,
 		SettingKeyPurchaseSubscriptionEnabled:               "false",
 		SettingKeyPurchaseSubscriptionURL:                   "",
 		SettingKeyTableDefaultPageSize:                      "20",
@@ -187,6 +190,7 @@ func (s *SettingService) InitializeDefaultSettings(ctx context.Context) error {
 
 		// Channel monitor defaults (enabled, 60s)
 		SettingKeyChannelMonitorEnabled:                "true",
+		SettingKeyPublicChannelStatusEnabled:           "false",
 		SettingKeyChannelMonitorMode:                   ChannelMonitorModeV1,
 		SettingKeyChannelMonitorDefaultIntervalSeconds: "60",
 		SettingKeyChannelMonitorHideThroughput:         "true",
@@ -351,6 +355,9 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		SiteName:                               s.getStringOrDefault(settings, SettingKeySiteName, "Sub2API"),
 		SiteLogo:                               settings[SettingKeySiteLogo],
 		SiteSubtitle:                           s.getStringOrDefault(settings, SettingKeySiteSubtitle, "Subscription to API Conversion Platform"),
+		LandingNoticeEnabled:                   settings[SettingKeyLandingNoticeEnabled] == "true",
+		LandingNoticeText:                      landingNoticeSettingOrDefault(settings, SettingKeyLandingNoticeText, DefaultLandingNoticeText),
+		LandingNoticeURL:                       landingNoticeSettingOrDefault(settings, SettingKeyLandingNoticeURL, DefaultLandingNoticeURL),
 		APIBaseURL:                             settings[SettingKeyAPIBaseURL],
 		ContactInfo:                            settings[SettingKeyContactInfo],
 		DocURL:                                 settings[SettingKeyDocURL],
@@ -363,6 +370,21 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 		CustomEndpoints:                        settings[SettingKeyCustomEndpoints],
 		BackendModeEnabled:                     settings[SettingKeyBackendModeEnabled] == "true",
 	}
+	storedLandingNoticeEnabled := result.LandingNoticeEnabled
+	landingNoticeEnabled := storedLandingNoticeEnabled
+	landingNoticeText, textErr := normalizeLandingNoticeText(result.LandingNoticeText)
+	if textErr != nil {
+		slog.Warn("invalid persisted landing notice text; hiding notice body", "error", textErr)
+		landingNoticeText = ""
+	}
+	landingNoticeURL, urlErr := normalizeLandingNoticeURL(result.LandingNoticeURL)
+	if urlErr != nil {
+		slog.Warn("invalid persisted landing notice URL; hiding notice link", "error", urlErr)
+		landingNoticeURL = ""
+	}
+	result.LandingNoticeEnabled = landingNoticeEnabled
+	result.LandingNoticeText = landingNoticeText
+	result.LandingNoticeURL = landingNoticeURL
 	result.TableDefaultPageSize, result.TablePageSizeOptions = parseTablePreferences(
 		settings[SettingKeyTableDefaultPageSize],
 		settings[SettingKeyTablePageSizeOptions],
@@ -791,6 +813,7 @@ func (s *SettingService) parseSettings(settings map[string]string) *SystemSettin
 
 	// Channel monitor feature (default: enabled, 60s)
 	result.ChannelMonitorEnabled = !isFalseSettingValue(settings[SettingKeyChannelMonitorEnabled])
+	result.PublicChannelStatusEnabled = settings[SettingKeyPublicChannelStatusEnabled] == "true"
 	result.ChannelMonitorMode = normalizeChannelMonitorMode(settings[SettingKeyChannelMonitorMode])
 	result.ChannelMonitorDefaultIntervalSeconds = parseChannelMonitorInterval(
 		settings[SettingKeyChannelMonitorDefaultIntervalSeconds],

@@ -226,6 +226,8 @@ export default {
     dontHaveAccount: '还没有账户？',
     alreadyHaveAccount: '已有账户？',
     registrationDisabled: '注册功能暂时关闭，请联系管理员。',
+    usernameLabel: '用户名',
+    usernamePlaceholder: '请输入用户名',
     emailLabel: '邮箱',
     emailPlaceholder: '请输入邮箱',
     passwordLabel: '密码',

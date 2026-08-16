@@ -89,6 +89,12 @@
             </span>
           </template>
 
+          <template #cell-public_visible="{ value }">
+            <span :class="['badge', value ? 'badge-primary' : 'badge-gray']">
+              {{ value ? t('admin.announcements.publicVisibleOn') : t('admin.announcements.publicVisibleOff') }}
+            </span>
+          </template>
+
           <template #cell-targeting="{ row }">
             <span class="text-sm text-gray-600 dark:text-gray-300">
               {{ targetingSummary(row.targeting) }}
@@ -211,6 +217,23 @@
           </div>
         </div>
 
+        <div class="rounded-lg border border-gray-200 p-3 dark:border-dark-600">
+          <div class="flex items-start gap-3">
+            <input
+              id="announcement-public-visible"
+              v-model="form.public_visible"
+              type="checkbox"
+              class="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            />
+            <div>
+              <label for="announcement-public-visible" class="cursor-pointer text-sm font-medium text-gray-900 dark:text-white">
+                {{ t('admin.announcements.form.publicVisible') }}
+              </label>
+              <p class="input-hint mt-1">{{ t('admin.announcements.form.publicVisibleHint') }}</p>
+            </div>
+          </div>
+        </div>
+
         <AnnouncementTargetingEditor
           v-model="form.targeting"
           :groups="subscriptionGroups"
@@ -325,6 +348,7 @@ const columns = computed<Column[]>(() => [
   { key: 'title', label: t('admin.announcements.columns.title'), sortable: true },
   { key: 'status', label: t('admin.announcements.columns.status'), sortable: true },
   { key: 'notify_mode', label: t('admin.announcements.columns.notifyMode'), sortable: true },
+  { key: 'public_visible', label: t('admin.announcements.columns.publicVisible') },
   { key: 'targeting', label: t('admin.announcements.columns.targeting') },
   { key: 'timeRange', label: t('admin.announcements.columns.timeRange') },
   { key: 'created_at', label: t('admin.announcements.columns.createdAt'), sortable: true },
@@ -432,6 +456,7 @@ const form = reactive({
   content: '',
   status: 'draft',
   notify_mode: 'silent',
+  public_visible: false,
   starts_at_str: '',
   ends_at_str: '',
   targeting: { any_of: [] } as AnnouncementTargeting
@@ -454,6 +479,7 @@ function resetForm() {
   form.content = ''
   form.status = 'draft'
   form.notify_mode = 'silent'
+  form.public_visible = false
   form.starts_at_str = ''
   form.ends_at_str = ''
   form.targeting = { any_of: [] }
@@ -464,6 +490,7 @@ function fillFormFromAnnouncement(a: Announcement) {
   form.content = a.content
   form.status = a.status
   form.notify_mode = a.notify_mode || 'silent'
+  form.public_visible = Boolean(a.public_visible)
 
   // Backend returns RFC3339 strings
   form.starts_at_str = a.starts_at ? formatDateTimeLocalInput(Math.floor(new Date(a.starts_at).getTime() / 1000)) : ''
@@ -498,6 +525,7 @@ function buildCreatePayload() {
     content: form.content,
     status: form.status as any,
     notify_mode: form.notify_mode as any,
+    public_visible: form.public_visible,
     targeting: form.targeting,
     starts_at: startsAt ?? undefined,
     ends_at: endsAt ?? undefined
@@ -511,6 +539,7 @@ function buildUpdatePayload(original: Announcement) {
   if (form.content !== original.content) payload.content = form.content
   if (form.status !== original.status) payload.status = form.status
   if (form.notify_mode !== (original.notify_mode || 'silent')) payload.notify_mode = form.notify_mode
+  if (form.public_visible !== Boolean(original.public_visible)) payload.public_visible = form.public_visible
 
   // starts_at / ends_at: distinguish unchanged vs clear(0) vs set
   const originalStarts = original.starts_at ? Math.floor(new Date(original.starts_at).getTime() / 1000) : null

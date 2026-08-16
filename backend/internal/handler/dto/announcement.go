@@ -7,11 +7,12 @@ import (
 )
 
 type Announcement struct {
-	ID         int64  `json:"id"`
-	Title      string `json:"title"`
-	Content    string `json:"content"`
-	Status     string `json:"status"`
-	NotifyMode string `json:"notify_mode"`
+	ID            int64  `json:"id"`
+	Title         string `json:"title"`
+	Content       string `json:"content"`
+	Status        string `json:"status"`
+	NotifyMode    string `json:"notify_mode"`
+	PublicVisible bool   `json:"public_visible"`
 
 	Targeting service.AnnouncementTargeting `json:"targeting"`
 
@@ -45,18 +46,39 @@ func AnnouncementFromService(a *service.Announcement) *Announcement {
 		return nil
 	}
 	return &Announcement{
-		ID:         a.ID,
-		Title:      a.Title,
-		Content:    a.Content,
-		Status:     a.Status,
-		NotifyMode: a.NotifyMode,
-		Targeting:  a.Targeting,
-		StartsAt:   a.StartsAt,
-		EndsAt:     a.EndsAt,
-		CreatedBy:  a.CreatedBy,
-		UpdatedBy:  a.UpdatedBy,
-		CreatedAt:  a.CreatedAt,
-		UpdatedAt:  a.UpdatedAt,
+		ID:            a.ID,
+		Title:         a.Title,
+		Content:       a.Content,
+		Status:        a.Status,
+		NotifyMode:    a.NotifyMode,
+		PublicVisible: a.PublicVisible,
+		Targeting:     a.Targeting,
+		StartsAt:      a.StartsAt,
+		EndsAt:        a.EndsAt,
+		CreatedBy:     a.CreatedBy,
+		UpdatedBy:     a.UpdatedBy,
+		CreatedAt:     a.CreatedAt,
+		UpdatedAt:     a.UpdatedAt,
+	}
+}
+
+// PublicAnnouncement is the intentionally narrow contract exposed to
+// anonymous website visitors. Do not add targeting, notification, actor, or
+// read-status fields here: those are private administration/user data.
+type PublicAnnouncement struct {
+	ID      int64  `json:"id"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
+func PublicAnnouncementFromService(a *service.Announcement) *PublicAnnouncement {
+	if a == nil {
+		return nil
+	}
+	return &PublicAnnouncement{
+		ID:      a.ID,
+		Title:   a.Title,
+		Content: a.Content,
 	}
 }
 

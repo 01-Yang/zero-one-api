@@ -75,6 +75,11 @@ func NotifyMode(v string) predicate.Announcement {
 	return predicate.Announcement(sql.FieldEQ(FieldNotifyMode, v))
 }
 
+// PublicVisible applies equality check predicate on the "public_visible" field. It's identical to PublicVisibleEQ.
+func PublicVisible(v bool) predicate.Announcement {
+	return predicate.Announcement(sql.FieldEQ(FieldPublicVisible, v))
+}
+
 // StartsAt applies equality check predicate on the "starts_at" field. It's identical to StartsAtEQ.
 func StartsAt(v time.Time) predicate.Announcement {
 	return predicate.Announcement(sql.FieldEQ(FieldStartsAt, v))
@@ -363,6 +368,16 @@ func NotifyModeEqualFold(v string) predicate.Announcement {
 // NotifyModeContainsFold applies the ContainsFold predicate on the "notify_mode" field.
 func NotifyModeContainsFold(v string) predicate.Announcement {
 	return predicate.Announcement(sql.FieldContainsFold(FieldNotifyMode, v))
+}
+
+// PublicVisibleEQ applies the EQ predicate on the "public_visible" field.
+func PublicVisibleEQ(v bool) predicate.Announcement {
+	return predicate.Announcement(sql.FieldEQ(FieldPublicVisible, v))
+}
+
+// PublicVisibleNEQ applies the NEQ predicate on the "public_visible" field.
+func PublicVisibleNEQ(v bool) predicate.Announcement {
+	return predicate.Announcement(sql.FieldNEQ(FieldPublicVisible, v))
 }
 
 // TargetingIsNil applies the IsNil predicate on the "targeting" field.

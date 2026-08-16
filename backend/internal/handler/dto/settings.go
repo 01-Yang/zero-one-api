@@ -151,6 +151,9 @@ type SystemSettings struct {
 	SiteName                    string           `json:"site_name"`
 	SiteLogo                    string           `json:"site_logo"`
 	SiteSubtitle                string           `json:"site_subtitle"`
+	LandingNoticeEnabled        bool             `json:"landing_notice_enabled"`
+	LandingNoticeText           string           `json:"landing_notice_text"`
+	LandingNoticeURL            string           `json:"landing_notice_url"`
 	APIBaseURL                  string           `json:"api_base_url"`
 	ContactInfo                 string           `json:"contact_info"`
 	DocURL                      string           `json:"doc_url"`
@@ -302,6 +305,7 @@ type SystemSettings struct {
 
 	// Channel Monitor feature switch
 	ChannelMonitorEnabled                bool   `json:"channel_monitor_enabled"`
+	PublicChannelStatusEnabled           bool   `json:"public_channel_status_enabled"`
 	ChannelMonitorMode                   string `json:"channel_monitor_mode"`
 	ChannelMonitorDefaultIntervalSeconds int    `json:"channel_monitor_default_interval_seconds"`
 	ChannelMonitorHideThroughput         bool   `json:"channel_monitor_hide_throughput"`
@@ -375,6 +379,9 @@ type PublicSettings struct {
 	SiteName                            string                   `json:"site_name"`
 	SiteLogo                            string                   `json:"site_logo"`
 	SiteSubtitle                        string                   `json:"site_subtitle"`
+	LandingNoticeEnabled                bool                     `json:"landing_notice_enabled"`
+	LandingNoticeText                   string                   `json:"landing_notice_text"`
+	LandingNoticeURL                    string                   `json:"landing_notice_url"`
 	APIBaseURL                          string                   `json:"api_base_url"`
 	ContactInfo                         string                   `json:"contact_info"`
 	DocURL                              string                   `json:"doc_url"`
@@ -411,6 +418,7 @@ type PublicSettings struct {
 	BalanceLowNotifyRechargeURL string  `json:"balance_low_notify_recharge_url"`
 
 	ChannelMonitorEnabled                bool   `json:"channel_monitor_enabled"`
+	PublicChannelStatusEnabled           bool   `json:"public_channel_status_enabled"`
 	ChannelMonitorMode                   string `json:"channel_monitor_mode"`
 	ChannelMonitorDefaultIntervalSeconds int    `json:"channel_monitor_default_interval_seconds"`
 	ChannelMonitorHideThroughput         bool   `json:"channel_monitor_hide_throughput"`

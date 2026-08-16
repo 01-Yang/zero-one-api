@@ -205,13 +205,17 @@ type Announcement struct {
 	Content    string
 	Status     string
 	NotifyMode string
-	Targeting  AnnouncementTargeting
-	StartsAt   *time.Time
-	EndsAt     *time.Time
-	CreatedBy  *int64
-	UpdatedBy  *int64
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	// PublicVisible is intentionally separate from Targeting. Targeting governs
+	// authenticated users, while public visibility is an explicit opt-in for
+	// anonymous website visitors.
+	PublicVisible bool
+	Targeting     AnnouncementTargeting
+	StartsAt      *time.Time
+	EndsAt        *time.Time
+	CreatedBy     *int64
+	UpdatedBy     *int64
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }
 
 func (a *Announcement) IsActiveAt(now time.Time) bool {

@@ -6239,6 +6239,97 @@
                 </div>
               </div>
 
+              <!-- Public Landing Page Notice -->
+              <div
+                class="border-t border-gray-100 pt-4 dark:border-dark-700"
+                data-testid="landing-notice-settings"
+              >
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">
+                      {{ t("admin.settings.site.landingNotice.title") }}
+                    </h3>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {{ t("admin.settings.site.landingNotice.description") }}
+                    </p>
+                  </div>
+                  <Toggle
+                    v-model="form.landing_notice_enabled"
+                    data-testid="landing-notice-toggle"
+                    :aria-label="t('admin.settings.site.landingNotice.enabled')"
+                  />
+                </div>
+
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t("admin.settings.site.landingNotice.enabledHint") }}
+                </p>
+
+                <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label
+                      for="landing-notice-text"
+                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      {{ t("admin.settings.site.landingNotice.text") }}
+                    </label>
+                    <input
+                      id="landing-notice-text"
+                      v-model="form.landing_notice_text"
+                      type="text"
+                      maxlength="160"
+                      class="input text-sm"
+                      data-testid="landing-notice-text"
+                      :placeholder="t('admin.settings.site.landingNotice.textPlaceholder')"
+                      aria-describedby="landing-notice-text-help"
+                    />
+                    <div
+                      id="landing-notice-text-help"
+                      class="mt-1.5 flex items-start justify-between gap-3 text-xs text-gray-500 dark:text-gray-400"
+                    >
+                      <span>{{ t("admin.settings.site.landingNotice.textHint") }}</span>
+                      <span class="shrink-0 tabular-nums">{{ form.landing_notice_text.length }}/160</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      for="landing-notice-url"
+                      class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      {{ t("admin.settings.site.landingNotice.url") }}
+                    </label>
+                    <input
+                      id="landing-notice-url"
+                      v-model="form.landing_notice_url"
+                      type="text"
+                      inputmode="url"
+                      class="input font-mono text-sm"
+                      data-testid="landing-notice-url"
+                      :placeholder="t('admin.settings.site.landingNotice.urlPlaceholder')"
+                      aria-describedby="landing-notice-url-help"
+                      :aria-invalid="landingNoticeUrlInvalid"
+                    />
+                    <p
+                      id="landing-notice-url-help"
+                      class="mt-1.5 text-xs"
+                      :class="
+                        landingNoticeUrlInvalid
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-gray-500 dark:text-gray-400'
+                      "
+                    >
+                      {{
+                        t(
+                          landingNoticeUrlInvalid
+                            ? "admin.settings.site.landingNotice.urlInvalid"
+                            : "admin.settings.site.landingNotice.urlHint",
+                        )
+                      }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <!-- API Base URL -->
               <div>
                 <label
@@ -6968,6 +7059,21 @@
                 </p>
               </div>
               <Toggle v-model="form.channel_monitor_enabled" />
+            </div>
+
+            <div class="flex items-start justify-between gap-4 border-t border-gray-100 pt-5 dark:border-dark-700">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                  {{ t('admin.settings.features.channelMonitor.publicStatusEnabled') }}
+                </p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {{ t('admin.settings.features.channelMonitor.publicStatusEnabledHint') }}
+                </p>
+              </div>
+              <Toggle
+                v-model="form.public_channel_status_enabled"
+                data-testid="public-channel-status-toggle"
+              />
             </div>
 
             <div v-if="form.channel_monitor_enabled" class="space-y-5">
@@ -8938,6 +9044,34 @@ const openaiFastPolicyLoaded = ref(false);
 const tablePageSizeMin = 5;
 const tablePageSizeMax = 1000;
 const tablePageSizeDefault = 20;
+const defaultLandingNoticeText = "";
+const defaultLandingNoticeUrl = "";
+
+function isValidHttpUrl(url: string): boolean {
+  if (!url) return true;
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isValidLandingNoticeUrl(url: string): boolean {
+  if (!url) return true;
+  if (
+    url.startsWith("/") &&
+    !url.startsWith("//") &&
+    !url.includes("\\") &&
+    !Array.from(url).some((character) => {
+      const code = character.charCodeAt(0);
+      return code <= 31 || code === 127;
+    })
+  ) {
+    return true;
+  }
+  return isValidHttpUrl(url);
+}
 
 function defaultLoginAgreementDocuments(): LoginAgreementDocument[] {
   return [
@@ -9450,6 +9584,9 @@ const form = reactive<SettingsForm>({
   site_name: "Sub2API",
   site_logo: "",
   site_subtitle: "Subscription to API Conversion Platform",
+  landing_notice_enabled: false,
+  landing_notice_text: defaultLandingNoticeText,
+  landing_notice_url: defaultLandingNoticeUrl,
   api_base_url: "",
   contact_info: "",
   doc_url: "",
@@ -9681,6 +9818,7 @@ const form = reactive<SettingsForm>({
   account_quota_notify_emails: [] as NotifyEmailEntry[],
   // Channel Monitor feature switch
   channel_monitor_enabled: true,
+  public_channel_status_enabled: false,
   channel_monitor_mode: 'v1' as 'v1' | 'v2',
   channel_monitor_default_interval_seconds: 60,
   channel_monitor_hide_throughput: false,
@@ -9695,6 +9833,10 @@ const form = reactive<SettingsForm>({
   // Allow user view error requests
   allow_user_view_error_requests: false,
 });
+
+const landingNoticeUrlInvalid = computed(
+  () => !isValidLandingNoticeUrl(form.landing_notice_url),
+);
 
 // 人机验证 UI 状态：单卡片「总开关 + 服务商单选」，落库仍是三个独立
 // enabled 键（与上游一致），由下面的映射保证同一时间至多一家启用。
@@ -10659,6 +10801,18 @@ async function loadSettings() {
         (form as Record<string, unknown>)[key] = value;
       }
     }
+    form.landing_notice_enabled =
+      typeof settings.landing_notice_enabled === "boolean"
+        ? settings.landing_notice_enabled
+        : false;
+    form.landing_notice_text =
+      typeof settings.landing_notice_text === "string"
+        ? settings.landing_notice_text
+        : defaultLandingNoticeText;
+    form.landing_notice_url =
+      typeof settings.landing_notice_url === "string"
+        ? settings.landing_notice_url
+        : defaultLandingNoticeUrl;
     syncCaptchaProviderSelection();
     if (!form.claude_oauth_system_prompt_blocks?.trim()) {
       form.claude_oauth_system_prompt_blocks =
@@ -10682,6 +10836,8 @@ async function loadSettings() {
       settings.login_agreement_mode === "checkbox" ? "checkbox" : "modal";
     form.channel_monitor_mode =
       settings.channel_monitor_mode === "v2" ? "v2" : "v1";
+    form.public_channel_status_enabled =
+      settings.public_channel_status_enabled === true;
     form.channel_monitor_hide_throughput = Boolean(
       settings.channel_monitor_hide_throughput
     );
@@ -11008,18 +11164,10 @@ async function saveSettings() {
       return;
     }
     // Validate URL fields — novalidate disables browser-native checks, so we validate here
-    const isValidHttpUrl = (url: string): boolean => {
-      if (!url) return true;
-      try {
-        const u = new URL(url);
-        return u.protocol === "http:" || u.protocol === "https:";
-      } catch {
-        return false;
-      }
-    };
     // Optional URL fields: auto-clear invalid values so they don't cause backend 400 errors
     if (!isValidHttpUrl(form.frontend_url)) form.frontend_url = "";
     if (!isValidHttpUrl(form.doc_url)) form.doc_url = "";
+    if (!isValidLandingNoticeUrl(form.landing_notice_url)) form.landing_notice_url = "";
     syncWeChatConnectMode();
     const wechatStoredMode = deriveWeChatConnectStoredMode(
       form.wechat_connect_open_enabled,
@@ -11075,6 +11223,9 @@ async function saveSettings() {
       site_name: form.site_name,
       site_logo: form.site_logo,
       site_subtitle: form.site_subtitle,
+      landing_notice_enabled: form.landing_notice_enabled,
+      landing_notice_text: form.landing_notice_text,
+      landing_notice_url: form.landing_notice_url,
       api_base_url: form.api_base_url,
       contact_info: form.contact_info,
       doc_url: form.doc_url,
@@ -11332,6 +11483,7 @@ async function saveSettings() {
       ).filter((e) => e.email.trim() !== ""),
       // Channel Monitor feature switch
       channel_monitor_enabled: form.channel_monitor_enabled,
+      public_channel_status_enabled: form.public_channel_status_enabled,
       channel_monitor_mode: form.channel_monitor_mode === 'v1' ? 'v1' : 'v2',
       channel_monitor_default_interval_seconds:
         Number(form.channel_monitor_default_interval_seconds) || 60,

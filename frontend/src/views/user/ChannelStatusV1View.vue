@@ -73,12 +73,15 @@ const countdown = autoRefresh.countdown
 
 // ── Computed ──
 const overallStatus = computed<OverallStatus>(() => {
-  if (items.value.length === 0) return 'operational'
+  if (items.value.length === 0) return 'unavailable'
+  let hasIncompleteData = false
   for (const it of items.value) {
     if (it.primary_status === 'failed' || it.primary_status === 'error') return 'degraded'
-    if (it.primary_status !== STATUS_OPERATIONAL) return 'degraded'
+    if (it.primary_status === STATUS_OPERATIONAL) continue
+    if (it.primary_status === 'degraded') return 'degraded'
+    hasIncompleteData = true
   }
-  return 'operational'
+  return hasIncompleteData ? 'unavailable' : 'operational'
 })
 
 const detailTitle = computed(() => {

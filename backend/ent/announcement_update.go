@@ -86,6 +86,20 @@ func (_u *AnnouncementUpdate) SetNillableNotifyMode(v *string) *AnnouncementUpda
 	return _u
 }
 
+// SetPublicVisible sets the "public_visible" field.
+func (_u *AnnouncementUpdate) SetPublicVisible(v bool) *AnnouncementUpdate {
+	_u.mutation.SetPublicVisible(v)
+	return _u
+}
+
+// SetNillablePublicVisible sets the "public_visible" field if the given value is not nil.
+func (_u *AnnouncementUpdate) SetNillablePublicVisible(v *bool) *AnnouncementUpdate {
+	if v != nil {
+		_u.SetPublicVisible(*v)
+	}
+	return _u
+}
+
 // SetTargeting sets the "targeting" field.
 func (_u *AnnouncementUpdate) SetTargeting(v domain.AnnouncementTargeting) *AnnouncementUpdate {
 	_u.mutation.SetTargeting(v)
@@ -332,6 +346,9 @@ func (_u *AnnouncementUpdate) sqlSave(ctx context.Context) (_node int, err error
 	if value, ok := _u.mutation.NotifyMode(); ok {
 		_spec.SetField(announcement.FieldNotifyMode, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.PublicVisible(); ok {
+		_spec.SetField(announcement.FieldPublicVisible, field.TypeBool, value)
+	}
 	if value, ok := _u.mutation.Targeting(); ok {
 		_spec.SetField(announcement.FieldTargeting, field.TypeJSON, value)
 	}
@@ -488,6 +505,20 @@ func (_u *AnnouncementUpdateOne) SetNotifyMode(v string) *AnnouncementUpdateOne 
 func (_u *AnnouncementUpdateOne) SetNillableNotifyMode(v *string) *AnnouncementUpdateOne {
 	if v != nil {
 		_u.SetNotifyMode(*v)
+	}
+	return _u
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (_u *AnnouncementUpdateOne) SetPublicVisible(v bool) *AnnouncementUpdateOne {
+	_u.mutation.SetPublicVisible(v)
+	return _u
+}
+
+// SetNillablePublicVisible sets the "public_visible" field if the given value is not nil.
+func (_u *AnnouncementUpdateOne) SetNillablePublicVisible(v *bool) *AnnouncementUpdateOne {
+	if v != nil {
+		_u.SetPublicVisible(*v)
 	}
 	return _u
 }
@@ -767,6 +798,9 @@ func (_u *AnnouncementUpdateOne) sqlSave(ctx context.Context) (_node *Announceme
 	}
 	if value, ok := _u.mutation.NotifyMode(); ok {
 		_spec.SetField(announcement.FieldNotifyMode, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.PublicVisible(); ok {
+		_spec.SetField(announcement.FieldPublicVisible, field.TypeBool, value)
 	}
 	if value, ok := _u.mutation.Targeting(); ok {
 		_spec.SetField(announcement.FieldTargeting, field.TypeJSON, value)

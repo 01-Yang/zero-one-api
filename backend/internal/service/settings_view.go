@@ -152,6 +152,9 @@ type SystemSettings struct {
 	SiteName                    string
 	SiteLogo                    string
 	SiteSubtitle                string
+	LandingNoticeEnabled        bool
+	LandingNoticeText           string
+	LandingNoticeURL            string
 	APIBaseURL                  string
 	ContactInfo                 string
 	DocURL                      string
@@ -198,6 +201,7 @@ type SystemSettings struct {
 
 	// Channel Monitor feature
 	ChannelMonitorEnabled                bool   `json:"channel_monitor_enabled"`
+	PublicChannelStatusEnabled           bool   `json:"public_channel_status_enabled"`
 	ChannelMonitorMode                   string `json:"channel_monitor_mode"`
 	ChannelMonitorDefaultIntervalSeconds int    `json:"channel_monitor_default_interval_seconds"`
 	ChannelMonitorHideThroughput         bool   `json:"channel_monitor_hide_throughput"`
@@ -340,6 +344,9 @@ type PublicSettings struct {
 	SiteName                            string
 	SiteLogo                            string
 	SiteSubtitle                        string
+	LandingNoticeEnabled                bool
+	LandingNoticeText                   string
+	LandingNoticeURL                    string
 	APIBaseURL                          string
 	ContactInfo                         string
 	DocURL                              string
@@ -375,6 +382,7 @@ type PublicSettings struct {
 
 	// Channel Monitor feature
 	ChannelMonitorEnabled                bool   `json:"channel_monitor_enabled"`
+	PublicChannelStatusEnabled           bool   `json:"public_channel_status_enabled"`
 	ChannelMonitorMode                   string `json:"channel_monitor_mode"`
 	ChannelMonitorDefaultIntervalSeconds int    `json:"channel_monitor_default_interval_seconds"`
 	ChannelMonitorHideThroughput         bool   `json:"channel_monitor_hide_throughput"`

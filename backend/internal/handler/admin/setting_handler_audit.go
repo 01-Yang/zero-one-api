@@ -326,6 +326,15 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	if before.SiteSubtitle != after.SiteSubtitle {
 		changed = append(changed, "site_subtitle")
 	}
+	if before.LandingNoticeEnabled != after.LandingNoticeEnabled {
+		changed = append(changed, service.SettingKeyLandingNoticeEnabled)
+	}
+	if before.LandingNoticeText != after.LandingNoticeText {
+		changed = append(changed, service.SettingKeyLandingNoticeText)
+	}
+	if before.LandingNoticeURL != after.LandingNoticeURL {
+		changed = append(changed, service.SettingKeyLandingNoticeURL)
+	}
 	if before.APIBaseURL != after.APIBaseURL {
 		changed = append(changed, "api_base_url")
 	}
@@ -569,6 +578,9 @@ func diffSettings(before *service.SystemSettings, after *service.SystemSettings,
 	}
 	if before.ChannelMonitorEnabled != after.ChannelMonitorEnabled {
 		changed = append(changed, "channel_monitor_enabled")
+	}
+	if before.PublicChannelStatusEnabled != after.PublicChannelStatusEnabled {
+		changed = append(changed, service.SettingKeyPublicChannelStatusEnabled)
 	}
 	if before.ChannelMonitorDefaultIntervalSeconds != after.ChannelMonitorDefaultIntervalSeconds {
 		changed = append(changed, "channel_monitor_default_interval_seconds")

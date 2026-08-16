@@ -48,6 +48,26 @@ func (h *AnnouncementHandler) List(c *gin.Context) {
 	response.Success(c, out)
 }
 
+// ListPublic lists active announcements explicitly approved for the public
+// website. It does not require a user session and intentionally returns the
+// narrow public DTO only.
+// GET /api/v1/announcements/public
+func (h *AnnouncementHandler) ListPublic(c *gin.Context) {
+	c.Header("Cache-Control", "no-store")
+
+	items, err := h.announcementService.ListPublic(c.Request.Context())
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	out := make([]dto.PublicAnnouncement, 0, len(items))
+	for i := range items {
+		out = append(out, *dto.PublicAnnouncementFromService(&items[i]))
+	}
+	response.Success(c, out)
+}
+
 // MarkRead marks an announcement as read for current user
 // POST /api/v1/announcements/:id/read
 func (h *AnnouncementHandler) MarkRead(c *gin.Context) {

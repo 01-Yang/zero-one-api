@@ -82,6 +82,64 @@ func TestSettingHandler_GetPublicSettings_ExposesForceEmailOnThirdPartySignup(t 
 	require.True(t, resp.Data.ForceEmailOnThirdPartySignup)
 }
 
+func TestSettingHandler_GetPublicSettings_ExposesLandingNotice(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	repo := &settingHandlerPublicRepoStub{
+		values: map[string]string{
+			service.SettingKeyLandingNoticeEnabled: "false",
+			service.SettingKeyLandingNoticeText:    "Maintenance tonight",
+			service.SettingKeyLandingNoticeURL:     "/status",
+		},
+	}
+	h := NewSettingHandler(service.NewSettingService(repo, &config.Config{}), "test-version")
+
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/settings/public", nil)
+
+	h.GetPublicSettings(c)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	var resp struct {
+		Code int `json:"code"`
+		Data struct {
+			LandingNoticeEnabled bool   `json:"landing_notice_enabled"`
+			LandingNoticeText    string `json:"landing_notice_text"`
+			LandingNoticeURL     string `json:"landing_notice_url"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp))
+	require.Equal(t, 0, resp.Code)
+	require.False(t, resp.Data.LandingNoticeEnabled)
+	require.Equal(t, "Maintenance tonight", resp.Data.LandingNoticeText)
+	require.Equal(t, "/status", resp.Data.LandingNoticeURL)
+}
+
+func TestSettingHandler_GetPublicSettings_ExposesPublicChannelStatusSwitch(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	repo := &settingHandlerPublicRepoStub{values: map[string]string{
+		service.SettingKeyPublicChannelStatusEnabled: "true",
+	}}
+	h := NewSettingHandler(service.NewSettingService(repo, &config.Config{}), "test-version")
+
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = httptest.NewRequest(http.MethodGet, "/api/v1/settings/public", nil)
+
+	h.GetPublicSettings(c)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	var resp struct {
+		Data struct {
+			PublicChannelStatusEnabled bool `json:"public_channel_status_enabled"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(recorder.Body.Bytes(), &resp))
+	require.True(t, resp.Data.PublicChannelStatusEnabled)
+}
+
 func TestSettingHandler_GetPublicSettings_ExposesTencentCaptchaConfiguration(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

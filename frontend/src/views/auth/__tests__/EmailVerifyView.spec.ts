@@ -425,6 +425,67 @@ describe('EmailVerifyView', () => {
     )
   })
 
+  it('preserves the username when completing email-verified registration', async () => {
+    sessionStorage.setItem(
+      'register_data',
+      JSON.stringify({
+        username: 'zero-one',
+        email: 'username@example.com',
+        password: 'secret-123',
+      })
+    )
+
+    const wrapper = mount(EmailVerifyView, {
+      global: {
+        stubs: {
+          AuthLayout: { template: '<div><slot /><slot name="footer" /></div>' },
+          Icon: true,
+          TurnstileWidget: true,
+          transition: false,
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#code').setValue('123456')
+    await wrapper.get('form').trigger('submit.prevent')
+    await flushPromises()
+
+    expect(registerMock).toHaveBeenCalledWith(
+      expect.objectContaining({ username: 'zero-one' })
+    )
+  })
+
+  it('omits a blank optional username when completing email-verified registration', async () => {
+    sessionStorage.setItem(
+      'register_data',
+      JSON.stringify({
+        username: '   ',
+        email: 'blank-name@example.com',
+        password: 'secret-123',
+      })
+    )
+
+    const wrapper = mount(EmailVerifyView, {
+      global: {
+        stubs: {
+          AuthLayout: { template: '<div><slot /><slot name="footer" /></div>' },
+          Icon: true,
+          TurnstileWidget: true,
+          transition: false,
+        },
+      },
+    })
+
+    await flushPromises()
+    await wrapper.get('#code').setValue('123456')
+    await wrapper.get('form').trigger('submit.prevent')
+    await flushPromises()
+
+    expect(registerMock).toHaveBeenCalled()
+    expect(registerMock.mock.calls[0]?.[0]).not.toHaveProperty('username')
+  })
+
   // 域名限量注册开关默认关闭：恢复 PR5423 之前的客户端白名单预检，非白名单域名不发送验证码。
   it('blocks sending a verification code for a non-whitelist email domain when the quota switch is disabled', async () => {
     getPublicSettingsMock.mockResolvedValue({

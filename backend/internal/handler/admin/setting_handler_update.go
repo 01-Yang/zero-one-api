@@ -156,6 +156,9 @@ type UpdateSettingsRequest struct {
 	SiteName                    string                `json:"site_name"`
 	SiteLogo                    string                `json:"site_logo"`
 	SiteSubtitle                string                `json:"site_subtitle"`
+	LandingNoticeEnabled        *bool                 `json:"landing_notice_enabled"`
+	LandingNoticeText           *string               `json:"landing_notice_text"`
+	LandingNoticeURL            *string               `json:"landing_notice_url"`
 	APIBaseURL                  string                `json:"api_base_url"`
 	ContactInfo                 string                `json:"contact_info"`
 	DocURL                      string                `json:"doc_url"`
@@ -329,6 +332,7 @@ type UpdateSettingsRequest struct {
 
 	// Channel Monitor feature switch
 	ChannelMonitorEnabled                *bool   `json:"channel_monitor_enabled"`
+	PublicChannelStatusEnabled           *bool   `json:"public_channel_status_enabled"`
 	ChannelMonitorMode                   *string `json:"channel_monitor_mode"`
 	ChannelMonitorDefaultIntervalSeconds *int    `json:"channel_monitor_default_interval_seconds"`
 	ChannelMonitorHideThroughput         *bool   `json:"channel_monitor_hide_throughput"`
@@ -516,6 +520,27 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 	registrationEmailDomainQuotaEnabled := previousSettings.RegistrationEmailDomainQuotaEnabled
 	if req.RegistrationEmailDomainQuotaEnabled != nil {
 		registrationEmailDomainQuotaEnabled = *req.RegistrationEmailDomainQuotaEnabled
+	}
+	landingNoticeEnabled := previousSettings.LandingNoticeEnabled
+	if req.LandingNoticeEnabled != nil {
+		landingNoticeEnabled = *req.LandingNoticeEnabled
+	}
+	landingNoticeText := previousSettings.LandingNoticeText
+	if req.LandingNoticeText != nil {
+		landingNoticeText = *req.LandingNoticeText
+	}
+	landingNoticeURL := previousSettings.LandingNoticeURL
+	if req.LandingNoticeURL != nil {
+		landingNoticeURL = *req.LandingNoticeURL
+	}
+	landingNoticeEnabled, landingNoticeText, landingNoticeURL, err = service.NormalizeLandingNoticeSettings(
+		landingNoticeEnabled,
+		landingNoticeText,
+		landingNoticeURL,
+	)
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
 	}
 	if passkeyEnabled {
 		configured, _, _ := h.settingService.PasskeyConfiguration()
@@ -1611,6 +1636,9 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		SiteName:                               req.SiteName,
 		SiteLogo:                               req.SiteLogo,
 		SiteSubtitle:                           req.SiteSubtitle,
+		LandingNoticeEnabled:                   landingNoticeEnabled,
+		LandingNoticeText:                      landingNoticeText,
+		LandingNoticeURL:                       landingNoticeURL,
 		APIBaseURL:                             req.APIBaseURL,
 		ContactInfo:                            req.ContactInfo,
 		DocURL:                                 req.DocURL,
@@ -1870,6 +1898,12 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 				return *req.ChannelMonitorEnabled
 			}
 			return previousSettings.ChannelMonitorEnabled
+		}(),
+		PublicChannelStatusEnabled: func() bool {
+			if req.PublicChannelStatusEnabled != nil {
+				return *req.PublicChannelStatusEnabled
+			}
+			return previousSettings.PublicChannelStatusEnabled
 		}(),
 		ChannelMonitorMode: func() string {
 			if req.ChannelMonitorMode != nil {
@@ -2221,6 +2255,9 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		SiteName:                                               updatedSettings.SiteName,
 		SiteLogo:                                               updatedSettings.SiteLogo,
 		SiteSubtitle:                                           updatedSettings.SiteSubtitle,
+		LandingNoticeEnabled:                                   updatedSettings.LandingNoticeEnabled,
+		LandingNoticeText:                                      updatedSettings.LandingNoticeText,
+		LandingNoticeURL:                                       updatedSettings.LandingNoticeURL,
 		APIBaseURL:                                             updatedSettings.APIBaseURL,
 		ContactInfo:                                            updatedSettings.ContactInfo,
 		DocURL:                                                 updatedSettings.DocURL,
@@ -2339,6 +2376,7 @@ func (h *SettingHandler) UpdateSettings(c *gin.Context) {
 		PaymentAlipayMobilePrecreateDeepLink:                   updatedPaymentCfg.AlipayMobilePrecreateDeepLink,
 
 		ChannelMonitorEnabled:                updatedSettings.ChannelMonitorEnabled,
+		PublicChannelStatusEnabled:           updatedSettings.PublicChannelStatusEnabled,
 		ChannelMonitorMode:                   updatedSettings.ChannelMonitorMode,
 		ChannelMonitorDefaultIntervalSeconds: updatedSettings.ChannelMonitorDefaultIntervalSeconds,
 		ChannelMonitorHideThroughput:         updatedSettings.ChannelMonitorHideThroughput,

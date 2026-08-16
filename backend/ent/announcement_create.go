@@ -64,6 +64,20 @@ func (_c *AnnouncementCreate) SetNillableNotifyMode(v *string) *AnnouncementCrea
 	return _c
 }
 
+// SetPublicVisible sets the "public_visible" field.
+func (_c *AnnouncementCreate) SetPublicVisible(v bool) *AnnouncementCreate {
+	_c.mutation.SetPublicVisible(v)
+	return _c
+}
+
+// SetNillablePublicVisible sets the "public_visible" field if the given value is not nil.
+func (_c *AnnouncementCreate) SetNillablePublicVisible(v *bool) *AnnouncementCreate {
+	if v != nil {
+		_c.SetPublicVisible(*v)
+	}
+	return _c
+}
+
 // SetTargeting sets the "targeting" field.
 func (_c *AnnouncementCreate) SetTargeting(v domain.AnnouncementTargeting) *AnnouncementCreate {
 	_c.mutation.SetTargeting(v)
@@ -220,6 +234,10 @@ func (_c *AnnouncementCreate) defaults() {
 		v := announcement.DefaultNotifyMode
 		_c.mutation.SetNotifyMode(v)
 	}
+	if _, ok := _c.mutation.PublicVisible(); !ok {
+		v := announcement.DefaultPublicVisible
+		_c.mutation.SetPublicVisible(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := announcement.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -263,6 +281,9 @@ func (_c *AnnouncementCreate) check() error {
 		if err := announcement.NotifyModeValidator(v); err != nil {
 			return &ValidationError{Name: "notify_mode", err: fmt.Errorf(`ent: validator failed for field "Announcement.notify_mode": %w`, err)}
 		}
+	}
+	if _, ok := _c.mutation.PublicVisible(); !ok {
+		return &ValidationError{Name: "public_visible", err: errors.New(`ent: missing required field "Announcement.public_visible"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Announcement.created_at"`)}
@@ -312,6 +333,10 @@ func (_c *AnnouncementCreate) createSpec() (*Announcement, *sqlgraph.CreateSpec)
 	if value, ok := _c.mutation.NotifyMode(); ok {
 		_spec.SetField(announcement.FieldNotifyMode, field.TypeString, value)
 		_node.NotifyMode = value
+	}
+	if value, ok := _c.mutation.PublicVisible(); ok {
+		_spec.SetField(announcement.FieldPublicVisible, field.TypeBool, value)
+		_node.PublicVisible = value
 	}
 	if value, ok := _c.mutation.Targeting(); ok {
 		_spec.SetField(announcement.FieldTargeting, field.TypeJSON, value)
@@ -454,6 +479,18 @@ func (u *AnnouncementUpsert) SetNotifyMode(v string) *AnnouncementUpsert {
 // UpdateNotifyMode sets the "notify_mode" field to the value that was provided on create.
 func (u *AnnouncementUpsert) UpdateNotifyMode() *AnnouncementUpsert {
 	u.SetExcluded(announcement.FieldNotifyMode)
+	return u
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (u *AnnouncementUpsert) SetPublicVisible(v bool) *AnnouncementUpsert {
+	u.Set(announcement.FieldPublicVisible, v)
+	return u
+}
+
+// UpdatePublicVisible sets the "public_visible" field to the value that was provided on create.
+func (u *AnnouncementUpsert) UpdatePublicVisible() *AnnouncementUpsert {
+	u.SetExcluded(announcement.FieldPublicVisible)
 	return u
 }
 
@@ -669,6 +706,20 @@ func (u *AnnouncementUpsertOne) SetNotifyMode(v string) *AnnouncementUpsertOne {
 func (u *AnnouncementUpsertOne) UpdateNotifyMode() *AnnouncementUpsertOne {
 	return u.Update(func(s *AnnouncementUpsert) {
 		s.UpdateNotifyMode()
+	})
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (u *AnnouncementUpsertOne) SetPublicVisible(v bool) *AnnouncementUpsertOne {
+	return u.Update(func(s *AnnouncementUpsert) {
+		s.SetPublicVisible(v)
+	})
+}
+
+// UpdatePublicVisible sets the "public_visible" field to the value that was provided on create.
+func (u *AnnouncementUpsertOne) UpdatePublicVisible() *AnnouncementUpsertOne {
+	return u.Update(func(s *AnnouncementUpsert) {
+		s.UpdatePublicVisible()
 	})
 }
 
@@ -1069,6 +1120,20 @@ func (u *AnnouncementUpsertBulk) SetNotifyMode(v string) *AnnouncementUpsertBulk
 func (u *AnnouncementUpsertBulk) UpdateNotifyMode() *AnnouncementUpsertBulk {
 	return u.Update(func(s *AnnouncementUpsert) {
 		s.UpdateNotifyMode()
+	})
+}
+
+// SetPublicVisible sets the "public_visible" field.
+func (u *AnnouncementUpsertBulk) SetPublicVisible(v bool) *AnnouncementUpsertBulk {
+	return u.Update(func(s *AnnouncementUpsert) {
+		s.SetPublicVisible(v)
+	})
+}
+
+// UpdatePublicVisible sets the "public_visible" field to the value that was provided on create.
+func (u *AnnouncementUpsertBulk) UpdatePublicVisible() *AnnouncementUpsertBulk {
+	return u.Update(func(s *AnnouncementUpsert) {
+		s.UpdatePublicVisible()
 	})
 }
 
