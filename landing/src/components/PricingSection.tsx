@@ -1,0 +1,289 @@
+import { ArrowRight, RefreshCw, Search } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  LANDING_PLATFORM_FILTERS,
+  fetchModelPlaza,
+  selectRepresentativePriceRows,
+  type LandingPlatformFilter,
+  type LandingPriceRow,
+  type ModelPlazaResult,
+} from '../lib/modelPlaza'
+import { consoleUrl } from '../siteConfig'
+import SpecularAction from './SpecularAction'
+
+interface PricingSectionProps {
+  enabled: boolean
+  requireAuth: boolean
+  serverUtcOffset: string
+}
+
+type PricingViewState = { status: 'loading' } | ModelPlazaResult
+
+const FILTER_LABELS: Record<LandingPlatformFilter, string> = {
+  all: 'All',
+  anthropic: 'Claude',
+  openai: 'OpenAI',
+  gemini: 'Gemini',
+  other: '其他',
+}
+
+const VISIBLE_FILTERS = LANDING_PLATFORM_FILTERS.filter((filter) => filter !== 'other')
+
+function PriceValues({ row, field }: { row: LandingPriceRow; field: 'input' | 'output' | 'request' }) {
+  return (
+    <div className="price-values">
+      {row.prices.map((line, index) => (
+        <span key={`${line.label}:${index}`}>
+          {line.label ? <small>{line.label}</small> : null}
+          <strong>{line[field]}</strong>
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function PlatformPrice({ row, field }: { row: LandingPriceRow; field: 'input' | 'output' }) {
+  const hasCache = row.prices.some((line) => line.cacheWrite !== '—' || line.cacheRead !== '—')
+  return (
+    <div className="platform-price-cell">
+      <PriceValues row={row} field={row.billingMode === 'token' ? field : field === 'input' ? 'request' : 'output'} />
+      {hasCache && field === 'input' ? (
+        <small className="cache-note">
+          缓存写 {row.prices[0]?.cacheWrite ?? '—'} · 读 {row.prices[0]?.cacheRead ?? '—'}
+        </small>
+      ) : null}
+      <small className="price-unit">{row.unit}</small>
+      {field === 'input' ? <span className="rate-badge">{row.effectiveRateLabel}</span> : null}
+    </div>
+  )
+}
+
+function OfficialPrice({ value, cache }: { value: string; cache: string }) {
+  return (
+    <div className="official-price-cell">
+      <strong>{value}</strong>
+      {value !== '—' ? <small>$ / 1M tokens</small> : null}
+      {cache !== '—' ? <small>缓存 {cache}</small> : null}
+    </div>
+  )
+}
+
+function billingLabel(row: LandingPriceRow): string {
+  if (row.billingMode === 'token') return 'Token'
+  if (row.billingMode === 'image') return '按张'
+  if (row.billingMode === 'video') return '视频'
+  return '按次'
+}
+
+function PriceTable({ rows, onClear }: { rows: LandingPriceRow[]; onClear: () => void }) {
+  return (
+      <div className="price-table-wrap" tabIndex={0} aria-label="模型价格横向滚动区域">
+        <table className="price-table">
+          <thead>
+            <tr>
+              <th scope="col">模型</th>
+              <th scope="col">提供商</th>
+              <th scope="col">计费</th>
+              <th scope="col">输入（官方参考）</th>
+              <th scope="col">输出（官方参考）</th>
+              <th scope="col">输入（零一 API）</th>
+              <th scope="col">输出（零一 API）</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length ? rows.map((row) => (
+              <tr key={`${row.key}:${row.billingMode}`}>
+                <th scope="row">
+                  <span className="model-name">{row.model}</span>
+                  <small>{row.groupName}</small>
+                </th>
+                <td><span className={`provider-mark provider-${row.platformFilter}`} />{row.platform}</td>
+                <td>
+                  <span>{billingLabel(row)}</span>
+                  <small>{row.unit}</small>
+                </td>
+                <td><OfficialPrice value={row.officialInput} cache={row.officialCacheRead} /></td>
+                <td><OfficialPrice value={row.officialOutput} cache="—" /></td>
+                <td><PlatformPrice row={row} field="input" /></td>
+                <td><PlatformPrice row={row} field="output" />{row.peakNote ? <small className="peak-note">{row.peakNote}</small> : null}</td>
+              </tr>
+            )) : (
+              <tr className="price-empty-row">
+                <td colSpan={7}>
+                  <strong>没有匹配的模型</strong>
+                  <span>调整平台筛选或搜索关键词后再试。</span>
+                  <button type="button" onClick={onClear}>清除筛选</button>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+  )
+}
+
+interface PricingMessageProps {
+  state: Exclude<PricingViewState, { status: 'success' }>
+  onRetry: () => void
+}
+
+function PricingMessage({ state, onRetry }: PricingMessageProps) {
+  let title = '实时价目暂未公开'
+  let description = '公开价格功能当前未开启，页面不会展示示例价格。'
+  let retry = false
+
+  if (state.status === 'loading') {
+    title = '正在读取实时价格'
+    description = '正在获取最新公开价格。'
+  } else if (state.status === 'auth-required' || state.status === 'forbidden') {
+    title = '登录后查看模型与价格'
+    description = '当前站点要求登录后访问模型广场。'
+  } else if (state.status === 'rate-limited') {
+    title = '价格请求过于频繁'
+    description = state.retryAfter
+      ? `请在约 ${state.retryAfter} 秒后重试。`
+      : '请稍后手动重试。'
+    retry = true
+  } else if (state.status === 'empty') {
+    title = '暂无公开模型价格'
+    description = '当前没有可公开展示的模型与计费配置。'
+  } else if (state.status === 'error') {
+    retry = state.reason !== 'aborted'
+    if (state.reason === 'timeout') {
+      title = '读取价格超时'
+      description = '请求超过 3 秒，未展示任何缓存或示例价格。'
+    } else if (state.reason === 'invalid-response') {
+      title = '价格数据暂时不可用'
+      description = '服务返回的数据格式无法安全展示。'
+    } else if (state.reason === 'server') {
+      title = '价格服务暂时不可用'
+      description = '服务端暂时无法返回实时价目。'
+    } else if (state.reason === 'aborted') {
+      title = '价格读取已取消'
+      description = '页面已停止本次价格请求。'
+    } else {
+      title = '暂时无法读取价格'
+      description = '请检查网络后手动重试。'
+    }
+  }
+
+  const needsLogin = state.status === 'auth-required' || state.status === 'forbidden'
+
+  return (
+    <div className={`pricing-message${state.status === 'loading' ? ' is-loading' : ''}`} role="status">
+      <span className="pricing-message-mark" aria-hidden="true" />
+      <div>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </div>
+      {needsLogin ? (
+        <SpecularAction
+          className="button-secondary"
+          href={consoleUrl('/login?redirect=/model-plaza')}
+          size="md"
+          radius={14}
+        >
+          登录查看
+          <ArrowRight aria-hidden="true" />
+        </SpecularAction>
+      ) : null}
+      {retry ? (
+        <SpecularAction
+          className="button-secondary"
+          type="button"
+          size="md"
+          radius={14}
+          onClick={onRetry}
+        >
+          <RefreshCw aria-hidden="true" />
+          重新读取
+        </SpecularAction>
+      ) : null}
+    </div>
+  )
+}
+
+export default function PricingSection({ enabled, requireAuth, serverUtcOffset }: PricingSectionProps) {
+  const [platform, setPlatform] = useState<LandingPlatformFilter>('all')
+  const [search, setSearch] = useState('')
+  const [attempt, setAttempt] = useState(0)
+  const [state, setState] = useState<PricingViewState>(() => {
+    if (!enabled) return { status: 'disabled' }
+    if (requireAuth) return { status: 'auth-required' }
+    return { status: 'loading' }
+  })
+
+  useEffect(() => {
+    if (!enabled) {
+      setState({ status: 'disabled' })
+      return
+    }
+    if (requireAuth) {
+      setState({ status: 'auth-required' })
+      return
+    }
+
+    const controller = new AbortController()
+    setState({ status: 'loading' })
+    void fetchModelPlaza({ enabled: true, timeoutMs: 3_000, signal: controller.signal }).then((result) => {
+      if (!controller.signal.aborted) setState(result)
+    })
+    return () => controller.abort()
+  }, [attempt, enabled, requireAuth])
+
+  const rows = useMemo(() => {
+    if (state.status !== 'success') return []
+    return selectRepresentativePriceRows(state.data, {
+      platform,
+      search,
+      limit: 8,
+      serverUtcOffset,
+    })
+  }, [platform, search, serverUtcOffset, state])
+
+  return (
+    <section id="pricing" className="section pricing-section" aria-labelledby="pricing-title">
+      <div className="pricing-heading-row" data-reveal>
+        <div className="section-heading">
+          <h2 id="pricing-title">实时价格</h2>
+          <p>价格来自公开模型广场配置。官方参考价与零一实付价分列展示，缺失数据保持为空。</p>
+        </div>
+      </div>
+
+      {state.status === 'success' ? (
+        <div className="pricing-data-shell pricing-data-enter">
+          <div className="price-controls">
+            <div className="filter-tabs" role="group" aria-label="按平台筛选">
+              {VISIBLE_FILTERS.map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  aria-pressed={platform === filter}
+                  onClick={() => setPlatform(filter)}
+                >
+                  {FILTER_LABELS[filter]}
+                </button>
+              ))}
+            </div>
+            <label className="model-search">
+              <span className="sr-only">搜索模型或分组</span>
+              <Search aria-hidden="true" />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="搜索模型或分组"
+              />
+            </label>
+          </div>
+
+          <PriceTable rows={rows} onClear={() => { setPlatform('all'); setSearch('') }} />
+        </div>
+      ) : (
+        <div className="pricing-data-enter">
+          <PricingMessage state={state} onRetry={() => setAttempt((value) => value + 1)} />
+        </div>
+      )}
+    </section>
+  )
+}
