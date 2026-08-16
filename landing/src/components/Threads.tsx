@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import { Color, Mesh, Program, Renderer, Triangle } from 'ogl'
 
 const vertexShader = `
@@ -12,17 +12,20 @@ void main() {
 }
 `
 
-// Adapted from React Bits Threads. See THIRD_PARTY_NOTICES.md.
+// Adapted from React Bits Threads. See THIRD_PARTY_NOTICES.txt.
 const fragmentShader = `
 precision highp float;
 
 uniform float iTime;
 uniform vec3 iResolution;
+uniform vec3 uColor;
+uniform float uAmplitude;
+uniform float uDistance;
 uniform vec2 uMouse;
 
 #define PI 3.1415926538
 
-const int lineCount = 32;
+const int lineCount = 40;
 const float lineWidth = 7.0;
 const float lineBlur = 10.0;
 
@@ -60,8 +63,9 @@ float lineShape(
 ) {
   float splitPoint = 0.1 + percentage * 0.4;
   float amplitudeNormal = smoothstep(splitPoint, 0.7, point.x);
-  float amplitude = amplitudeNormal * 0.28 * (1.0 + (mouse.y - 0.5) * 0.10);
-  float scaledTime = time / 12.0 + (mouse.x - 0.5) * 0.35;
+  float amplitude = amplitudeNormal * 0.5 * uAmplitude
+    * (1.0 + (mouse.y - 0.5) * 0.2);
+  float scaledTime = time / 10.0 + (mouse.x - 0.5);
   float blur = smoothstep(splitPoint, splitPoint + 0.05, point.x) * percentage;
 
   float noise = mix(
@@ -70,7 +74,7 @@ float lineShape(
     point.x * 0.3
   );
 
-  float y = 0.5 + (percentage - 0.5) * 0.15 + noise / 2.0 * amplitude;
+  float y = 0.5 + (percentage - 0.5) * uDistance + noise / 2.0 * amplitude;
   float start = smoothstep(
     y + width / 2.0 + lineBlur * pixel(1.0, iResolution.xy) * blur,
     y,
@@ -105,12 +109,34 @@ void main() {
   }
 
   float value = 1.0 - strength;
-  gl_FragColor = vec4(vec3(value), value);
+  gl_FragColor = vec4(uColor * value, value);
 }
 `
 
-export default function Threads() {
+export interface ThreadsProps {
+  mode?: 'animated' | 'static'
+  color?: readonly [number, number, number]
+  amplitude?: number
+  distance?: number
+  enableMouseInteraction?: boolean
+  interactionTargetRef?: RefObject<HTMLElement | null>
+  persistent?: boolean
+  className?: string
+}
+
+export default function Threads({
+  mode = 'animated',
+  color = [1, 1, 1],
+  amplitude = 1,
+  distance = 0,
+  enableMouseInteraction = true,
+  interactionTargetRef,
+  persistent = false,
+  className = '',
+}: ThreadsProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const visualPropsRef = useRef({ color, amplitude, distance, enableMouseInteraction })
+  visualPropsRef.current = { color, amplitude, distance, enableMouseInteraction }
 
   useEffect(() => {
     const container = containerRef.current
@@ -121,25 +147,91 @@ export default function Threads() {
     let resizeObserver: ResizeObserver | null = null
     let intersectionObserver: IntersectionObserver | null = null
     let canvas: HTMLCanvasElement | null = null
+    let loseContext: (() => void) | null = null
     let isOnscreen = true
     let isDocumentVisible = !document.hidden
     let isDisposed = false
+    let isContextLost = false
+    let resizeFallbackAttached = false
+    let pointerListenersAttached = false
+    let pointerResetListenersAttached = false
+    let visibilityListenerAttached = false
+    let motionListenerAttached = false
+    let mobileListenerAttached = false
 
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     const finePointerQuery = window.matchMedia('(pointer: fine)')
+    const mobileQuery = window.matchMedia('(max-width: 767px)')
     let reducedMotion = reducedMotionQuery.matches
     const hasFinePointer = finePointerQuery.matches
+    let isMobile = mobileQuery.matches
+    let minimumFrameInterval = isMobile ? 1000 / 30 : 1000 / 60
+    const interactionElement = interactionTargetRef?.current ?? container
+
+    const stopAnimation = () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId)
+        frameId = null
+      }
+    }
+
+    const cleanup = () => {
+      if (isDisposed) return
+      isDisposed = true
+      stopAnimation()
+      resizeObserver?.disconnect()
+      intersectionObserver?.disconnect()
+      if (resizeFallbackAttached) window.removeEventListener('resize', resize)
+      if (visibilityListenerAttached) {
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
+      }
+      if (motionListenerAttached) {
+        reducedMotionQuery.removeEventListener('change', handleMotionPreferenceChange)
+      }
+      if (mobileListenerAttached) {
+        mobileQuery.removeEventListener('change', handleMobilePreferenceChange)
+      }
+      if (pointerListenersAttached) {
+        if (persistent) {
+          window.removeEventListener('pointermove', handlePointerMove)
+          window.removeEventListener('pointerleave', handlePointerLeave)
+        } else {
+          interactionElement.removeEventListener('pointermove', handlePointerMove)
+          interactionElement.removeEventListener('pointerleave', handlePointerLeave)
+        }
+      }
+      if (pointerResetListenersAttached) {
+        window.removeEventListener('blur', handlePointerLeave)
+        document.documentElement.removeEventListener('pointerleave', handlePointerLeave)
+        document.documentElement.removeEventListener('pointerout', handleRootPointerOut)
+      }
+      canvas?.removeEventListener('webglcontextlost', handleContextLost)
+      if (canvas && container.contains(canvas)) container.removeChild(canvas)
+      loseContext?.()
+    }
+
+    let resize = () => {}
+    let handlePointerMove = (_event: PointerEvent) => {}
+    let handlePointerLeave = () => {}
+    let handleRootPointerOut = (_event: PointerEvent) => {}
+    let handleVisibilityChange = () => {}
+    let handleMotionPreferenceChange = (_event: MediaQueryListEvent) => {}
+    let handleMobilePreferenceChange = (_event: MediaQueryListEvent) => {}
+    let handleContextLost = (_event: Event) => {}
 
     try {
-      renderer = new Renderer({ alpha: true, dpr: 1 })
+      renderer = new Renderer({ alpha: true, premultipliedAlpha: true, dpr: 1 })
       const gl = renderer.gl
       canvas = gl.canvas
       canvas.setAttribute('aria-hidden', 'true')
+      canvas.setAttribute('role', 'presentation')
       container.appendChild(canvas)
+      container.dataset.webgl = 'ready'
+      loseContext = () => gl.getExtension('WEBGL_lose_context')?.loseContext()
 
       gl.clearColor(0, 0, 0, 0)
       gl.enable(gl.BLEND)
-      gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
 
       const geometry = new Triangle(gl)
       const program = new Program(gl, {
@@ -148,6 +240,9 @@ export default function Threads() {
         uniforms: {
           iTime: { value: 0 },
           iResolution: { value: new Color(1, 1, 1) },
+          uColor: { value: new Color(...visualPropsRef.current.color) },
+          uAmplitude: { value: visualPropsRef.current.amplitude },
+          uDistance: { value: visualPropsRef.current.distance },
           uMouse: { value: new Float32Array([0.5, 0.5]) },
         },
       })
@@ -155,26 +250,48 @@ export default function Threads() {
 
       const currentMouse = [0.5, 0.5]
       let targetMouse = [0.5, 0.5]
+      let lastRenderTime = Number.NEGATIVE_INFINITY
 
       const renderFrame = (time: number) => {
-        program.uniforms.iTime.value = reducedMotion ? 0 : time * 0.001
+        const visual = visualPropsRef.current
+        program.uniforms.uColor.value.set(...visual.color)
+        program.uniforms.uAmplitude.value = visual.amplitude
+        program.uniforms.uDistance.value = visual.distance
+        program.uniforms.iTime.value = reducedMotion || mode === 'static' ? 0 : time * 0.001
 
-        if (hasFinePointer && !reducedMotion) {
-          currentMouse[0] += (targetMouse[0] - currentMouse[0]) * 0.045
-          currentMouse[1] += (targetMouse[1] - currentMouse[1]) * 0.045
+        if (
+          visual.enableMouseInteraction &&
+          hasFinePointer &&
+          !reducedMotion &&
+          mode === 'animated'
+        ) {
+          currentMouse[0] += (targetMouse[0] - currentMouse[0]) * 0.05
+          currentMouse[1] += (targetMouse[1] - currentMouse[1]) * 0.05
           program.uniforms.uMouse.value[0] = currentMouse[0]
           program.uniforms.uMouse.value[1] = currentMouse[1]
+        } else {
+          program.uniforms.uMouse.value[0] = 0.5
+          program.uniforms.uMouse.value[1] = 0.5
         }
 
         renderer?.render({ scene: mesh })
       }
 
-      const shouldAnimate = () => !reducedMotion && isOnscreen && isDocumentVisible && !isDisposed
+      const shouldAnimate = () =>
+        mode === 'animated' &&
+        !reducedMotion &&
+        (persistent || isOnscreen) &&
+        isDocumentVisible &&
+        !isDisposed &&
+        !isContextLost
 
       const tick = (time: number) => {
         frameId = null
         if (!shouldAnimate()) return
-        renderFrame(time)
+        if (time - lastRenderTime >= minimumFrameInterval) {
+          lastRenderTime = time
+          renderFrame(time)
+        }
         frameId = window.requestAnimationFrame(tick)
       }
 
@@ -182,18 +299,17 @@ export default function Threads() {
         if (shouldAnimate() && frameId === null) {
           frameId = window.requestAnimationFrame(tick)
         } else if (!shouldAnimate() && frameId !== null) {
-          window.cancelAnimationFrame(frameId)
-          frameId = null
+          stopAnimation()
         }
       }
 
-      const resize = () => {
+      resize = () => {
         if (!renderer) return
         const { clientWidth, clientHeight } = container
         if (!clientWidth || !clientHeight) return
 
         const maxRenderDimension = 1920
-        const baseDpr = Math.min(window.devicePixelRatio || 1, 1.5)
+        const baseDpr = isMobile ? 1 : Math.min(window.devicePixelRatio || 1, 1.5)
         const longestSide = Math.max(clientWidth, clientHeight) * baseDpr
         const dpr =
           longestSide > maxRenderDimension
@@ -210,24 +326,28 @@ export default function Threads() {
         renderFrame(0)
       }
 
-      const handlePointerMove = (event: PointerEvent) => {
+      handlePointerMove = (event: PointerEvent) => {
         const rect = container.getBoundingClientRect()
         targetMouse = [
-          (event.clientX - rect.left) / Math.max(rect.width, 1),
-          1 - (event.clientY - rect.top) / Math.max(rect.height, 1),
+          Math.min(1, Math.max(0, (event.clientX - rect.left) / Math.max(rect.width, 1))),
+          Math.min(1, Math.max(0, 1 - (event.clientY - rect.top) / Math.max(rect.height, 1))),
         ]
       }
 
-      const handlePointerLeave = () => {
+      handlePointerLeave = () => {
         targetMouse = [0.5, 0.5]
       }
 
-      const handleVisibilityChange = () => {
+      handleRootPointerOut = (event: PointerEvent) => {
+        if (event.relatedTarget === null) handlePointerLeave()
+      }
+
+      handleVisibilityChange = () => {
         isDocumentVisible = !document.hidden
         syncAnimation()
       }
 
-      const handleMotionPreferenceChange = (event: MediaQueryListEvent) => {
+      handleMotionPreferenceChange = (event: MediaQueryListEvent) => {
         reducedMotion = event.matches
         if (reducedMotion) {
           currentMouse[0] = 0.5
@@ -238,49 +358,79 @@ export default function Threads() {
         syncAnimation()
       }
 
-      resizeObserver = new ResizeObserver(resize)
-      resizeObserver.observe(container)
+      handleMobilePreferenceChange = (event: MediaQueryListEvent) => {
+        isMobile = event.matches
+        minimumFrameInterval = isMobile ? 1000 / 30 : 1000 / 60
+        lastRenderTime = Number.NEGATIVE_INFINITY
+        resize()
+      }
 
-      intersectionObserver = new IntersectionObserver(
-        ([entry]) => {
-          isOnscreen = entry?.isIntersecting ?? false
-          syncAnimation()
-        },
-        { threshold: 0 },
-      )
-      intersectionObserver.observe(container)
+      handleContextLost = (event: Event) => {
+        event.preventDefault()
+        isContextLost = true
+        container.dataset.webgl = 'unavailable'
+        stopAnimation()
+      }
+
+      canvas.addEventListener('webglcontextlost', handleContextLost)
+
+      if (typeof ResizeObserver === 'function') {
+        resizeObserver = new ResizeObserver(resize)
+        resizeObserver.observe(container)
+      } else {
+        window.addEventListener('resize', resize)
+        resizeFallbackAttached = true
+      }
+
+      if (!persistent && mode === 'animated' && typeof IntersectionObserver === 'function') {
+        intersectionObserver = new IntersectionObserver(
+          ([entry]) => {
+            isOnscreen = entry?.isIntersecting ?? false
+            syncAnimation()
+          },
+          { threshold: 0 },
+        )
+        intersectionObserver.observe(container)
+      }
 
       document.addEventListener('visibilitychange', handleVisibilityChange)
+      visibilityListenerAttached = true
       reducedMotionQuery.addEventListener('change', handleMotionPreferenceChange)
-      if (hasFinePointer) {
-        container.addEventListener('pointermove', handlePointerMove)
-        container.addEventListener('pointerleave', handlePointerLeave)
+      motionListenerAttached = true
+      mobileQuery.addEventListener('change', handleMobilePreferenceChange)
+      mobileListenerAttached = true
+      if (hasFinePointer && mode === 'animated') {
+        if (persistent) {
+          window.addEventListener('pointermove', handlePointerMove)
+          window.addEventListener('pointerleave', handlePointerLeave)
+        } else {
+          interactionElement.addEventListener('pointermove', handlePointerMove)
+          interactionElement.addEventListener('pointerleave', handlePointerLeave)
+        }
+        pointerListenersAttached = true
+        window.addEventListener('blur', handlePointerLeave)
+        document.documentElement.addEventListener('pointerleave', handlePointerLeave)
+        document.documentElement.addEventListener('pointerout', handleRootPointerOut)
+        pointerResetListenersAttached = true
       }
 
       resize()
-      if (reducedMotion) renderFrame(0)
+      if (reducedMotion || mode === 'static') renderFrame(0)
       syncAnimation()
 
-      return () => {
-        isDisposed = true
-        if (frameId !== null) window.cancelAnimationFrame(frameId)
-        resizeObserver?.disconnect()
-        intersectionObserver?.disconnect()
-        document.removeEventListener('visibilitychange', handleVisibilityChange)
-        reducedMotionQuery.removeEventListener('change', handleMotionPreferenceChange)
-        container.removeEventListener('pointermove', handlePointerMove)
-        container.removeEventListener('pointerleave', handlePointerLeave)
-        if (canvas && container.contains(canvas)) container.removeChild(canvas)
-        gl.getExtension('WEBGL_lose_context')?.loseContext()
-      }
+      return cleanup
     } catch {
       container.dataset.webgl = 'unavailable'
-      if (canvas && container.contains(canvas)) container.removeChild(canvas)
-      return () => {
-        isDisposed = true
-      }
+      cleanup()
+      return undefined
     }
-  }, [])
+  }, [interactionTargetRef, mode, persistent])
 
-  return <div ref={containerRef} className="threads" aria-hidden="true" />
+  return (
+    <div
+      ref={containerRef}
+      className={`threads threads--${mode}${className ? ` ${className}` : ''}`}
+      aria-hidden="true"
+    />
+  )
 }
