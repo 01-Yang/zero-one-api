@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import Action from './Action'
 import SpecularAction from './SpecularAction'
 
 const runtime = vi.hoisted(() => ({
@@ -81,5 +82,24 @@ describe('SpecularAction', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start' }))
     unmount()
     expect(runtime.unregister).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders non-highlight actions without changing their child structure or registering canvas work', () => {
+    render(
+      <Action className="integration-primary-action" href="/keys" highlight={false}>
+        <svg data-testid="key-icon" />
+        Create key
+      </Action>,
+    )
+
+    const action = screen.getByRole('link', { name: 'Create key' })
+    expect(action.classList.contains('landing-action')).toBe(true)
+    expect(action.classList.contains('integration-primary-action')).toBe(true)
+    expect(action.classList.contains('specular-action')).toBe(false)
+    expect(action.getAttribute('data-action-highlight')).toBe('none')
+    expect(action.hasAttribute('data-specular-state')).toBe(false)
+    expect(action.querySelector('.landing-action__label')).toBeNull()
+    expect(screen.getByTestId('key-icon').parentElement).toBe(action)
+    expect(runtime.register).not.toHaveBeenCalled()
   })
 })

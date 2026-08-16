@@ -64,7 +64,7 @@
     <!-- Rate Limit Indicator (429) -->
     <div v-if="isRateLimited" class="group relative">
       <span
-        class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+        class="inline-flex items-center gap-1 rounded bg-zo-alert-100 px-1.5 py-0.5 text-xs font-medium text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400"
       >
         <Icon name="exclamationTriangle" size="xs" :stroke-width="2" />
         429
@@ -104,7 +104,7 @@
         <!-- 正在走积分（模型限流但积分可用）-->
         <span
           v-else-if="item.kind === 'credits_active'"
-          class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+          class="inline-flex items-center gap-1 rounded bg-zo-alert-100 px-1.5 py-0.5 text-xs font-medium text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400"
         >
           <span>⚡</span>
           {{ formatScopeName(item.model) }}

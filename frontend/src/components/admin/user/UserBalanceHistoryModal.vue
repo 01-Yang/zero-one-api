@@ -42,7 +42,7 @@
             <template v-else>&nbsp;</template>
           </p>
           <p class="ml-4 flex-shrink-0 text-xs text-gray-500 dark:text-dark-400">
-            {{ t('admin.users.totalRecharged') }}: <span class="font-semibold text-emerald-600 dark:text-emerald-400">${{ totalRecharged.toFixed(2) }}</span>
+            {{ t('admin.users.totalRecharged') }}: <span class="font-semibold text-zo-signal-600 dark:text-zo-signal-400">${{ totalRecharged.toFixed(2) }}</span>
           </p>
         </div>
       </div>
@@ -61,7 +61,7 @@
           @click="emit('deposit')"
           class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-dark-600 dark:bg-dark-800 dark:text-gray-300 dark:hover:bg-dark-700"
         >
-          <Icon name="plus" size="sm" class="text-emerald-500" :stroke-width="2" />
+          <Icon name="plus" size="sm" class="text-zo-signal-500" :stroke-width="2" />
           {{ t('admin.users.deposit') }}
         </button>
         <!-- Withdraw button - matches menu style -->
@@ -70,7 +70,7 @@
           @click="emit('withdraw')"
           class="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:border-dark-600 dark:bg-dark-800 dark:text-gray-300 dark:hover:bg-dark-700"
         >
-          <svg class="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="h-4 w-4 text-zo-alert-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
           </svg>
           {{ t('admin.users.withdraw') }}
@@ -255,39 +255,39 @@ const getIconName = (item: BalanceHistoryItem) => {
 const getIconBg = (item: BalanceHistoryItem) => {
   if (isBalanceType(item.type)) {
     return item.value >= 0
-      ? 'bg-emerald-100 dark:bg-emerald-900/30'
+      ? 'bg-zo-signal-100 dark:bg-zo-signal-900/30'
       : 'bg-red-100 dark:bg-red-900/30'
   }
   if (isSubscriptionType(item.type)) return 'bg-purple-100 dark:bg-purple-900/30'
   return item.value >= 0
     ? 'bg-blue-100 dark:bg-blue-900/30'
-    : 'bg-orange-100 dark:bg-orange-900/30'
+    : 'bg-zo-alert-100 dark:bg-zo-alert-900/30'
 }
 
 // Icon text color
 const getIconColor = (item: BalanceHistoryItem) => {
   if (isBalanceType(item.type)) {
     return item.value >= 0
-      ? 'text-emerald-600 dark:text-emerald-400'
+      ? 'text-zo-signal-600 dark:text-zo-signal-400'
       : 'text-red-600 dark:text-red-400'
   }
   if (isSubscriptionType(item.type)) return 'text-purple-600 dark:text-purple-400'
   return item.value >= 0
     ? 'text-blue-600 dark:text-blue-400'
-    : 'text-orange-600 dark:text-orange-400'
+    : 'text-zo-alert-600 dark:text-zo-alert-400'
 }
 
 // Value text color
 const getValueColor = (item: BalanceHistoryItem) => {
   if (isBalanceType(item.type)) {
     return item.value >= 0
-      ? 'text-emerald-600 dark:text-emerald-400'
+      ? 'text-zo-signal-600 dark:text-zo-signal-400'
       : 'text-red-600 dark:text-red-400'
   }
   if (isSubscriptionType(item.type)) return 'text-purple-600 dark:text-purple-400'
   return item.value >= 0
     ? 'text-blue-600 dark:text-blue-400'
-    : 'text-orange-600 dark:text-orange-400'
+    : 'text-zo-alert-600 dark:text-zo-alert-400'
 }
 
 // Item title

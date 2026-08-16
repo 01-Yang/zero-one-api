@@ -9,7 +9,7 @@ import {
   type ModelPlazaResult,
 } from '../lib/modelPlaza'
 import { consoleUrl } from '../siteConfig'
-import SpecularAction from './SpecularAction'
+import Action from './Action'
 
 interface PricingSectionProps {
   enabled: boolean
@@ -177,7 +177,7 @@ function PricingMessage({ state, onRetry }: PricingMessageProps) {
         <p>{description}</p>
       </div>
       {needsLogin ? (
-        <SpecularAction
+        <Action
           className="button-secondary"
           href={consoleUrl('/login?redirect=/model-plaza')}
           size="md"
@@ -185,10 +185,10 @@ function PricingMessage({ state, onRetry }: PricingMessageProps) {
         >
           登录查看
           <ArrowRight aria-hidden="true" />
-        </SpecularAction>
+        </Action>
       ) : null}
       {retry ? (
-        <SpecularAction
+        <Action
           className="button-secondary"
           type="button"
           size="md"
@@ -197,7 +197,7 @@ function PricingMessage({ state, onRetry }: PricingMessageProps) {
         >
           <RefreshCw aria-hidden="true" />
           重新读取
-        </SpecularAction>
+        </Action>
       ) : null}
     </div>
   )

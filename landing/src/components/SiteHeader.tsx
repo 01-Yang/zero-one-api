@@ -1,7 +1,7 @@
 import { Menu, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { consoleUrl, documentUrl } from '../siteConfig'
-import SpecularAction from './SpecularAction'
+import Action from './Action'
 
 interface SiteHeaderProps {
   siteName: string
@@ -56,7 +56,7 @@ function NavigationLinks({
       {registrationEnabled ? (
         <a href={consoleUrl('/login')} onClick={onNavigate}>登录</a>
       ) : (
-        <SpecularAction
+        <Action
           className="nav-primary"
           href={consoleUrl('/login')}
           size="sm"
@@ -65,10 +65,10 @@ function NavigationLinks({
           onClick={onNavigate}
         >
           登录控制台
-        </SpecularAction>
+        </Action>
       )}
       {registrationEnabled ? (
-        <SpecularAction
+        <Action
           className="nav-primary"
           href={consoleUrl('/register')}
           size="sm"
@@ -77,7 +77,7 @@ function NavigationLinks({
           onClick={onNavigate}
         >
           注册账号
-        </SpecularAction>
+        </Action>
       ) : null}
     </>
   )

@@ -22,7 +22,7 @@
                 <p class="text-xl font-bold text-gray-900 dark:text-white">
                   {{ stats.total_api_keys }}
                 </p>
-                <p class="text-xs text-green-600 dark:text-green-400">
+                <p class="text-xs text-zo-signal-600 dark:text-zo-signal-400">
                   {{ stats.active_api_keys }} {{ t('common.active') }}
                 </p>
               </div>
@@ -43,7 +43,7 @@
                   {{ stats.total_accounts }}
                 </p>
                 <p class="text-xs">
-                  <span class="text-green-600 dark:text-green-400"
+                  <span class="text-zo-signal-600 dark:text-zo-signal-400"
                     >{{ stats.normal_accounts }} {{ t('common.active') }}</span
                   >
                   <span v-if="stats.error_accounts > 0" class="ml-1 text-red-500"
@@ -550,17 +550,17 @@ const userTrendChartData = computed(() => {
   const sortedDates = Array.from(allDates).sort()
   const colors = [
     '#3b82f6',
-    '#10b981',
-    '#f59e0b',
+    '#7c5cfc',
+    '#a855f7',
     '#ef4444',
     '#8b5cf6',
     '#ec4899',
-    '#14b8a6',
-    '#f97316',
-    '#6366f1',
-    '#84cc16',
     '#06b6d4',
-    '#a855f7'
+    '#f43f5e',
+    '#6366f1',
+    '#93c5fd',
+    '#60a5fa',
+    '#c084fc'
   ]
 
   const datasets = Array.from(userGroups.values()).map((group, idx) => ({

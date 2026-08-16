@@ -13,9 +13,7 @@
           >
             <img :src="siteLogo" :alt="siteName" class="h-full w-full object-contain" />
           </div>
-          <h1 class="mb-2 text-3xl font-bold text-gray-900 dark:text-white">
-            {{ siteName }}
-          </h1>
+          <ParticleTitle as="h1" :text="siteName" class="mb-2 text-3xl font-bold" />
           <p class="text-sm text-gray-500 dark:text-dark-400">
             {{ siteSubtitle }}
           </p>
@@ -43,6 +41,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores'
+import ParticleTitle from '@/components/common/ParticleTitle.vue'
 import { sanitizeUrl } from '@/utils/url'
 import { DEFAULT_SITE_NAME, DEFAULT_SITE_SUBTITLE } from '@/utils/branding'
 

@@ -37,7 +37,7 @@
         </span>
         <span
           v-if="hasPeakRate"
-          class="inline-flex items-center whitespace-nowrap rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+          class="inline-flex items-center whitespace-nowrap rounded-full bg-zo-alert-50 px-3 py-1 text-xs font-semibold text-zo-alert-700 dark:bg-zo-alert-900/20 dark:text-zo-alert-300"
           :title="peakRateTitle"
         >
           {{ peakRateText }}
@@ -127,9 +127,9 @@ const peakRateTitle = computed(() => {
 const ratePillClass = computed(() => {
   switch (props.platform) {
     case 'anthropic':
-      return 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+      return 'bg-zo-alert-50 text-zo-alert-700 dark:bg-zo-alert-900/20 dark:text-zo-alert-400'
     case 'openai':
-      return 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+      return 'bg-zo-signal-50 text-zo-signal-700 dark:bg-zo-signal-900/20 dark:text-zo-signal-400'
     case 'gemini':
       return 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-400'
     default: // antigravity and others

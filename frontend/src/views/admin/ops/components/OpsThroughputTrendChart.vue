@@ -47,8 +47,8 @@ const isDarkMode = computed(() => document.documentElement.classList.contains('d
 const colors = computed(() => ({
   blue: '#3b82f6',
   blueAlpha: '#3b82f620',
-  green: '#10b981',
-  greenAlpha: '#10b98120',
+  violet: '#7c5cfc',
+  violetAlpha: '#7c5cfc20',
   grid: isDarkMode.value ? '#374151' : '#f3f4f6',
   text: isDarkMode.value ? '#9ca3af' : '#6b7280'
 }))
@@ -73,8 +73,8 @@ const chartData = computed(() => {
       {
         label: t('admin.ops.tpsK'),
         data: props.points.map((p) => (p.tps ?? 0) / 1000),
-        borderColor: colors.value.green,
-        backgroundColor: colors.value.greenAlpha,
+        borderColor: colors.value.violet,
+        backgroundColor: colors.value.violetAlpha,
         fill: true,
         tension: 0.4,
         pointRadius: 0,
@@ -150,7 +150,7 @@ const options = computed(() => {
         display: true,
         position: 'right' as const,
         grid: { display: false },
-        ticks: { color: c.green, font: { size: 10 } }
+        ticks: { color: c.violet, font: { size: 10 } }
       }
     }
   }
@@ -190,7 +190,7 @@ function downloadChart() {
         class="flex w-full min-w-0 flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400 sm:w-auto sm:justify-end"
       >
         <span class="flex shrink-0 items-center gap-1"><span class="h-2 w-2 rounded-full bg-blue-500"></span>QPS</span>
-        <span class="flex shrink-0 items-center gap-1"><span class="h-2 w-2 rounded-full bg-green-500"></span>{{ t('admin.ops.tpsK') }}</span>
+        <span class="flex shrink-0 items-center gap-1"><span class="h-2 w-2 rounded-full bg-zo-signal-500"></span>{{ t('admin.ops.tpsK') }}</span>
         <template v-if="!props.fullscreen">
           <button
             type="button"

@@ -37,7 +37,7 @@
       </p>
       <p
         v-if="peakNote"
-        class="mt-1.5 inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400"
+        class="mt-1.5 inline-flex items-center gap-1 text-xs text-zo-alert-600 dark:text-zo-alert-400"
       >
         <Icon name="clock" size="xs" class="h-3 w-3" />
         {{ peakNote }}

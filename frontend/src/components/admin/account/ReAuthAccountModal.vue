@@ -77,7 +77,7 @@
                 ? 'bg-purple-500 text-white'
                 : geminiOAuthType === 'code_assist'
                   ? 'bg-blue-500 text-white'
-                  : 'bg-amber-500 text-white'
+                  : 'bg-zo-alert-500 text-white'
             ]"
           >
             <Icon v-if="geminiOAuthType === 'google_one'" name="user" size="sm" />

@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="sidebar"
+    class="sidebar console-skin-sidebar"
     :class="[
       sidebarCollapsed ? 'w-[72px]' : 'w-64',
       { '-translate-x-full lg:translate-x-0': !mobileOpen }
@@ -12,13 +12,18 @@
         v-if="siteLogo || sidebarCollapsed"
         :to="homePath"
         :aria-label="siteName"
-        class="sidebar-logo flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg transition-opacity duration-200 hover:opacity-80"
+        class="sidebar-logo flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg transition-opacity duration-200 hover:opacity-80"
         @click="handleMenuItemClick(homePath)"
       >
         <img v-if="siteLogo" :src="siteLogo" :alt="siteName" class="h-full w-full object-contain" />
         <span v-else class="text-xs font-semibold text-gray-900 dark:text-white">零一</span>
       </router-link>
-      <div class="sidebar-brand" :class="{ 'sidebar-brand-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">
+      <div
+        class="sidebar-brand"
+        :class="{ 'sidebar-brand-collapsed': sidebarCollapsed }"
+        :aria-hidden="sidebarCollapsed ? 'true' : 'false'"
+        :inert="sidebarCollapsed || undefined"
+      >
         <router-link
           :to="homePath"
           class="sidebar-brand-title inline-flex min-h-11 items-center text-lg font-bold text-gray-900 transition-colors duration-200 hover:text-gray-600 dark:text-white dark:hover:text-gray-300"
@@ -48,6 +53,8 @@
                   'sidebar-link-collapsed': sidebarCollapsed
                 }"
                 :title="sidebarCollapsed ? item.label : undefined"
+                :aria-label="item.label"
+                :aria-expanded="sidebarCollapsed ? undefined : isGroupExpanded(item)"
                 @click="handleGroupClick(item)"
               >
                 <component :is="item.icon" class="h-5 w-5 flex-shrink-0" />
@@ -64,19 +71,22 @@
                 </span>
               </button>
               <!-- Children -->
-              <div v-if="!sidebarCollapsed && isGroupExpanded(item)" class="mb-1 ml-4 border-l border-gray-200 pl-2 dark:border-dark-600">
-                <router-link
-                  v-for="child in item.children"
-                  :key="child.path"
-                  :to="child.path"
-                  class="sidebar-link mb-0.5 py-1.5 text-sm"
-                  :class="{ 'sidebar-link-active': route.path === child.path }"
-                  @click="handleMenuItemClick(child.path)"
-                >
-                  <component :is="child.icon" class="h-4 w-4 flex-shrink-0" />
-                  <span>{{ child.label }}</span>
-                </router-link>
-              </div>
+              <Transition name="sidebar-subnav">
+                <div v-if="!sidebarCollapsed && isGroupExpanded(item)" class="mb-1 ml-4 border-l border-gray-200 pl-2 dark:border-dark-600">
+                  <router-link
+                    v-for="child in item.children"
+                    :key="child.path"
+                    :to="child.path"
+                    class="sidebar-link mb-0.5 py-1.5 text-sm"
+                    :class="{ 'sidebar-link-active': route.path === child.path }"
+                    :aria-label="child.label"
+                    @click="handleMenuItemClick(child.path)"
+                  >
+                    <component :is="child.icon" class="h-4 w-4 flex-shrink-0" />
+                    <span>{{ child.label }}</span>
+                  </router-link>
+                </div>
+              </Transition>
             </template>
             <!-- Normal item (no children) -->
             <router-link
@@ -85,6 +95,7 @@
               class="sidebar-link mb-1"
               :class="{ 'sidebar-link-active': isActive(item.path), 'sidebar-link-collapsed': sidebarCollapsed }"
               :title="sidebarCollapsed ? item.label : undefined"
+              :aria-label="item.label"
               :id="
                 item.path === '/admin/accounts'
                   ? 'sidebar-channel-manage'
@@ -118,6 +129,7 @@
             class="sidebar-link mb-1"
             :class="{ 'sidebar-link-active': isActive(item.path), 'sidebar-link-collapsed': sidebarCollapsed }"
             :title="sidebarCollapsed ? item.label : undefined"
+            :aria-label="item.label"
             :data-tour="item.path === '/keys' ? 'sidebar-my-keys' : undefined"
             @click="handleMenuItemClick(item.path)"
           >
@@ -138,6 +150,7 @@
             class="sidebar-link mb-1"
             :class="{ 'sidebar-link-active': isActive(item.path), 'sidebar-link-collapsed': sidebarCollapsed }"
             :title="sidebarCollapsed ? item.label : undefined"
+            :aria-label="item.label"
             :data-tour="item.path === '/keys' ? 'sidebar-my-keys' : undefined"
             @click="handleMenuItemClick(item.path)"
           >
@@ -157,8 +170,9 @@
         class="sidebar-link mb-2 w-full"
         :class="{ 'sidebar-link-collapsed': sidebarCollapsed }"
         :title="sidebarCollapsed ? (isDark ? t('nav.lightMode') : t('nav.darkMode')) : undefined"
+        :aria-label="isDark ? t('nav.lightMode') : t('nav.darkMode')"
       >
-        <SunIcon v-if="isDark" class="h-5 w-5 flex-shrink-0 text-amber-500" />
+        <SunIcon v-if="isDark" class="h-5 w-5 flex-shrink-0 text-zo-alert-500" />
         <MoonIcon v-else class="h-5 w-5 flex-shrink-0" />
         <span class="sidebar-label" :class="{ 'sidebar-label-collapsed': sidebarCollapsed }" :aria-hidden="sidebarCollapsed ? 'true' : 'false'">{{
           isDark ? t('nav.lightMode') : t('nav.darkMode')
@@ -171,6 +185,7 @@
         class="sidebar-link w-full"
         :class="{ 'sidebar-link-collapsed': sidebarCollapsed }"
         :title="sidebarCollapsed ? t('nav.expand') : t('nav.collapse')"
+        :aria-label="sidebarCollapsed ? t('nav.expand') : t('nav.collapse')"
       >
         <ChevronDoubleLeftIcon v-if="!sidebarCollapsed" class="h-5 w-5 flex-shrink-0" />
         <ChevronDoubleRightIcon v-else class="h-5 w-5 flex-shrink-0" />
@@ -952,14 +967,15 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .sidebar-logo {
-  flex: 0 0 2.25rem;
-  min-width: 2.25rem;
+  flex: 0 0 3rem;
+  min-width: 3rem;
 }
 
 .sidebar-header-collapsed {
   gap: 0;
-  padding-left: 1.125rem;
-  padding-right: 1.125rem;
+  justify-content: center;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
 }
 
 .sidebar-brand {
@@ -986,6 +1002,12 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transform: translateY(5pt);
+}
+
+:deep(.sidebar-brand > .relative) {
+  position: relative;
+  top: -5pt;
 }
 
 .sidebar-link-collapsed {
@@ -1076,5 +1098,36 @@ onBeforeUnmount(() => {
   display: block;
   width: 1.25rem;
   height: 1.25rem;
+}
+
+.sidebar-subnav-enter-active {
+  transition:
+    opacity 180ms ease-out,
+    transform 180ms ease-out;
+}
+
+.sidebar-subnav-leave-active {
+  transition:
+    opacity 120ms ease-in,
+    transform 120ms ease-in;
+}
+
+.sidebar-subnav-enter-from,
+.sidebar-subnav-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-subnav-enter-active,
+  .sidebar-subnav-leave-active {
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .sidebar-subnav-enter-from,
+  .sidebar-subnav-leave-to {
+    transform: none !important;
+  }
 }
 </style>

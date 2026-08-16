@@ -346,7 +346,7 @@
                   <label class="text-xs font-medium text-gray-700 dark:text-gray-300">
                     {{ t('admin.channels.form.codexImageGenerationBridge') }}
                   </label>
-                  <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">
+                  <p class="mt-0.5 text-[11px] text-zo-alert-600 dark:text-zo-alert-400">
                     {{ t('admin.channels.form.codexImageGenerationBridgeHint') }}
                   </p>
                 </div>
@@ -361,7 +361,7 @@
                   <label class="text-xs font-medium text-gray-700 dark:text-gray-300">
                     {{ t('admin.channels.form.bedrockCCCompat') }}
                   </label>
-                  <p class="mt-0.5 text-[11px] text-amber-600 dark:text-amber-400">
+                  <p class="mt-0.5 text-[11px] text-zo-alert-600 dark:text-zo-alert-400">
                     {{ t('admin.channels.form.bedrockCCCompatHint') }}
                   </p>
                 </div>

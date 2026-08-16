@@ -58,15 +58,15 @@ const detailParts = computed(() => {
 
 const stateClass = computed(() => {
   if (!props.state) return 'text-gray-900 dark:text-white'
-  if (props.state === 'healthy') return 'text-emerald-600 dark:text-emerald-400'
-  if (props.state === 'warning') return 'text-amber-600 dark:text-amber-400'
+  if (props.state === 'healthy') return 'text-zo-signal-600 dark:text-zo-signal-400'
+  if (props.state === 'warning') return 'text-zo-alert-600 dark:text-zo-alert-400'
   if (props.state === 'critical') return 'text-red-600 dark:text-red-400'
   return 'text-gray-500 dark:text-dark-400'
 })
 
 const dotClass = computed(() => {
-  if (props.state === 'healthy') return 'bg-emerald-500'
-  if (props.state === 'warning') return 'bg-amber-500'
+  if (props.state === 'healthy') return 'bg-zo-signal-500'
+  if (props.state === 'warning') return 'bg-zo-alert-500'
   if (props.state === 'critical') return 'bg-red-500'
   return 'bg-gray-300 dark:bg-dark-600'
 })

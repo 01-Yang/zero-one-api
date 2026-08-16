@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-dark-950">
+  <div class="app-shell console-skin-shell min-h-screen">
     <!-- Sidebar -->
     <AppSidebar />
 

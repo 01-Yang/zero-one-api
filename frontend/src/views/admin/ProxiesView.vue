@@ -272,7 +272,7 @@
               <button
                 @click="handleTestConnection(row)"
                 :disabled="testingProxyIds.has(row.id)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-zo-signal-50 hover:text-zo-signal-600 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-zo-signal-900/20 dark:hover:text-zo-signal-400"
               >
                 <svg
                   v-if="testingProxyIds.has(row.id)"
@@ -560,9 +560,9 @@
                 name="exclamationCircle"
                 size="sm"
                 :stroke-width="2"
-                class="text-amber-500"
+                class="text-zo-alert-500"
               />
-              <span class="text-amber-600 dark:text-amber-400">
+              <span class="text-zo-alert-600 dark:text-zo-alert-400">
                 {{ t('admin.proxies.invalidCount', { count: batchParseResult.invalid }) }}
               </span>
             </div>

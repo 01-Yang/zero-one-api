@@ -185,8 +185,8 @@ function formatDate(value: string): string {
 }
 function decisionClass(decision: string): string {
   if (decision === 'critical') return 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300'
-  if (decision === 'flag') return 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
-  return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+  if (decision === 'flag') return 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-950/50 dark:text-zo-alert-300'
+  return 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-950/50 dark:text-zo-signal-300'
 }
 const DECISIONS = new Set(['pass', 'flag', 'critical'])
 const RISK_LEVELS = new Set(['low', 'medium', 'high', 'critical'])

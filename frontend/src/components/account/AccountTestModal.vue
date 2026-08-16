@@ -33,7 +33,7 @@
           :class="[
             'rounded-full px-2.5 py-1 text-xs font-semibold',
             account.status === 'active'
-              ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400'
+              ? 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-500/20 dark:text-zo-signal-400'
               : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
           ]"
         >
@@ -88,7 +88,7 @@
             <Icon name="play" size="sm" :stroke-width="2" />
             <span>{{ t('admin.accounts.readyToTest') }}</span>
           </div>
-          <div v-else-if="status === 'connecting'" class="flex items-center gap-2 text-yellow-400">
+          <div v-else-if="status === 'connecting'" class="flex items-center gap-2 text-zo-alert-400">
             <Icon name="refresh" size="sm" class="animate-spin" :stroke-width="2" />
             <span>{{ t('admin.accounts.connectingToApi') }}</span>
           </div>
@@ -99,14 +99,14 @@
           </div>
 
           <!-- Streaming Content -->
-          <div v-if="streamingContent" class="text-green-400">
+          <div v-if="streamingContent" class="text-zo-signal-400">
             {{ streamingContent }}<span class="animate-pulse">_</span>
           </div>
 
           <!-- Result Status -->
           <div
             v-if="status === 'success'"
-            class="mt-3 flex items-center gap-2 border-t border-gray-700 pt-3 text-green-400"
+            class="mt-3 flex items-center gap-2 border-t border-gray-700 pt-3 text-zo-signal-400"
           >
             <Icon name="check" size="sm" :stroke-width="2" />
             <span>{{ t('admin.accounts.testCompleted') }}</span>
@@ -211,9 +211,9 @@
             status === 'connecting' || !selectedModelId
               ? 'cursor-not-allowed bg-primary-400 text-white'
               : status === 'success'
-                ? 'bg-green-500 text-white hover:bg-green-600'
+                ? 'bg-zo-signal-500 text-white hover:bg-zo-signal-600'
                 : status === 'error'
-                  ? 'bg-orange-500 text-white hover:bg-orange-600'
+                  ? 'bg-zo-alert-500 text-white hover:bg-zo-alert-600'
                   : 'bg-primary-500 text-white hover:bg-primary-600'
           ]"
         >
@@ -493,7 +493,7 @@ const handleEvent = (event: {
 }) => {
   switch (event.type) {
     case 'test_start':
-      addLine(t('admin.accounts.connectedToApi'), 'text-green-400')
+      addLine(t('admin.accounts.connectedToApi'), 'text-zo-signal-400')
       if (event.model) {
         addLine(t('admin.accounts.usingModel', { model: event.model }), 'text-cyan-400')
       }
@@ -504,7 +504,7 @@ const handleEvent = (event: {
         'text-gray-400'
       )
       addLine('', 'text-gray-300')
-      addLine(t('admin.accounts.response'), 'text-yellow-400')
+      addLine(t('admin.accounts.response'), 'text-zo-alert-400')
       break
 
     case 'content':
@@ -533,7 +533,7 @@ const handleEvent = (event: {
     case 'test_complete':
       // Move streaming content to output lines
       if (streamingContent.value) {
-        addLine(streamingContent.value, 'text-green-300')
+        addLine(streamingContent.value, 'text-zo-signal-300')
         streamingContent.value = ''
       }
       if (event.success) {
@@ -548,7 +548,7 @@ const handleEvent = (event: {
       status.value = 'error'
       errorMessage.value = event.error || 'Unknown error'
       if (streamingContent.value) {
-        addLine(streamingContent.value, 'text-green-300')
+        addLine(streamingContent.value, 'text-zo-signal-300')
         streamingContent.value = ''
       }
       break

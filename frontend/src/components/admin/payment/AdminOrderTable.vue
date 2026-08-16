@@ -97,7 +97,7 @@
           <button
             v-if="row.status === 'PENDING'"
             @click="emit('cancel', row)"
-            class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-yellow-50 hover:text-yellow-600 dark:hover:bg-yellow-900/20 dark:hover:text-yellow-400"
+            class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-zo-alert-50 hover:text-zo-alert-600 dark:hover:bg-zo-alert-900/20 dark:hover:text-zo-alert-400"
           >
             <Icon name="x" size="sm" />
             <span class="text-xs">{{ t('payment.orders.cancel') }}</span>

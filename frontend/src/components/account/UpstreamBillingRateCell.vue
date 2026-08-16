@@ -51,7 +51,7 @@
         </p>
         <p class="mt-2 border-t border-white/15 pt-2" data-testid="upstream-billing-probe-state">
           {{ t('admin.accounts.upstreamBilling.accountProbeState') }}
-          <span :class="probeEnabled ? 'text-emerald-400' : 'text-red-400'">
+          <span :class="probeEnabled ? 'text-zo-signal-400' : 'text-red-400'">
             {{ probeEnabled ? t('admin.accounts.upstreamBilling.enabled') : t('admin.accounts.upstreamBilling.disabled') }}
           </span>
         </p>
@@ -204,7 +204,7 @@ const statusLabel = computed(() => {
 const statusClass = computed(() => {
   if (!snapshot.value) return 'text-gray-400 dark:text-gray-500'
   if (snapshot.value.status === 'unsupported') return 'text-gray-500 dark:text-gray-400'
-  if (stale.value) return 'text-amber-600 dark:text-amber-400'
+  if (stale.value) return 'text-zo-alert-600 dark:text-zo-alert-400'
   if (snapshot.value.status === 'failed') return 'text-red-600 dark:text-red-400'
   return ''
 })

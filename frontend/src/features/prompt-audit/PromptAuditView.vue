@@ -4,7 +4,11 @@
       <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p class="text-xs font-semibold uppercase tracking-[0.16em] text-primary-600 dark:text-primary-400">{{ t('nav.securityAudit') }}</p>
-          <h1 class="mt-1 text-2xl font-semibold tracking-tight text-gray-950 dark:text-white">{{ t('admin.promptAudit.title') }}</h1>
+          <ParticleTitle
+            as="h1"
+            :text="t('admin.promptAudit.title')"
+            class="mt-1 text-2xl font-semibold tracking-tight"
+          />
           <p class="mt-2 max-w-3xl text-sm text-gray-500 dark:text-dark-300">{{ t('admin.promptAudit.description') }}</p>
         </div>
         <div v-if="draft" class="text-right text-xs text-gray-500 dark:text-dark-400">
@@ -49,7 +53,7 @@
                 @update:endpoints="updateEndpoints"
                 @probe="runProbe"
               />
-              <div v-if="loadErrors.groups" role="alert" class="mt-5 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">{{ loadErrors.groups }}</div>
+              <div v-if="loadErrors.groups" role="alert" class="mt-5 rounded-lg bg-zo-alert-50 px-4 py-3 text-sm text-zo-alert-800 dark:bg-zo-alert-950/30 dark:text-zo-alert-200">{{ loadErrors.groups }}</div>
               <PolicyPanel :draft="draft" :groups="groups" @update:draft="replaceDraft" />
             </template>
           </div>
@@ -59,7 +63,7 @@
               v-if="draft?.enabled && !draft.store_pass_events"
               data-test="pass-events-disabled-notice"
               role="status"
-              class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/30 dark:text-amber-200"
+              class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zo-alert-200 bg-zo-alert-50 px-4 py-3 text-sm text-zo-alert-900 dark:border-zo-alert-900/70 dark:bg-zo-alert-950/30 dark:text-zo-alert-200"
             >
               <span>{{ t('admin.promptAudit.events.passEventsDisabled') }}</span>
               <button type="button" class="btn btn-secondary btn-sm" @click="activeTab = 'config'">
@@ -99,7 +103,7 @@
           <SaveToggle :label="t('admin.promptAudit.saveBar.storePass')" :model-value="draft.store_pass_events" data-test="store-pass-toggle" @update:model-value="replaceDraft({ ...draft!, store_pass_events: $event })" />
         </div>
         <div class="flex items-center gap-3">
-          <span class="text-sm" :class="dirty ? 'text-amber-700 dark:text-amber-300' : 'text-gray-500 dark:text-dark-400'">
+          <span class="text-sm" :class="dirty ? 'text-zo-alert-700 dark:text-zo-alert-300' : 'text-gray-500 dark:text-dark-400'">
             {{ dirty ? t('admin.promptAudit.saveBar.dirty') : t('admin.promptAudit.saveBar.synced') }}
           </span>
           <button type="button" class="btn btn-secondary" :disabled="!dirty || loading.saving" @click="resetDraft">{{ t('common.reset') }}</button>
@@ -148,6 +152,7 @@ import { computed, defineComponent, h, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
+import ParticleTitle from '@/components/common/ParticleTitle.vue'
 import { useAppStore } from '@/stores/app'
 import { extractApiErrorCode, extractApiErrorMessage } from '@/utils/apiError'
 import RuntimeOverview from './components/RuntimeOverview.vue'

@@ -35,7 +35,7 @@ const statusClass = computed(() => {
   }
   // In use: yellow
   if (current > 0) {
-    return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+    return 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400'
   }
   // Idle: gray
   return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'

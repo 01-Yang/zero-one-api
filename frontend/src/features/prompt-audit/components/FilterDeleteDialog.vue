@@ -85,7 +85,7 @@
           <dt>{{ t('admin.promptAudit.events.expiresAt') }}</dt>
           <dd>{{ formatDate(preview.expires_at) }}</dd>
         </dl>
-        <p class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">{{ t('admin.promptAudit.events.filterDeleteWarning') }}</p>
+        <p class="mt-2 rounded-lg bg-zo-alert-50 px-3 py-2 text-xs text-zo-alert-800 dark:bg-zo-alert-950/30 dark:text-zo-alert-200">{{ t('admin.promptAudit.events.filterDeleteWarning') }}</p>
       </div>
       <p v-else class="rounded-xl border border-dashed border-gray-300 px-4 py-3 text-xs text-gray-500 dark:border-dark-600 dark:text-dark-400" data-test="delete-preview-empty">
         {{ t('admin.promptAudit.events.filterDeleteNeedPreview') }}

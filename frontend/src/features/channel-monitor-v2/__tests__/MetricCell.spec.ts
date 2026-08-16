@@ -17,14 +17,14 @@ describe('MetricCell', () => {
     expect(wrapper.text()).toContain('请求')
     expect(wrapper.text()).toContain('1,234')
     expect(wrapper.text()).toContain('12.5 RPM')
-    expect(wrapper.find('strong').classes().join(' ')).toMatch(/emerald/)
+    expect(wrapper.find('strong').classes()).toContain('text-zo-signal-600')
   })
 
   it('maps warning and critical health states to distinct colors', () => {
     const warning = mount(MetricCell, {
       props: { label: '错误', value: '10%', detail: '1 次', state: 'warning' },
     })
-    expect(warning.find('strong').classes().join(' ')).toMatch(/amber/)
+    expect(warning.find('strong').classes()).toContain('text-zo-alert-600')
 
     const critical = mount(MetricCell, {
       props: { label: '错误', value: '50%', detail: '5 次', state: 'critical' },

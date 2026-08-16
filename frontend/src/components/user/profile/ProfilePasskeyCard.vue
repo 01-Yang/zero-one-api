@@ -24,7 +24,7 @@
       <div v-if="!enabled" class="mb-5 text-sm text-gray-500 dark:text-gray-400">
         {{ t('profile.passkey.featureDisabled') }}
       </div>
-      <div v-if="enabled && !supported" class="mb-5 text-sm text-amber-600 dark:text-amber-400">
+      <div v-if="enabled && !supported" class="mb-5 text-sm text-zo-alert-600 dark:text-zo-alert-400">
         {{ t('profile.passkey.unsupported') }}
       </div>
       <div>
@@ -94,7 +94,7 @@
                 </p>
                 <span
                   v-if="credential.backup"
-                  class="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                  class="rounded-full bg-zo-signal-50 px-2 py-0.5 text-xs text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-300"
                 >
                   {{ t('profile.passkey.synced') }}
                 </span>

@@ -623,7 +623,7 @@ onMounted(() => {
   font-style: italic;
 }
 .code-success {
-  color: #22c55e;
+  color: #60a5fa;
   padding: 2px 8px;
   border-radius: 4px;
   font-weight: 600;

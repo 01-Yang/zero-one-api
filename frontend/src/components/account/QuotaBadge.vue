@@ -15,9 +15,9 @@ const badgeClass = computed(() => {
     return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
   }
   if (props.used >= props.limit * 0.8) {
-    return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+    return 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400'
   }
-  return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+  return 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-400'
 })
 
 const tooltip = computed(() => {

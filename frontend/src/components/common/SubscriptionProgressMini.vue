@@ -62,10 +62,10 @@
               <!-- Unlimited subscription badge -->
               <div
                 v-if="isUnlimited(subscription)"
-                class="flex items-center gap-2 rounded-md bg-emerald-50 px-2.5 py-1.5 dark:bg-emerald-900/20"
+                class="flex items-center gap-2 rounded-md bg-zo-signal-50 px-2.5 py-1.5 dark:bg-zo-signal-900/20"
               >
-                <span class="text-lg text-emerald-600 dark:text-emerald-400">∞</span>
-                <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                <span class="text-lg text-zo-signal-600 dark:text-zo-signal-400">∞</span>
+                <span class="text-xs font-medium text-zo-signal-700 dark:text-zo-signal-300">
                   {{ t('subscriptionProgress.unlimited') }}
                 </span>
               </div>
@@ -229,20 +229,20 @@ function isUnlimited(sub: UserSubscription): boolean {
 function getProgressDotClass(sub: UserSubscription): string {
   // Unlimited subscriptions get a special color
   if (isUnlimited(sub)) {
-    return 'bg-emerald-500'
+    return 'bg-zo-signal-500'
   }
   const maxPercentage = getMaxUsagePercentage(sub)
   if (maxPercentage >= 90) return 'bg-red-500'
-  if (maxPercentage >= 70) return 'bg-orange-500'
-  return 'bg-green-500'
+  if (maxPercentage >= 70) return 'bg-zo-alert-500'
+  return 'bg-zo-signal-500'
 }
 
 function getProgressBarClass(used: number | undefined, limit: number | null | undefined): string {
   if (!limit || limit === 0) return 'bg-gray-400'
   const percentage = ((used || 0) / limit) * 100
   if (percentage >= 90) return 'bg-red-500'
-  if (percentage >= 70) return 'bg-orange-500'
-  return 'bg-green-500'
+  if (percentage >= 70) return 'bg-zo-alert-500'
+  return 'bg-zo-signal-500'
 }
 
 function getProgressWidth(used: number | undefined, limit: number | null | undefined): string {
@@ -274,7 +274,7 @@ function getDaysRemainingClass(expiresAt: string): string {
   const diff = expires.getTime() - now.getTime()
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
   if (days <= 3) return 'text-red-600 dark:text-red-400'
-  if (days <= 7) return 'text-orange-600 dark:text-orange-400'
+  if (days <= 7) return 'text-zo-alert-600 dark:text-zo-alert-400'
   return 'text-gray-500 dark:text-dark-400'
 }
 

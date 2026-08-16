@@ -25,7 +25,7 @@ const isDarkMode = computed(() => document.documentElement.classList.contains('d
 const colors = computed(() => ({
   blue: '#3b82f6',
   red: '#ef4444',
-  orange: '#f59e0b',
+  orange: '#fb7185',
   gray: '#9ca3af',
   text: isDarkMode.value ? '#9ca3af' : '#6b7280'
 }))

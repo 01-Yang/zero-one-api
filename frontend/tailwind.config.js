@@ -1,38 +1,19 @@
 /** @type {import('tailwindcss').Config} */
+import { consolePalette } from './src/styles/palette-adapter.js'
+
 export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        // 品牌主色 - 黑白中性色。保留 primary 命名以避免改变既有业务组件的接口。
-        primary: {
-          50: '#f5f5f7',
-          100: '#e5e5e7',
-          200: '#d2d2d7',
-          300: '#b6b6bc',
-          400: '#86868b',
-          500: '#636366',
-          600: '#3a3a3c',
-          700: '#2c2c2e',
-          800: '#1d1d1f',
-          900: '#0b0b0c',
-          950: '#000000'
-        },
-        // 辅助中性色，供既有强调文本和边界使用。
-        accent: {
-          50: '#f5f5f7',
-          100: '#e5e5e7',
-          200: '#d2d2d7',
-          300: '#a1a1a6',
-          400: '#86868b',
-          500: '#636366',
-          600: '#48484a',
-          700: '#303033',
-          800: '#1c1c1e',
-          900: '#141416',
-          950: '#000000'
-        },
+        // Keep primary/accent as compatibility aliases for upstream components.
+        primary: consolePalette.primary,
+        accent: consolePalette.accent,
+        // Explicit Zero One roles preserve the current skin without redefining
+        // Tailwind's generic success and warning palettes for future pages.
+        'zo-signal': consolePalette.signal,
+        'zo-alert': consolePalette.alert,
         // 深色模式层级：页面、侧栏、表面和文字。
         dark: {
           50: '#f5f5f7',

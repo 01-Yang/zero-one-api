@@ -101,9 +101,9 @@ watch(
 const labelClass = computed(() => {
   const colors = {
     indigo: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-    emerald: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    emerald: 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/40 dark:text-zo-signal-300',
     purple: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-    amber: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+    amber: 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-900/40 dark:text-zo-alert-300'
   }
   return colors[props.color]
 })
@@ -114,16 +114,16 @@ const barClass = computed(() => {
     if (props.utilization <= 20) {
       return 'bg-red-500'
     } else if (props.utilization <= 50) {
-      return 'bg-amber-500'
+      return 'bg-zo-alert-500'
     }
-    return 'bg-green-500'
+    return 'bg-zo-signal-500'
   }
   if (props.utilization >= 100) {
     return 'bg-red-500'
   } else if (props.utilization >= 80) {
-    return 'bg-amber-500'
+    return 'bg-zo-alert-500'
   } else {
-    return 'bg-green-500'
+    return 'bg-zo-signal-500'
   }
 })
 
@@ -133,14 +133,14 @@ const textClass = computed(() => {
     if (props.utilization <= 20) {
       return 'text-red-600 dark:text-red-400'
     } else if (props.utilization <= 50) {
-      return 'text-amber-600 dark:text-amber-400'
+      return 'text-zo-alert-600 dark:text-zo-alert-400'
     }
     return 'text-gray-600 dark:text-gray-400'
   }
   if (props.utilization >= 100) {
     return 'text-red-600 dark:text-red-400'
   } else if (props.utilization >= 80) {
-    return 'text-amber-600 dark:text-amber-400'
+    return 'text-zo-alert-600 dark:text-zo-alert-400'
   } else {
     return 'text-gray-600 dark:text-gray-400'
   }

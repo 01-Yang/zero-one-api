@@ -303,9 +303,9 @@ watch(
 
 function getLoadBarClass(loadPct: number): string {
   if (loadPct >= 90) return 'bg-red-500 dark:bg-red-600'
-  if (loadPct >= 70) return 'bg-orange-500 dark:bg-orange-600'
-  if (loadPct >= 50) return 'bg-yellow-500 dark:bg-yellow-600'
-  return 'bg-green-500 dark:bg-green-600'
+  if (loadPct >= 70) return 'bg-zo-alert-500 dark:bg-zo-alert-600'
+  if (loadPct >= 50) return 'bg-zo-alert-500 dark:bg-zo-alert-600'
+  return 'bg-zo-signal-500 dark:bg-zo-signal-600'
 }
 
 function getLoadBarStyle(loadPct: number): string {
@@ -314,9 +314,9 @@ function getLoadBarStyle(loadPct: number): string {
 
 function getLoadTextClass(loadPct: number): string {
   if (loadPct >= 90) return 'text-red-600 dark:text-red-400'
-  if (loadPct >= 70) return 'text-orange-600 dark:text-orange-400'
-  if (loadPct >= 50) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-green-600 dark:text-green-400'
+  if (loadPct >= 70) return 'text-zo-alert-600 dark:text-zo-alert-400'
+  if (loadPct >= 50) return 'text-zo-alert-600 dark:text-zo-alert-400'
+  return 'text-zo-signal-600 dark:text-zo-signal-400'
 }
 
 function formatDuration(seconds: number): string {
@@ -482,7 +482,7 @@ watch(
                 />
               </svg>
               <span class="text-gray-600 dark:text-gray-300">
-                <span class="font-bold text-green-600 dark:text-green-400">{{ row.available_accounts }}</span
+                <span class="font-bold text-zo-signal-600 dark:text-zo-signal-400">{{ row.available_accounts }}</span
                 >/{{ row.total_accounts }}
               </span>
               <span class="text-gray-400 dark:text-gray-500">{{ row.availability_percentage }}%</span>
@@ -491,7 +491,7 @@ watch(
             <!-- 限流账号 -->
             <span
               v-if="row.rate_limited_accounts > 0"
-              class="rounded-full bg-amber-100 px-1.5 py-0.5 font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+              class="rounded-full bg-zo-alert-100 px-1.5 py-0.5 font-semibold text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400"
             >
               {{ t('admin.ops.concurrency.rateLimited', { count: row.rate_limited_accounts }) }}
             </span>
@@ -534,7 +534,7 @@ watch(
               <!-- 状态徽章 -->
               <span
                 v-if="row.is_available"
-                class="inline-flex items-center gap-1 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                class="inline-flex items-center gap-1 rounded bg-zo-signal-100 px-1.5 py-0.5 text-[10px] font-medium text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-400"
               >
                 <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -543,7 +543,7 @@ watch(
               </span>
               <span
                 v-else-if="row.is_rate_limited"
-                class="inline-flex items-center gap-1 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                class="inline-flex items-center gap-1 rounded bg-zo-alert-100 px-1.5 py-0.5 text-[10px] font-medium text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400"
               >
                 <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

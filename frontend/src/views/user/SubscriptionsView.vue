@@ -51,7 +51,7 @@
                 </p>
                 <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-400 dark:text-gray-500">
                   <span>{{ t('payment.planCard.rate') }}: ×{{ subscription.group?.rate_multiplier ?? 1 }}</span>
-                  <span v-if="subscriptionHasPeakRate(subscription)" class="text-amber-700 dark:text-amber-300">
+                  <span v-if="subscriptionHasPeakRate(subscription)" class="text-zo-alert-700 dark:text-zo-alert-300">
                     {{ t('payment.planCard.peakRate') }}: {{ subscriptionPeakRateLabel(subscription) }}
                   </span>
                 </div>
@@ -62,7 +62,7 @@
                 :class="[
                   'rounded-full px-2 py-0.5 text-xs font-medium',
                   subscription.status === 'active'
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                    ? 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/40 dark:text-zo-signal-300'
                     : subscription.status === 'expired'
                       ? 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-gray-400'
                       : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
@@ -226,15 +226,15 @@
                 !subscription.group?.weekly_limit_usd &&
                 !subscription.group?.monthly_limit_usd
               "
-              class="flex items-center justify-center rounded-lg bg-emerald-50 py-6 dark:bg-emerald-900/20"
+              class="flex items-center justify-center rounded-lg bg-zo-signal-50 py-6 dark:bg-zo-signal-900/20"
             >
               <div class="flex items-center gap-3">
-                <span class="text-4xl text-emerald-600 dark:text-emerald-400">∞</span>
+                <span class="text-4xl text-zo-signal-600 dark:text-zo-signal-400">∞</span>
                 <div>
-                  <p class="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  <p class="text-sm font-medium text-zo-signal-700 dark:text-zo-signal-300">
                     {{ t('userSubscriptions.unlimited') }}
                   </p>
-                  <p class="text-xs text-emerald-600/70 dark:text-emerald-400/70">
+                  <p class="text-xs text-zo-signal-600/70 dark:text-zo-signal-400/70">
                     {{ t('userSubscriptions.unlimitedDesc') }}
                   </p>
                 </div>
@@ -268,8 +268,8 @@ import {
 
 function platformAccentDotClass(p: string): string {
   switch (p) {
-    case 'anthropic': return 'bg-orange-500'
-    case 'openai': return 'bg-emerald-500'
+    case 'anthropic': return 'bg-zo-alert-500'
+    case 'openai': return 'bg-zo-signal-500'
     case 'antigravity': return 'bg-purple-500'
     case 'gemini': return 'bg-blue-500'
     default: return 'bg-gray-400'
@@ -313,8 +313,8 @@ function getProgressBarClass(used: number | undefined, limit: number | null | un
   if (!limit || limit === 0) return 'bg-gray-400'
   const percentage = ((used || 0) / limit) * 100
   if (percentage >= 90) return 'bg-red-500'
-  if (percentage >= 70) return 'bg-orange-500'
-  return 'bg-green-500'
+  if (percentage >= 70) return 'bg-zo-alert-500'
+  return 'bg-zo-signal-500'
 }
 
 function formatExpirationDate(expiresAt: string): string {
@@ -350,7 +350,7 @@ function getExpirationClass(expiresAt: string): string {
 
   if (diff <= 0) return 'text-red-600 dark:text-red-400 font-medium'
   if (days <= 3) return 'text-red-600 dark:text-red-400'
-  if (days <= 7) return 'text-orange-600 dark:text-orange-400'
+  if (days <= 7) return 'text-zo-alert-600 dark:text-zo-alert-400'
   return 'text-gray-700 dark:text-gray-300'
 }
 

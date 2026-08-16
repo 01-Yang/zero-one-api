@@ -93,17 +93,17 @@ const stats = ref<DashboardStats | null>(null)
 
 function methodColor(type: string): string {
   const c: Record<string, string> = {
-    alipay: 'bg-blue-500', wxpay: 'bg-green-500',
-    alipay_direct: 'bg-blue-400', wxpay_direct: 'bg-green-400',
+    alipay: 'bg-blue-500', wxpay: 'bg-zo-signal-500',
+    alipay_direct: 'bg-blue-400', wxpay_direct: 'bg-zo-signal-400',
     stripe: 'bg-purple-500',
   }
   return c[type] || 'bg-gray-400'
 }
 
 function rankClass(idx: number): string {
-  if (idx === 0) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+  if (idx === 0) return 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400'
   if (idx === 1) return 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-  if (idx === 2) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+  if (idx === 2) return 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400'
   return 'bg-gray-100 text-gray-500 dark:bg-dark-700 dark:text-gray-400'
 }
 

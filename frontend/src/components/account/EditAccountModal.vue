@@ -84,9 +84,9 @@
 
           <div
             v-if="isOpenAIModelRestrictionDisabled"
-            class="mb-3 rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20"
+            class="mb-3 rounded-lg bg-zo-alert-50 p-3 dark:bg-zo-alert-900/20"
           >
-            <p class="text-xs text-amber-700 dark:text-amber-400">
+            <p class="text-xs text-zo-alert-700 dark:text-zo-alert-400">
               {{ t('admin.accounts.openai.modelRestrictionDisabledByPassthrough') }}
             </p>
           </div>
@@ -355,8 +355,8 @@
           </div>
 
           <div v-if="customErrorCodesEnabled" class="space-y-3">
-            <div class="rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20">
-              <p class="text-xs text-amber-700 dark:text-amber-400">
+            <div class="rounded-lg bg-zo-alert-50 p-3 dark:bg-zo-alert-900/20">
+              <p class="text-xs text-zo-alert-700 dark:text-zo-alert-400">
                 <Icon name="exclamationTriangle" size="sm" class="mr-1 inline" :stroke-width="2" />
                 {{ t('admin.accounts.customErrorCodesWarning') }}
               </p>
@@ -539,9 +539,9 @@
 
         <div
           v-if="isOpenAIModelRestrictionDisabled"
-          class="mb-3 rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20"
+          class="mb-3 rounded-lg bg-zo-alert-50 p-3 dark:bg-zo-alert-900/20"
         >
-          <p class="text-xs text-amber-700 dark:text-amber-400">
+          <p class="text-xs text-zo-alert-700 dark:text-zo-alert-400">
             {{ t('admin.accounts.openai.modelRestrictionDisabledByPassthrough') }}
           </p>
         </div>
@@ -1142,7 +1142,7 @@
               type="button"
               @click="syncAntigravityUpstreamModels"
               :disabled="isSyncingAntigravityUpstream || !account?.id"
-              class="rounded-lg border border-emerald-200 px-3 py-1.5 text-sm text-emerald-600 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-900/30"
+              class="rounded-lg border border-zo-signal-200 px-3 py-1.5 text-sm text-zo-signal-600 hover:bg-zo-signal-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zo-signal-800 dark:text-zo-signal-400 dark:hover:bg-zo-signal-900/30"
             >
               {{ isSyncingAntigravityUpstream ? t('admin.accounts.syncUpstreamModelsLoading') : t('admin.accounts.syncUpstreamModels') }}
             </button>
@@ -1691,7 +1691,7 @@
         </div>
         <div
           v-else
-          class="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
+          class="rounded-lg bg-zo-alert-50 px-3 py-2 text-xs text-zo-alert-700 dark:bg-zo-alert-900/20 dark:text-zo-alert-300"
           data-testid="openai-responses-mode-not-applicable"
         >
           {{ t('admin.accounts.openai.responsesModeTextDisabledHint') }}
@@ -3061,15 +3061,15 @@ const codexImageToolOptions = computed<Array<{
     value: 'enabled',
     label: t('admin.accounts.openai.codexImageToolEnabled'),
     description: t('admin.accounts.openai.codexImageToolEnabledDesc'),
-    selectedCardClass: 'border-emerald-300 bg-emerald-50 text-emerald-900 shadow-sm ring-1 ring-emerald-200 dark:border-emerald-700 dark:bg-emerald-900/25 dark:text-emerald-100 dark:ring-emerald-800',
-    selectedDotClass: 'border-emerald-500 bg-emerald-500 text-white'
+    selectedCardClass: 'border-zo-signal-300 bg-zo-signal-50 text-zo-signal-900 shadow-sm ring-1 ring-zo-signal-200 dark:border-zo-signal-700 dark:bg-zo-signal-900/25 dark:text-zo-signal-100 dark:ring-zo-signal-800',
+    selectedDotClass: 'border-zo-signal-500 bg-zo-signal-500 text-white'
   },
   {
     value: 'disabled',
     label: t('admin.accounts.openai.codexImageToolDisabled'),
     description: t('admin.accounts.openai.codexImageToolDisabledDesc'),
-    selectedCardClass: 'border-amber-300 bg-amber-50 text-amber-900 shadow-sm ring-1 ring-amber-200 dark:border-amber-700 dark:bg-amber-900/25 dark:text-amber-100 dark:ring-amber-800',
-    selectedDotClass: 'border-amber-500 bg-amber-500 text-white'
+    selectedCardClass: 'border-zo-alert-300 bg-zo-alert-50 text-zo-alert-900 shadow-sm ring-1 ring-zo-alert-200 dark:border-zo-alert-700 dark:bg-zo-alert-900/25 dark:text-zo-alert-100 dark:ring-zo-alert-800',
+    selectedDotClass: 'border-zo-alert-500 bg-zo-alert-500 text-white'
   },
   {
     value: 'block',
@@ -3094,9 +3094,9 @@ const codexImageToolBadgeLabel = computed(() => {
 const codexImageToolBadgeClass = computed(() => {
   switch (codexImageToolMode.value) {
     case 'enabled':
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+      return 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/40 dark:text-zo-signal-300'
     case 'disabled':
-      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+      return 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-900/40 dark:text-zo-alert-300'
     case 'block':
       return 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
     default:

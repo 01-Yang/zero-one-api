@@ -109,8 +109,8 @@
               class="rounded-full px-2.5 py-1 text-xs font-medium"
               :class="
                 selectedEventMeta.optional
-                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                  ? 'bg-zo-alert-100 text-zo-alert-800 dark:bg-zo-alert-900/30 dark:text-zo-alert-300'
+                  : 'bg-zo-signal-100 text-zo-signal-800 dark:bg-zo-signal-900/30 dark:text-zo-signal-300'
               "
             >
               {{ selectedEventMeta.optional ? localText("可退订通知", "Optional") : localText("事务邮件", "Transactional") }}
@@ -129,7 +129,7 @@
 
         <div
           v-if="!eventOptions.length || !localeOptions.length"
-          class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
+          class="rounded-lg border border-zo-alert-200 bg-zo-alert-50 p-4 text-sm text-zo-alert-700 dark:border-zo-alert-800 dark:bg-zo-alert-900/20 dark:text-zo-alert-300"
         >
           {{ t("admin.settings.emailTemplates.empty") }}
         </div>

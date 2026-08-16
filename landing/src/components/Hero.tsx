@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { DISPLAY_API_ENDPOINT, consoleUrl, documentUrl } from '../siteConfig'
 import { copyText } from './copyText'
 import EchoText from './EchoText'
-import SpecularAction from './SpecularAction'
+import Action from './Action'
 
 interface HeroProps {
   docUrl: string
@@ -83,7 +83,7 @@ export default function Hero({
 
         <div className="hero-actions" data-hero-reveal="2">
           {registrationEnabled ? (
-            <SpecularAction
+            <Action
               className="button-primary"
               href={consoleUrl('/register')}
               size="lg"
@@ -92,9 +92,9 @@ export default function Hero({
               thickness={1.15}
             >
               注册账号
-            </SpecularAction>
+            </Action>
           ) : (
-            <SpecularAction
+            <Action
               className="button-primary"
               href={consoleUrl('/login')}
               size="lg"
@@ -103,21 +103,21 @@ export default function Hero({
               thickness={1.15}
             >
               登录控制台
-            </SpecularAction>
+            </Action>
           )}
           {docUrl ? (
-            <SpecularAction
+            <Action
               className="button-secondary"
               href={documentUrl(docUrl)}
               size="lg"
               radius={16}
             >
               查看文档
-            </SpecularAction>
+            </Action>
           ) : (
-            <SpecularAction className="button-secondary" href="#quick-start" size="lg" radius={16}>
+            <Action className="button-secondary" href="#quick-start" size="lg" radius={16}>
               查看接入方式
-            </SpecularAction>
+            </Action>
           )}
           {modelPlazaEnabled ? (
             <a className="text-action" href={consoleUrl('/model-plaza')}>
@@ -132,7 +132,7 @@ export default function Hero({
             <span>API 地址：</span>
             <code>{DISPLAY_API_ENDPOINT}</code>
           </div>
-          <SpecularAction
+          <Action
             className="button-secondary hero-endpoint-copy"
             type="button"
             size="lg"
@@ -142,7 +142,7 @@ export default function Hero({
           >
             {endpointCopied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
             {endpointCopied ? '已复制地址' : '复制地址'}
-          </SpecularAction>
+          </Action>
         </div>
 
       </div>

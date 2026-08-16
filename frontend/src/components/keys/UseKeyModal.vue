@@ -7,15 +7,15 @@
   >
     <div class="space-y-4">
       <!-- No Group Assigned Warning -->
-      <div v-if="!platform" class="flex items-start gap-3 p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-        <svg class="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+      <div v-if="!platform" class="flex items-start gap-3 p-4 rounded-lg bg-zo-alert-50 dark:bg-zo-alert-900/20 border border-zo-alert-200 dark:border-zo-alert-800">
+        <svg class="w-5 h-5 text-zo-alert-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
         </svg>
         <div>
-          <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+          <p class="text-sm font-medium text-zo-alert-800 dark:text-zo-alert-200">
             {{ t('keys.useKeyModal.noGroupTitle') }}
           </p>
-          <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+          <p class="text-sm text-zo-alert-700 dark:text-zo-alert-300 mt-1">
             {{ t('keys.useKeyModal.noGroupDescription') }}
           </p>
         </div>
@@ -103,7 +103,7 @@
           <div
             v-if="codexAuthMode === 'api-key'"
             data-testid="codex-api-key-restart-notice"
-            class="mt-3 flex items-start gap-2 border-l-2 border-amber-400 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:border-amber-500 dark:bg-amber-950/30 dark:text-amber-200"
+            class="mt-3 flex items-start gap-2 border-l-2 border-zo-alert-400 bg-zo-alert-50 px-3 py-2 text-xs leading-5 text-zo-alert-800 dark:border-zo-alert-500 dark:bg-zo-alert-950/30 dark:text-zo-alert-200"
           >
             <Icon name="exclamationCircle" size="sm" class="mt-0.5 flex-shrink-0" />
             <p>{{ t('keys.useKeyModal.openai.authModeApiKeyRestartNotice') }}</p>
@@ -141,7 +141,7 @@
             class="relative"
           >
             <!-- File Hint (if exists) -->
-            <p v-if="file.hint" class="text-xs text-amber-600 dark:text-amber-400 mb-1.5 flex items-center gap-1">
+            <p v-if="file.hint" class="text-xs text-zo-alert-600 dark:text-zo-alert-400 mb-1.5 flex items-center gap-1">
               <Icon name="exclamationCircle" size="sm" class="flex-shrink-0" />
               {{ file.hint }}
             </p>
@@ -154,7 +154,7 @@
                   @click="copyContent(file.content, index)"
                   class="flex flex-shrink-0 items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors"
                   :class="copiedIndex === index
-                    ? 'bg-green-500/20 text-green-400'
+                    ? 'bg-zo-signal-500/20 text-zo-signal-400'
                     : 'bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white'"
                 >
                   <svg v-if="copiedIndex === index" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -477,10 +477,10 @@ const escapeHtml = (value: string) => value
 const wrapToken = (className: string, value: string) =>
   `<span class="${className}">${escapeHtml(value)}</span>`
 
-const keyword = (value: string) => wrapToken('text-emerald-300', value)
+const keyword = (value: string) => wrapToken('text-zo-signal-300', value)
 const variable = (value: string) => wrapToken('text-sky-200', value)
 const operator = (value: string) => wrapToken('text-slate-400', value)
-const string = (value: string) => wrapToken('text-amber-200', value)
+const string = (value: string) => wrapToken('text-zo-alert-200', value)
 const comment = (value: string) => wrapToken('text-slate-500', value)
 
 // Syntax highlighting helpers

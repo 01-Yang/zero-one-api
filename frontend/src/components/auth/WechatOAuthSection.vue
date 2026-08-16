@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <button type="button" :disabled="buttonDisabled" class="btn btn-secondary w-full" @click="startLogin">
       <span
-        class="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-300"
+        class="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-zo-signal-100 text-xs font-semibold text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-300"
       >
         W
       </span>
@@ -12,7 +12,7 @@
     <p
       v-if="disabledHint"
       data-testid="wechat-oauth-hint"
-      class="text-sm text-amber-600 dark:text-amber-400"
+      class="text-sm text-zo-alert-600 dark:text-zo-alert-400"
     >
       {{ disabledHint }}
     </p>

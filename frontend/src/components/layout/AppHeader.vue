@@ -1,5 +1,5 @@
 <template>
-  <header class="sticky top-0 z-30 border-b border-gray-200 bg-white dark:border-dark-800 dark:bg-dark-950">
+  <header class="app-header-surface console-skin-header sticky top-0 z-30 border-b border-gray-200 dark:border-dark-800">
     <div class="flex h-16 items-center justify-between gap-2 px-2 sm:px-4 md:px-6">
       <!-- Left: Mobile Menu Toggle + Page Title -->
       <div class="flex shrink-0 items-center gap-2 sm:gap-4">
@@ -12,7 +12,7 @@
         </button>
 
         <div class="hidden lg:block">
-          <h1 class="text-lg font-semibold text-gray-900 dark:text-white">
+          <h1 class="text-gradient text-lg font-semibold">
             {{ pageTitle }}
           </h1>
           <p v-if="pageDescription" class="text-xs text-gray-500 dark:text-dark-400">
@@ -77,7 +77,7 @@
           </span>
           <span
             v-if="frozenBalance > 0"
-            class="rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
+            class="rounded-full bg-zo-alert-100 px-1.5 py-0.5 text-xs font-medium text-zo-alert-700 dark:bg-zo-alert-900/40 dark:text-zo-alert-200"
           >
             {{ balanceFrozenLabel }}
           </span>
@@ -90,7 +90,7 @@
             </div>
             <div class="mt-2 flex items-center justify-between">
               <span class="text-gray-500 dark:text-dark-400">{{ balanceFrozenText }}</span>
-              <span class="font-medium text-amber-700 dark:text-amber-200">{{ formatHeaderMoney(frozenBalance) }}</span>
+              <span class="font-medium text-zo-alert-700 dark:text-zo-alert-200">{{ formatHeaderMoney(frozenBalance) }}</span>
             </div>
             <div class="mt-2 border-t border-gray-100 pt-2 dark:border-dark-700">
               <div class="flex items-center justify-between">
@@ -147,7 +147,7 @@
                 <div class="text-sm font-semibold text-gray-900 dark:text-white">
                   {{ formatHeaderMoney(availableBalance) }}
                 </div>
-                <div v-if="frozenBalance > 0" class="mt-1 text-xs text-amber-600 dark:text-amber-300">
+                <div v-if="frozenBalance > 0" class="mt-1 text-xs text-zo-alert-600 dark:text-zo-alert-300">
                   {{ balanceFrozenText }} {{ formatHeaderMoney(frozenBalance) }}
                 </div>
               </div>

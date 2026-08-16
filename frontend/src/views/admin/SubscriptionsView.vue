@@ -331,10 +331,10 @@
                   !row.group?.weekly_limit_usd &&
                   !row.group?.monthly_limit_usd
                 "
-                class="flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 dark:bg-emerald-900/20"
+                class="flex items-center gap-2 rounded-lg bg-zo-signal-50 px-3 py-2 dark:bg-zo-signal-900/20"
               >
-                <span class="text-lg text-emerald-600 dark:text-emerald-400">∞</span>
-                <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                <span class="text-lg text-zo-signal-600 dark:text-zo-signal-400">∞</span>
+                <span class="text-xs font-medium text-zo-signal-700 dark:text-zo-signal-300">
                   {{ t('admin.subscriptions.unlimited') }}
                 </span>
               </div>
@@ -347,7 +347,7 @@
                 class="text-sm"
                 :class="
                   isExpiringSoon(value)
-                    ? 'text-orange-600 dark:text-orange-400'
+                    ? 'text-zo-alert-600 dark:text-zo-alert-400'
                     : 'text-gray-700 dark:text-gray-300'
                 "
               >
@@ -396,7 +396,7 @@
                 v-if="row.status === 'active'"
                 @click="handleResetQuota(row)"
                 :disabled="resettingQuota && resettingSubscription?.id === row.id"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-zo-alert-50 hover:text-zo-alert-600 dark:hover:bg-zo-alert-900/20 dark:hover:text-zo-alert-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Icon name="refresh" size="sm" />
                 <span class="text-xs">{{ t('admin.subscriptions.resetQuota') }}</span>
@@ -412,7 +412,7 @@
               <button
                 v-if="row.status === 'revoked'"
                 @click="handleRestore(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-zo-signal-50 hover:text-zo-signal-600 dark:hover:bg-zo-signal-900/20 dark:hover:text-zo-signal-400"
               >
                 <Icon name="refresh" size="sm" />
                 <span class="text-xs">{{ t('admin.subscriptions.restore') }}</span>
@@ -1376,8 +1376,8 @@ const getProgressClass = (used: number | null | undefined, limit: number | null)
   const usedValue = used ?? 0
   const percentage = (usedValue / limit) * 100
   if (percentage >= 90) return 'bg-red-500'
-  if (percentage >= 70) return 'bg-orange-500'
-  return 'bg-green-500'
+  if (percentage >= 70) return 'bg-zo-alert-500'
+  return 'bg-zo-signal-500'
 }
 
 const formatResetDuration = (parts: RemainingDurationParts): string => {

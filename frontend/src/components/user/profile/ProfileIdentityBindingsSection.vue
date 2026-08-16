@@ -490,13 +490,13 @@ function providerInitial(provider: UserAuthProvider): string {
 
 function providerIconClass(provider: UserAuthProvider): string {
   if (provider === 'linuxdo') {
-    return 'bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-300'
+    return 'bg-zo-alert-100 text-zo-alert-600 dark:bg-zo-alert-900/20 dark:text-zo-alert-300'
   }
   if (provider === 'dingtalk') {
     return 'bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-300'
   }
   if (provider === 'wechat') {
-    return 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-300'
+    return 'bg-zo-signal-100 text-zo-signal-600 dark:bg-zo-signal-900/20 dark:text-zo-signal-300'
   }
   if (provider === 'oidc') {
     return 'bg-sky-100 text-sky-600 dark:bg-sky-900/20 dark:text-sky-300'

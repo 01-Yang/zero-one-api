@@ -46,9 +46,9 @@ export function useChannelMonitorFormat() {
   function statusBadgeClass(s: MonitorStatus | ''): string {
     switch (s) {
       case STATUS_OPERATIONAL:
-        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+        return 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-500/15 dark:text-zo-signal-300'
       case STATUS_DEGRADED:
-        return 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
+        return 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-500/15 dark:text-zo-alert-300'
       case STATUS_FAILED:
         return 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300'
       case STATUS_ERROR:
@@ -72,9 +72,9 @@ export function useChannelMonitorFormat() {
   function providerBadgeClass(p: Provider | string): string {
     switch (p) {
       case PROVIDER_OPENAI:
-        return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+        return 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-500/15 dark:text-zo-signal-300'
       case PROVIDER_ANTHROPIC:
-        return 'bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300'
+        return 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-500/15 dark:text-zo-alert-300'
       case PROVIDER_GEMINI:
         return 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300'
       case PROVIDER_GROK:
@@ -93,12 +93,12 @@ export function useChannelMonitorFormat() {
     switch (p) {
       case PROVIDER_OPENAI:
         return active
-          ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-400'
-          : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-300 hover:text-emerald-700 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400 dark:hover:border-emerald-500/50'
+          ? 'border-zo-signal-500 bg-zo-signal-50 text-zo-signal-700 dark:bg-zo-signal-500/15 dark:text-zo-signal-300 dark:border-zo-signal-400'
+          : 'border-gray-200 bg-white text-gray-600 hover:border-zo-signal-300 hover:text-zo-signal-700 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400 dark:hover:border-zo-signal-500/50'
       case PROVIDER_ANTHROPIC:
         return active
-          ? 'border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-400'
-          : 'border-gray-200 bg-white text-gray-600 hover:border-orange-300 hover:text-orange-700 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400 dark:hover:border-orange-500/50'
+          ? 'border-zo-alert-500 bg-zo-alert-50 text-zo-alert-700 dark:bg-zo-alert-500/15 dark:text-zo-alert-300 dark:border-zo-alert-400'
+          : 'border-gray-200 bg-white text-gray-600 hover:border-zo-alert-300 hover:text-zo-alert-700 dark:border-dark-700 dark:bg-dark-800 dark:text-gray-400 dark:hover:border-zo-alert-500/50'
       case PROVIDER_GEMINI:
         return active
           ? 'border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-400'
@@ -173,9 +173,9 @@ export function hslForPct(pct: number | null | undefined): string | undefined {
 export function providerGradient(provider: string): string {
   switch (provider) {
     case PROVIDER_OPENAI:
-      return 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-500/10 dark:to-emerald-500/20'
+      return 'bg-gradient-to-br from-zo-signal-50 to-zo-signal-100 dark:from-zo-signal-500/10 dark:to-zo-signal-500/20'
     case PROVIDER_ANTHROPIC:
-      return 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-500/10 dark:to-amber-500/20'
+      return 'bg-gradient-to-br from-zo-alert-50 to-zo-alert-100 dark:from-zo-alert-500/10 dark:to-zo-alert-500/20'
     case PROVIDER_GEMINI:
       return 'bg-gradient-to-br from-sky-50 to-indigo-100 dark:from-sky-500/10 dark:to-indigo-500/20'
     case PROVIDER_GROK:

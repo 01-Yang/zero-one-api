@@ -37,9 +37,11 @@
     <main class="flex-1 w-full max-w-5xl mx-auto px-6 py-12">
       <!-- Hero -->
       <div class="text-center mb-12">
-        <h1 class="mb-3 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
-          {{ t('keyUsage.title') }}
-        </h1>
+        <ParticleTitle
+          as="h1"
+          :text="t('keyUsage.title')"
+          class="mb-3 text-3xl font-bold sm:text-4xl"
+        />
         <p class="text-gray-500 dark:text-dark-400 text-base max-w-md mx-auto">
           {{ t('keyUsage.subtitle') }}
         </p>
@@ -159,7 +161,7 @@
             <div class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-5 py-2.5 dark:border-dark-700 dark:bg-dark-900">
               <span
                 class="w-2.5 h-2.5 rounded-full pulse-dot"
-                :class="statusInfo.isActive ? 'bg-emerald-500' : 'bg-rose-500'"
+                :class="statusInfo.isActive ? 'bg-zo-signal-500' : 'bg-rose-500'"
               ></span>
               <span class="text-sm font-medium text-gray-900 dark:text-white">{{ statusInfo.label }}</span>
               <span class="text-xs text-gray-400 dark:text-dark-500">|</span>
@@ -420,6 +422,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores'
+import ParticleTitle from '@/components/common/ParticleTitle.vue'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import Icon from '@/components/icons/Icon.vue'
 import { buildGatewayUrl } from '@/api/client'
@@ -528,10 +531,10 @@ function setDailyUsageDays(days: 7 | 30 | 90) {
 
 const CIRCUMFERENCE = 2 * Math.PI * 68
 const RING_GRADIENTS = [
-  { from: '#14b8a6', to: '#5eead4' },
+  { from: '#7C5CFC', to: '#C4B5FD' },
   { from: '#6366F1', to: '#A5B4FC' },
-  { from: '#10B981', to: '#6EE7B7' },
-  { from: '#F59E0B', to: '#FCD34D' },
+  { from: '#2563EB', to: '#93C5FD' },
+  { from: '#F43F5E', to: '#FDA4AF' },
 ]
 
 const ringAnimated = ref(false)
@@ -674,8 +677,8 @@ interface DetailRow {
 
 function getUsageColor(pct: number): string {
   if (pct > 90) return 'text-rose-500'
-  if (pct > 70) return 'text-amber-500'
-  return 'text-emerald-500'
+  if (pct > 70) return 'text-zo-alert-500'
+  return 'text-zo-signal-500'
 }
 
 const detailRows = computed<DetailRow[]>(() => {
@@ -691,10 +694,10 @@ const detailRows = computed<DetailRow[]>(() => {
   if (data.mode === 'quota_limited') {
     if (data.quota) {
       const remainColor = data.quota.remaining <= 0 ? 'text-rose-500'
-        : data.quota.remaining < data.quota.limit * 0.1 ? 'text-amber-500'
-        : 'text-emerald-500'
+        : data.quota.remaining < data.quota.limit * 0.1 ? 'text-zo-alert-500'
+        : 'text-zo-signal-500'
       rows.push({
-        iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-500', iconSvg: ICON_SHIELD,
+        iconBg: 'bg-zo-signal-500/10', iconColor: 'text-zo-signal-500', iconSvg: ICON_SHIELD,
         label: t('keyUsage.remainingQuota'), value: usd(data.quota.remaining), valueClass: remainColor,
       })
     }
@@ -705,7 +708,7 @@ const detailRows = computed<DetailRow[]>(() => {
         expiryStr += daysLeft > 0 ? ` ${t('keyUsage.daysLeft', { days: daysLeft })}` : daysLeft === 0 ? ` ${t('keyUsage.todayExpires')}` : ''
       }
       rows.push({
-        iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500', iconSvg: ICON_CALENDAR,
+        iconBg: 'bg-zo-alert-500/10', iconColor: 'text-zo-alert-500', iconSvg: ICON_CALENDAR,
         label: t('keyUsage.expiresAt'), value: expiryStr, valueClass: '',
       })
     }
@@ -728,7 +731,7 @@ const detailRows = computed<DetailRow[]>(() => {
     }
   } else {
     rows.push({
-      iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-500', iconSvg: ICON_CHECK,
+      iconBg: 'bg-zo-signal-500/10', iconColor: 'text-zo-signal-500', iconSvg: ICON_CHECK,
       label: t('keyUsage.subscriptionType'), value: data.planName || t('keyUsage.walletBalance'), valueClass: '',
     })
 
@@ -751,23 +754,23 @@ const detailRows = computed<DetailRow[]>(() => {
       if (sub.monthly_limit_usd > 0) {
         const pct = (sub.monthly_usage_usd / sub.monthly_limit_usd) * 100
         rows.push({
-          iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-500', iconSvg: ICON_DOLLAR,
+          iconBg: 'bg-zo-signal-500/10', iconColor: 'text-zo-signal-500', iconSvg: ICON_DOLLAR,
           label: `${t('keyUsage.usedQuota')} (${locale.value === 'zh' ? '月' : 'M'})`, value: `${usd(sub.monthly_usage_usd)} / ${usd(sub.monthly_limit_usd)}`, valueClass: getUsageColor(pct),
         })
       }
       if (sub.expires_at) {
         rows.push({
-          iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500', iconSvg: ICON_CALENDAR,
+          iconBg: 'bg-zo-alert-500/10', iconColor: 'text-zo-alert-500', iconSvg: ICON_CALENDAR,
           label: t('keyUsage.subscriptionExpires'), value: formatDate(sub.expires_at), valueClass: '',
         })
       }
     }
 
     const remainColor = data.remaining != null
-      ? (data.remaining <= 0 ? 'text-rose-500' : data.remaining < 10 ? 'text-amber-500' : 'text-emerald-500')
+      ? (data.remaining <= 0 ? 'text-rose-500' : data.remaining < 10 ? 'text-zo-alert-500' : 'text-zo-signal-500')
       : ''
     rows.push({
-      iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-500', iconSvg: ICON_SHIELD,
+      iconBg: 'bg-zo-signal-500/10', iconColor: 'text-zo-signal-500', iconSvg: ICON_SHIELD,
       label: t('keyUsage.remainingQuota'), value: data.remaining != null ? usd(data.remaining) : '-', valueClass: remainColor,
     })
   }

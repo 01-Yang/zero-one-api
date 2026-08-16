@@ -309,7 +309,7 @@
                 <li>{{ t('admin.backup.r2Guide.step2.line3') }}</li>
                 <li>{{ t('admin.backup.r2Guide.step2.line4') }}</li>
               </ol>
-              <div class="mt-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+              <div class="mt-2 rounded-lg bg-zo-alert-50 p-3 text-xs text-zo-alert-700 dark:bg-zo-alert-900/20 dark:text-zo-alert-300">
                 {{ t('admin.backup.r2Guide.step2.warning') }}
               </div>
             </div>
@@ -343,7 +343,7 @@
             </div>
 
             <!-- Free tier note -->
-            <div class="rounded-lg bg-green-50 p-3 text-xs text-green-700 dark:bg-green-900/20 dark:text-green-300">
+            <div class="rounded-lg bg-zo-signal-50 p-3 text-xs text-zo-signal-700 dark:bg-zo-signal-900/20 dark:text-zo-signal-300">
               {{ t('admin.backup.r2Guide.freeTier') }}
             </div>
 
@@ -825,7 +825,7 @@ async function removeBackup(id: string) {
 function statusClass(status: string): string {
   switch (status) {
     case 'completed':
-      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+      return 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-300'
     case 'running':
       return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
     case 'failed':

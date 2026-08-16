@@ -10,7 +10,7 @@
     @close="noop"
   >
     <div class="space-y-5">
-      <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+      <div class="rounded-lg border border-zo-alert-200 bg-zo-alert-50 p-4 text-sm text-zo-alert-900 dark:border-zo-alert-500/30 dark:bg-zo-alert-500/10 dark:text-zo-alert-100">
         <div class="flex gap-3">
           <Icon name="exclamationTriangle" size="md" class="mt-0.5 flex-shrink-0" />
           <div class="space-y-2">

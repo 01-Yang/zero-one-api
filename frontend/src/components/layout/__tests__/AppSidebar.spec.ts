@@ -13,6 +13,11 @@ const versionBadgePath = resolve(
 const versionBadgeSource = readFileSync(versionBadgePath, 'utf8')
 const stylePath = resolve(dirname(fileURLToPath(import.meta.url)), '../../../style.css')
 const styleSource = readFileSync(stylePath, 'utf8')
+const consoleSkinPath = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../styles/console-skin.css'
+)
+const consoleSkinSource = readFileSync(consoleSkinPath, 'utf8')
 
 describe('AppSidebar custom SVG styles', () => {
   it('does not override uploaded SVG fill or stroke colors', () => {
@@ -56,6 +61,44 @@ describe('AppSidebar header styles', () => {
     expect(sidebarBrandBlockMatch).not.toBeNull()
     expect(sidebarHeaderBlockMatch?.[0]).not.toContain('@apply overflow-hidden;')
     expect(sidebarBrandBlockMatch?.[0]).not.toContain('overflow: hidden;')
+  })
+
+  it('does not trap the version dropdown beneath sidebar navigation layers', () => {
+    const versionBadgeBlockMatch = componentSource.match(
+      /:deep\(\.sidebar-brand > \.relative\)\s*\{[\s\S]*?\n\}/
+    )
+
+    expect(versionBadgeBlockMatch).not.toBeNull()
+    expect(versionBadgeBlockMatch?.[0]).toContain('position: relative;')
+    expect(versionBadgeBlockMatch?.[0]).toContain('top: -5pt;')
+    expect(versionBadgeBlockMatch?.[0]).not.toContain('transform:')
+  })
+
+  it('applies the requested title and version badge offsets', () => {
+    expect(componentSource).toContain('transform: translateY(5pt);')
+    expect(componentSource).toContain('top: -5pt;')
+  })
+})
+
+describe('AppSidebar pill navigation motion', () => {
+  it('uses CSS-only pill states and a lightweight submenu transition', () => {
+    expect(componentSource).toContain('<Transition name="sidebar-subnav">')
+    expect(componentSource).toContain('sidebar console-skin-sidebar')
+    expect(consoleSkinSource).toContain('.sidebar-link::before')
+    expect(consoleSkinSource).toContain('--pill-reveal-size: 22rem;')
+    expect(consoleSkinSource).toContain('border-radius: 50%;')
+    expect(consoleSkinSource).toContain(
+      'transform-origin: 50% calc(100% + var(--pill-reveal-bottom));'
+    )
+    expect(consoleSkinSource).toContain('@media (any-hover: hover) and (any-pointer: fine)')
+    expect(consoleSkinSource).toContain('@media (prefers-reduced-motion: reduce)')
+    expect(componentSource).not.toContain("from 'gsap'")
+  })
+
+  it('keeps collapsed navigation and expandable groups accessible', () => {
+    expect(componentSource).toContain(':inert="sidebarCollapsed || undefined"')
+    expect(componentSource).toContain(':aria-expanded="sidebarCollapsed ? undefined : isGroupExpanded(item)"')
+    expect(componentSource).toContain(':aria-label="item.label"')
   })
 })
 

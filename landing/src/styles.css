@@ -1,3 +1,5 @@
+@import './styles/action.css';
+
 :root {
   font-family: Inter, "Public Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -589,49 +591,6 @@ button { color: inherit; }
 
 .hero-endpoint-copy { min-width: 126px; }
 
-.button {
-  position: relative;
-  min-height: 48px;
-  padding: 0 21px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  overflow: visible;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 16px;
-  color: #f7f7f8;
-  background: linear-gradient(135deg, rgba(33, 33, 36, 0.92), rgba(12, 12, 14, 0.9));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 10px 28px rgba(0, 0, 0, 0.32);
-  font-size: 15px;
-  font-weight: 650;
-  line-height: 1;
-  cursor: pointer;
-  backdrop-filter: blur(12px);
-  transition: color 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-.button svg { width: 16px; height: 16px; }
-.button:hover { color: #fff; border-color: rgba(255, 255, 255, 0.46); background: linear-gradient(135deg, rgba(48, 48, 52, 0.96), rgba(19, 19, 21, 0.94)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 14px 32px rgba(0, 0, 0, 0.42); }
-.button:active { transform: scale(0.98); }
-.button-primary { color: #080808; border-color: #fff; background: #f4f4f5; box-shadow: inset 0 1px 0 #fff, 0 12px 34px rgba(0, 0, 0, 0.36); }
-.button-primary:hover { color: #050505; border-color: #fff; background: #fff; box-shadow: inset 0 1px 0 #fff, 0 16px 38px rgba(0, 0, 0, 0.46); }
-.button-secondary { color: #f1f1f2; background: linear-gradient(135deg, rgba(33, 33, 36, 0.92), rgba(12, 12, 14, 0.9)); }
-
-.text-action {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: #d4d4d8;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.text-action svg { width: 15px; height: 15px; transition: transform 200ms ease; }
-.text-action:hover { color: #fff; }
-.text-action:hover svg { transform: translateX(2px); }
-
 [data-hero-reveal] {
   opacity: 0;
   transform: translateY(24px);
@@ -789,39 +748,6 @@ button { color: inherit; }
   flex-wrap: wrap;
   gap: 16px;
 }
-
-.integration-primary-action,
-.integration-secondary-action {
-  min-height: 48px;
-  padding: 0 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 1px solid transparent;
-  border-radius: 14px;
-  font-size: 15px;
-  font-weight: 700;
-  transition: color 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-.integration-primary-action {
-  color: #080808;
-  border-color: #fff;
-  background: #f4f4f5;
-  box-shadow: inset 0 1px 0 #fff, 0 9px 22px rgba(0, 0, 0, 0.32);
-}
-
-.integration-secondary-action {
-  border-color: rgba(255, 255, 255, 0.22);
-  color: #f2f2f3;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.integration-primary-action:hover { color: #050505; border-color: #fff; background: #fff; box-shadow: inset 0 1px 0 #fff, 0 13px 28px rgba(0, 0, 0, 0.42); }
-.integration-secondary-action:hover { border-color: rgba(255, 255, 255, 0.46); background: rgba(255, 255, 255, 0.12); }
-.integration-primary-action:active, .integration-secondary-action:active { transform: scale(0.98); }
-.integration-primary-action svg, .integration-secondary-action svg { width: 18px; height: 18px; stroke-width: 1.75; }
 
 .integration-preview {
   min-width: 0;
@@ -1678,60 +1604,6 @@ button { color: inherit; }
 .footer-column strong { margin-bottom: 7px; color: #b8b8bf; font-size: 13px; }
 .footer-column a { min-height: 30px; display: inline-flex; align-items: center; font-size: 13px; transition: color 150ms ease; }
 .footer-column a:hover { color: #fff; }
-
-.specular-effects-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100dvh;
-  pointer-events: none;
-  z-index: var(--specular-canvas-z-index, 70) !important;
-}
-
-body.mobile-menu-open .specular-effects-canvas { visibility: hidden; }
-
-.specular-action {
-  --specular-action-radius: 16px;
-  position: relative;
-  min-width: max-content;
-  min-height: 48px;
-  padding: 0 21px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  overflow: visible;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--specular-action-radius);
-  color: var(--specular-action-text-color, #f5f5f5);
-  background: linear-gradient(135deg, rgba(33, 33, 36, calc(0.92 + var(--specular-action-tint-opacity, 0))), rgba(12, 12, 14, calc(0.9 + var(--specular-action-tint-opacity, 0))));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.11), 0 12px 34px rgba(0, 0, 0, 0.36);
-  font-size: 15px;
-  font-weight: 650;
-  line-height: 1;
-  cursor: pointer;
-  backdrop-filter: blur(var(--specular-action-blur, 10px));
-  transition: color 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-}
-
-.specular-action--sm { min-height: 44px; padding-inline: 15px; border-radius: min(var(--specular-action-radius), 14px); }
-.specular-action--md { min-height: 48px; }
-.specular-action--lg { min-height: 52px; padding-inline: 24px; }
-.specular-action:hover { color: #fff; border-color: rgba(255, 255, 255, 0.46); background: linear-gradient(135deg, rgba(48, 48, 52, 0.96), rgba(19, 19, 21, 0.94)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.17), 0 16px 38px rgba(0, 0, 0, 0.46); }
-.specular-action:active { transform: scale(0.98); }
-.specular-action__label { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-.specular-action__label svg { width: 16px; height: 16px; }
-.specular-action--disabled { opacity: 0.5; cursor: not-allowed; }
-
-.specular-action.button-primary {
-  color: #080808;
-  border-color: #fff;
-  background: #f4f4f5;
-  box-shadow: inset 0 1px 0 #fff, 0 12px 34px rgba(0, 0, 0, 0.4);
-}
-
-.specular-action.button-primary:hover { color: #050505; background: #fff; }
-.specular-action.button-secondary { color: #f5f5f5; background: linear-gradient(135deg, rgba(33, 33, 36, 0.92), rgba(12, 12, 14, 0.9)); }
 
 @keyframes landing-fade-up {
   from { opacity: 0; transform: translateY(24px); }

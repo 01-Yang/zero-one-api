@@ -130,7 +130,7 @@
                     <Icon
                       :name="rule.passthrough_code ? 'checkCircle' : 'xCircle'"
                       size="xs"
-                      :class="rule.passthrough_code ? 'text-green-500' : 'text-gray-400'"
+                      :class="rule.passthrough_code ? 'text-zo-signal-500' : 'text-gray-400'"
                     />
                     <span class="text-gray-600 dark:text-gray-400">
                       {{ t('admin.errorPassthrough.code') }}:
@@ -141,7 +141,7 @@
                     <Icon
                       :name="rule.passthrough_body ? 'checkCircle' : 'xCircle'"
                       size="xs"
-                      :class="rule.passthrough_body ? 'text-green-500' : 'text-gray-400'"
+                      :class="rule.passthrough_body ? 'text-zo-signal-500' : 'text-gray-400'"
                     />
                     <span class="text-gray-600 dark:text-gray-400">
                       {{ t('admin.errorPassthrough.body') }}:
@@ -152,7 +152,7 @@
                     <Icon
                       name="checkCircle"
                       size="xs"
-                      class="text-yellow-500"
+                      class="text-zo-alert-500"
                     />
                     <span class="text-gray-600 dark:text-gray-400">
                       {{ t('admin.errorPassthrough.skipMonitoring') }}
@@ -381,7 +381,7 @@
           <input
             type="checkbox"
             v-model="form.skip_monitoring"
-            class="h-3.5 w-3.5 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+            class="h-3.5 w-3.5 rounded border-gray-300 text-zo-alert-600 focus:ring-zo-alert-500"
           />
           <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
             {{ t('admin.errorPassthrough.form.skipMonitoring') }}

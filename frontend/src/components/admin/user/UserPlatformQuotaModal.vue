@@ -8,7 +8,7 @@
     <div v-if="user" class="space-y-4">
       <div
         v-if="hasActiveSubscription"
-        class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+        class="rounded-xl border border-zo-alert-200 bg-zo-alert-50 px-4 py-3 text-sm text-zo-alert-700 dark:border-zo-alert-500/30 dark:bg-zo-alert-500/10 dark:text-zo-alert-200"
       >
         {{ t('admin.users.platformQuota.subscriptionWarning') }}
       </div>
@@ -42,7 +42,7 @@
                   />
                   <button
                     type="button"
-                    class="text-xs text-gray-400 hover:text-amber-500 disabled:opacity-50"
+                    class="text-xs text-gray-400 hover:text-zo-alert-500 disabled:opacity-50"
                     :disabled="!!resetting[`${row.platform}.daily`]"
                     :title="t('admin.users.platformQuota.reset.button')"
                     @click="onReset(row.platform, 'daily')"
@@ -61,7 +61,7 @@
                   />
                   <button
                     type="button"
-                    class="text-xs text-gray-400 hover:text-amber-500 disabled:opacity-50"
+                    class="text-xs text-gray-400 hover:text-zo-alert-500 disabled:opacity-50"
                     :disabled="!!resetting[`${row.platform}.weekly`]"
                     :title="t('admin.users.platformQuota.reset.button')"
                     @click="onReset(row.platform, 'weekly')"
@@ -80,7 +80,7 @@
                   />
                   <button
                     type="button"
-                    class="text-xs text-gray-400 hover:text-amber-500 disabled:opacity-50"
+                    class="text-xs text-gray-400 hover:text-zo-alert-500 disabled:opacity-50"
                     :disabled="!!resetting[`${row.platform}.monthly`]"
                     :title="t('admin.users.platformQuota.reset.button')"
                     @click="onReset(row.platform, 'monthly')"

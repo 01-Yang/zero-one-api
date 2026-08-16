@@ -28,7 +28,7 @@
           :class="[
             'rounded-full px-2.5 py-1 text-xs font-semibold',
             account.status === 'active'
-              ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400'
+              ? 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-500/20 dark:text-zo-signal-400'
               : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
           ]"
         >
@@ -517,8 +517,8 @@ const trendChartData = computed(() => {
       {
         label: t('usage.userBilled') + ' (USD)',
         data: stats.value.history.map((h) => h.user_cost),
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.08)',
+        borderColor: '#7c5cfc',
+        backgroundColor: 'rgba(124, 92, 252, 0.08)',
         fill: false,
         tension: 0.3,
         borderDash: [5, 5],
@@ -527,8 +527,8 @@ const trendChartData = computed(() => {
       {
         label: t('admin.accounts.stats.requests'),
         data: stats.value.history.map((h) => h.requests),
-        borderColor: '#f97316',
-        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+        borderColor: '#f43f5e',
+        backgroundColor: 'rgba(244, 63, 94, 0.1)',
         fill: false,
         tension: 0.3,
         yAxisID: 'y1'
@@ -616,7 +616,7 @@ const lineChartOptions = computed(() => ({
         drawOnChartArea: false
       },
       ticks: {
-        color: '#f97316',
+        color: '#f43f5e',
         font: {
           size: 10
         },
@@ -625,7 +625,7 @@ const lineChartOptions = computed(() => ({
       title: {
         display: true,
         text: t('admin.accounts.stats.requests'),
-        color: '#f97316',
+        color: '#f43f5e',
         font: {
           size: 11
         }

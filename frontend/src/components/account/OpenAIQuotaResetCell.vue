@@ -40,7 +40,7 @@
 
       <button
         type="button"
-        class="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-orange-600 transition-colors hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-orange-400 dark:hover:bg-orange-900/30"
+        class="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-zo-alert-600 transition-colors hover:bg-zo-alert-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-zo-alert-400 dark:hover:bg-zo-alert-900/30"
         :disabled="resetting || loading || !canReset"
         :title="resetButtonTitle"
         @click="openResetConfirm"
@@ -113,13 +113,13 @@
     </div>
     <div
       v-else-if="resetWarning"
-      class="text-[10px] text-amber-600 dark:text-amber-400"
+      class="text-[10px] text-zo-alert-600 dark:text-zo-alert-400"
     >
       {{ resetWarning }}
     </div>
     <div
       v-else-if="resetMessage"
-      class="text-[10px] text-emerald-600 dark:text-emerald-400"
+      class="text-[10px] text-zo-signal-600 dark:text-zo-signal-400"
     >
       {{ resetMessage }}
     </div>

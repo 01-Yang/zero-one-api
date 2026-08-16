@@ -268,9 +268,9 @@ function getThresholdColorClass(level: ThresholdLevel): string {
     case 'critical':
       return 'text-red-600 dark:text-red-400'
     case 'warning':
-      return 'text-yellow-600 dark:text-yellow-400'
+      return 'text-zo-alert-600 dark:text-zo-alert-400'
     default:
-      return 'text-green-600 dark:text-green-400'
+      return 'text-zo-signal-600 dark:text-zo-signal-400'
   }
 }
 
@@ -442,8 +442,8 @@ const healthScoreColor = computed(() => {
   if (isSystemIdle.value) return '#9ca3af' // gray-400
   const score = healthScoreValue.value
   if (score == null) return '#9ca3af'
-  if (score >= 90) return '#10b981' // green
-  if (score >= 60) return '#f59e0b' // yellow
+  if (score >= 90) return '#3b82f6' // blue
+  if (score >= 60) return '#a78bfa' // violet
   return '#ef4444' // red
 })
 
@@ -451,8 +451,8 @@ const healthScoreClass = computed(() => {
   if (isSystemIdle.value) return 'text-gray-400'
   const score = healthScoreValue.value
   if (score == null) return 'text-gray-400'
-  if (score >= 90) return 'text-green-500'
-  if (score >= 60) return 'text-yellow-500'
+  if (score >= 90) return 'text-zo-signal-500'
+  if (score >= 60) return 'text-zo-alert-500'
   return 'text-red-500'
 })
 
@@ -655,8 +655,8 @@ const cpuPercentClass = computed(() => {
   const v = cpuPercentValue.value
   if (v == null) return 'text-gray-900 dark:text-white'
   if (v >= 95) return 'text-rose-600 dark:text-rose-400'
-  if (v >= 80) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-emerald-600 dark:text-emerald-400'
+  if (v >= 80) return 'text-zo-alert-600 dark:text-zo-alert-400'
+  return 'text-zo-signal-600 dark:text-zo-signal-400'
 })
 
 const memPercentValue = computed<number | null>(() => {
@@ -668,8 +668,8 @@ const memPercentClass = computed(() => {
   const v = memPercentValue.value
   if (v == null) return 'text-gray-900 dark:text-white'
   if (v >= 95) return 'text-rose-600 dark:text-rose-400'
-  if (v >= 85) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-emerald-600 dark:text-emerald-400'
+  if (v >= 85) return 'text-zo-alert-600 dark:text-zo-alert-400'
+  return 'text-zo-signal-600 dark:text-zo-signal-400'
 })
 
 const dbConnActiveValue = computed<number | null>(() => {
@@ -713,10 +713,10 @@ const dbMiddleClass = computed(() => {
   if (systemMetrics.value?.db_ok === false) return 'text-rose-600 dark:text-rose-400'
   if (dbUsagePercent.value != null) {
     if (dbUsagePercent.value >= 90) return 'text-rose-600 dark:text-rose-400'
-    if (dbUsagePercent.value >= 70) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-emerald-600 dark:text-emerald-400'
+    if (dbUsagePercent.value >= 70) return 'text-zo-alert-600 dark:text-zo-alert-400'
+    return 'text-zo-signal-600 dark:text-zo-signal-400'
   }
-  if (systemMetrics.value?.db_ok === true) return 'text-emerald-600 dark:text-emerald-400'
+  if (systemMetrics.value?.db_ok === true) return 'text-zo-signal-600 dark:text-zo-signal-400'
   return 'text-gray-900 dark:text-white'
 })
 
@@ -756,10 +756,10 @@ const redisMiddleClass = computed(() => {
   if (systemMetrics.value?.redis_ok === false) return 'text-rose-600 dark:text-rose-400'
   if (redisUsagePercent.value != null) {
     if (redisUsagePercent.value >= 90) return 'text-rose-600 dark:text-rose-400'
-    if (redisUsagePercent.value >= 70) return 'text-yellow-600 dark:text-yellow-400'
-    return 'text-emerald-600 dark:text-emerald-400'
+    if (redisUsagePercent.value >= 70) return 'text-zo-alert-600 dark:text-zo-alert-400'
+    return 'text-zo-signal-600 dark:text-zo-signal-400'
   }
-  if (systemMetrics.value?.redis_ok === true) return 'text-emerald-600 dark:text-emerald-400'
+  if (systemMetrics.value?.redis_ok === true) return 'text-zo-signal-600 dark:text-zo-signal-400'
   return 'text-gray-900 dark:text-white'
 })
 
@@ -795,9 +795,9 @@ const goroutineStatusLabel = computed(() => {
 const goroutineStatusClass = computed(() => {
   switch (goroutineStatus.value) {
     case 'ok':
-      return 'text-emerald-600 dark:text-emerald-400'
+      return 'text-zo-signal-600 dark:text-zo-signal-400'
     case 'warning':
-      return 'text-yellow-600 dark:text-yellow-400'
+      return 'text-zo-alert-600 dark:text-zo-alert-400'
     case 'critical':
       return 'text-rose-600 dark:text-rose-400'
     default:
@@ -840,9 +840,9 @@ const jobsStatusLabel = computed(() => {
 const jobsStatusClass = computed(() => {
   switch (jobsStatus.value) {
     case 'ok':
-      return 'text-emerald-600 dark:text-emerald-400'
+      return 'text-zo-signal-600 dark:text-zo-signal-400'
     case 'warn':
-      return 'text-yellow-600 dark:text-yellow-400'
+      return 'text-zo-alert-600 dark:text-zo-alert-400'
     default:
       return 'text-gray-900 dark:text-white'
   }
@@ -880,7 +880,7 @@ function handleToolbarRefresh() {
         <div v-if="!props.fullscreen" class="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
           <span class="flex items-center gap-1.5" :title="props.loading ? t('admin.ops.loadingText') : t('admin.ops.ready')">
             <span class="relative flex h-2 w-2">
-              <span class="relative inline-flex h-2 w-2 rounded-full" :class="props.loading ? 'bg-gray-400' : 'bg-green-500'"></span>
+              <span class="relative inline-flex h-2 w-2 rounded-full" :class="props.loading ? 'bg-gray-400' : 'bg-zo-signal-500'"></span>
             </span>
             {{ props.loading ? t('admin.ops.loadingText') : t('admin.ops.ready') }}
           </span>
@@ -1021,7 +1021,7 @@ function handleToolbarRefresh() {
                           clip-rule="evenodd"
                         />
                       </svg>
-                      <svg v-else-if="item.type === 'warning'" class="h-4 w-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                      <svg v-else-if="item.type === 'warning'" class="h-4 w-4 text-zo-alert-500" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fill-rule="evenodd"
                           d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
@@ -1252,7 +1252,7 @@ function handleToolbarRefresh() {
             <div class="flex items-center gap-2">
               <span class="text-[10px] font-bold uppercase text-gray-400">{{ t('admin.ops.sla') }}</span>
               <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.sla')" />
-              <span class="h-1.5 w-1.5 rounded-full" :class="getSLAThresholdLevel(slaPercent) === 'critical' ? 'bg-red-500' : getSLAThresholdLevel(slaPercent) === 'warning' ? 'bg-yellow-500' : 'bg-green-500'"></span>
+              <span class="h-1.5 w-1.5 rounded-full" :class="getSLAThresholdLevel(slaPercent) === 'critical' ? 'bg-red-500' : getSLAThresholdLevel(slaPercent) === 'warning' ? 'bg-zo-alert-500' : 'bg-zo-signal-500'"></span>
             </div>
             <button
               v-if="!props.fullscreen"
@@ -1267,7 +1267,7 @@ function handleToolbarRefresh() {
             {{ slaPercent == null ? '-' : `${slaPercent.toFixed(3)}%` }}
           </div>
           <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-dark-700">
-            <div class="h-full transition-all" :class="getSLAThresholdLevel(slaPercent) === 'critical' ? 'bg-red-500' : getSLAThresholdLevel(slaPercent) === 'warning' ? 'bg-yellow-500' : 'bg-green-500'" :style="{ width: `${Math.max((slaPercent ?? 0) - 90, 0) * 10}%` }"></div>
+            <div class="h-full transition-all" :class="getSLAThresholdLevel(slaPercent) === 'critical' ? 'bg-red-500' : getSLAThresholdLevel(slaPercent) === 'warning' ? 'bg-zo-alert-500' : 'bg-zo-signal-500'" :style="{ width: `${Math.max((slaPercent ?? 0) - 90, 0) * 10}%` }"></div>
           </div>
           <div class="mt-3 text-xs">
             <div class="flex justify-between">
@@ -1386,7 +1386,7 @@ function handleToolbarRefresh() {
               <span class="text-[10px] font-bold uppercase text-gray-400">{{ t('admin.ops.requestErrors') }}</span>
               <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.errors')" />
             </div>
-            <button v-if="!props.fullscreen" class="text-[10px] font-bold text-blue-500 hover:underline" type="button" @click="openErrorDetails('request')">
+            <button v-if="!props.fullscreen" class="text-[10px] font-bold text-gray-600 hover:underline dark:text-dark-300" type="button" @click="openErrorDetails('request')">
               {{ t('admin.ops.requestDetails.details') }}
             </button>
           </div>
@@ -1412,7 +1412,7 @@ function handleToolbarRefresh() {
               <span class="text-[10px] font-bold uppercase text-gray-400">{{ t('admin.ops.upstreamErrors') }}</span>
               <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.upstreamErrors')" />
             </div>
-            <button v-if="!props.fullscreen" class="text-[10px] font-bold text-blue-500 hover:underline" type="button" @click="openErrorDetails('upstream')">
+            <button v-if="!props.fullscreen" class="text-[10px] font-bold text-gray-600 hover:underline dark:text-dark-300" type="button" @click="openErrorDetails('upstream')">
               {{ t('admin.ops.requestDetails.details') }}
             </button>
           </div>
@@ -1527,7 +1527,7 @@ function handleToolbarRefresh() {
               <div class="text-[10px] font-bold uppercase tracking-wider text-gray-400">{{ t('admin.ops.jobs') }}</div>
               <HelpTooltip v-if="!props.fullscreen" :content="t('admin.ops.tooltips.jobs')" />
             </div>
-            <button v-if="!props.fullscreen" class="text-[10px] font-bold text-blue-500 hover:underline" type="button" @click="openJobsDetails">
+            <button v-if="!props.fullscreen" class="text-[10px] font-bold text-gray-600 hover:underline dark:text-dark-300" type="button" @click="openJobsDetails">
               {{ t('admin.ops.requestDetails.details') }}
             </button>
           </div>

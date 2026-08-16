@@ -6,7 +6,7 @@ import {
   type ChannelStatusSummary,
 } from "../lib/channelStatus";
 import { consoleUrl, documentUrl } from "../siteConfig";
-import SpecularAction from "./SpecularAction";
+import Action from "./Action";
 
 interface ValuePricingSectionProps {
   modelPlazaEnabled: boolean;
@@ -61,7 +61,7 @@ export function ValuePricingSection({
           </div>
           <p className="value-pricing-detail">Token · 按次 · 图片等计费方式</p>
           <div className="value-pricing-action">
-            <SpecularAction
+            <Action
               className="button-primary"
               href={consoleUrl("/redeem")}
               size="md"
@@ -69,7 +69,7 @@ export function ValuePricingSection({
             >
               兑换额度
               <ArrowRight aria-hidden="true" />
-            </SpecularAction>
+            </Action>
           </div>
         </div>
       </div>
@@ -215,7 +215,7 @@ export function StatusSection({ enabled = true }: { enabled?: boolean }) {
         </div>
         <div className="status-actions">
           {shouldRetry ? (
-            <SpecularAction
+            <Action
               className="button-secondary"
               type="button"
               size="lg"
@@ -224,9 +224,9 @@ export function StatusSection({ enabled = true }: { enabled?: boolean }) {
             >
               <RefreshCw aria-hidden="true" />
               重新读取
-            </SpecularAction>
+            </Action>
           ) : null}
-          <SpecularAction
+          <Action
             className="button-secondary"
             href={consoleUrl("/monitor")}
             size="lg"
@@ -234,7 +234,7 @@ export function StatusSection({ enabled = true }: { enabled?: boolean }) {
           >
             查看全部渠道
             <ArrowRight aria-hidden="true" />
-          </SpecularAction>
+          </Action>
         </div>
       </div>
     </section>

@@ -142,10 +142,10 @@
                 <td class="py-1.5 text-right text-gray-600 dark:text-gray-400">
                   {{ formatTokens(model.total_tokens) }}
                 </td>
-                <td class="py-1.5 text-right text-green-600 dark:text-green-400">
+                <td class="py-1.5 text-right text-zo-signal-600 dark:text-zo-signal-400">
                   ${{ formatCost(model.actual_cost) }}
                 </td>
-                <td v-if="showAccountCost" class="py-1.5 text-right text-orange-500 dark:text-orange-400">
+                <td v-if="showAccountCost" class="py-1.5 text-right text-zo-alert-500 dark:text-zo-alert-400">
                   ${{ formatCost(model.account_cost) }}
                 </td>
                 <td class="py-1.5 text-right text-gray-400 dark:text-gray-500">
@@ -225,7 +225,7 @@
               <td class="py-1.5 text-right text-gray-600 dark:text-gray-400">
                 {{ formatTokens(item.tokens) }}
               </td>
-              <td class="py-1.5 text-right text-green-600 dark:text-green-400">
+              <td class="py-1.5 text-right text-zo-signal-600 dark:text-zo-signal-400">
                 ${{ formatCost(item.actual_cost) }}
               </td>
             </tr>
@@ -341,17 +341,17 @@ const activeView = ref<'model_distribution' | 'spending_ranking'>('model_distrib
 
 const chartColors = [
   '#3b82f6',
-  '#10b981',
-  '#f59e0b',
+  '#7c5cfc',
+  '#a855f7',
   '#ef4444',
   '#8b5cf6',
   '#ec4899',
-  '#14b8a6',
-  '#f97316',
-  '#6366f1',
-  '#84cc16',
   '#06b6d4',
-  '#a855f7'
+  '#f43f5e',
+  '#6366f1',
+  '#93c5fd',
+  '#60a5fa',
+  '#c084fc'
 ]
 
 const displayModelStats = computed(() => {

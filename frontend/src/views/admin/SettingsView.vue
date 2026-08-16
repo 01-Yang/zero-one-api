@@ -61,15 +61,15 @@
             <div class="space-y-4 p-6">
               <!-- Security Warning -->
               <div
-                class="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
+                class="rounded-lg border border-zo-alert-200 bg-zo-alert-50 p-4 dark:border-zo-alert-800 dark:bg-zo-alert-900/20"
               >
                 <div class="flex items-start">
                   <Icon
                     name="exclamationTriangle"
                     size="md"
-                    class="mt-0.5 flex-shrink-0 text-amber-500"
+                    class="mt-0.5 flex-shrink-0 text-zo-alert-500"
                   />
-                  <p class="ml-3 text-sm text-amber-700 dark:text-amber-300">
+                  <p class="ml-3 text-sm text-zo-alert-700 dark:text-zo-alert-300">
                     {{ t("admin.settings.adminApiKey.securityWarning") }}
                   </p>
                 </div>
@@ -170,16 +170,16 @@
                 <!-- Newly Generated Key Display -->
                 <div
                   v-if="newAdminApiKey"
-                  class="space-y-3 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
+                  class="space-y-3 rounded-lg border border-zo-signal-200 bg-zo-signal-50 p-4 dark:border-zo-signal-800 dark:bg-zo-signal-900/20"
                 >
                   <p
-                    class="text-sm font-medium text-green-700 dark:text-green-300"
+                    class="text-sm font-medium text-zo-signal-700 dark:text-zo-signal-300"
                   >
                     {{ t("admin.settings.adminApiKey.keyWarning") }}
                   </p>
                   <div class="flex items-center gap-2">
                     <code
-                      class="flex-1 select-all break-all rounded border border-green-300 bg-white px-3 py-2 font-mono text-sm dark:border-green-700 dark:bg-dark-800"
+                      class="flex-1 select-all break-all rounded border border-zo-signal-300 bg-white px-3 py-2 font-mono text-sm dark:border-zo-signal-700 dark:bg-dark-800"
                     >
                       {{ newAdminApiKey }}
                     </code>
@@ -191,7 +191,7 @@
                       {{ t("admin.settings.adminApiKey.copyKey") }}
                     </button>
                   </div>
-                  <p class="text-xs text-green-600 dark:text-green-400">
+                  <p class="text-xs text-zo-signal-600 dark:text-zo-signal-400">
                     {{ t("admin.settings.adminApiKey.usage") }}
                   </p>
                 </div>
@@ -1584,7 +1584,7 @@
                   <!-- Warning when encryption key not configured -->
                   <p
                     v-if="!form.totp_encryption_key_configured"
-                    class="mt-2 text-sm text-amber-600 dark:text-amber-400"
+                    class="mt-2 text-sm text-zo-alert-600 dark:text-zo-alert-400"
                   >
                     {{ t("admin.settings.registration.totpKeyNotConfigured") }}
                   </p>
@@ -1619,8 +1619,8 @@
                   class="mt-3 rounded-lg border px-3 py-2 text-sm"
                   :class="
                     form.passkey_configured
-                      ? 'border-green-200 bg-green-50 text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300'
-                      : 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300'
+                      ? 'border-zo-signal-200 bg-zo-signal-50 text-zo-signal-800 dark:border-zo-signal-900 dark:bg-zo-signal-950/40 dark:text-zo-signal-300'
+                      : 'border-zo-alert-200 bg-zo-alert-50 text-zo-alert-800 dark:border-zo-alert-900 dark:bg-zo-alert-950/40 dark:text-zo-alert-300'
                   "
                   data-testid="passkey-config-status"
                 >
@@ -2996,7 +2996,7 @@
                     (form.wechat_connect_mp_enabled ||
                       form.wechat_connect_mobile_enabled)
                   "
-                  class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/10 dark:text-amber-300"
+                  class="rounded-lg border border-zo-alert-200 bg-zo-alert-50 px-4 py-3 text-sm text-zo-alert-700 dark:border-zo-alert-900/40 dark:bg-zo-alert-900/10 dark:text-zo-alert-300"
                 >
                   {{
                     localText(
@@ -3277,7 +3277,7 @@
                         <p class="text-sm text-gray-500 dark:text-gray-400">
                           {{ t("admin.settings.dingtalk.syncCorpEmailHint") }}
                         </p>
-                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        <p class="text-xs text-zo-alert-600 dark:text-zo-alert-400 mt-1">
                           {{ t("admin.settings.dingtalk.syncCorpEmailPermissionHint") }}
                         </p>
                       </div>
@@ -3323,7 +3323,7 @@
                         <p class="text-sm text-gray-500 dark:text-gray-400">
                           {{ t("admin.settings.dingtalk.syncDeptHint") }}
                         </p>
-                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        <p class="text-xs text-zo-alert-600 dark:text-zo-alert-400 mt-1">
                           {{ t("admin.settings.dingtalk.syncDeptPermissionHint") }}
                         </p>
                       </div>
@@ -3991,7 +3991,7 @@
                   <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     {{ t("admin.settings.defaults.defaultPlatformQuotasHint") }}
                   </p>
-                  <p class="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
+                  <p class="mt-0.5 text-xs text-zo-alert-600 dark:text-zo-alert-400">
                     {{ t("admin.settings.defaults.platformQuotaNotice") }}
                   </p>
                 </div>
@@ -4541,7 +4541,7 @@
                   </button>
                   <p
                     v-if="codexFingerprintNoRequired"
-                    class="mt-2 text-xs text-amber-600 dark:text-amber-500"
+                    class="mt-2 text-xs text-zo-alert-600 dark:text-zo-alert-500"
                   >
                     {{ t("admin.settings.gatewayForwarding.codexFingerprintNoRequiredWarn") }}
                   </p>
@@ -4911,7 +4911,7 @@
                       )
                     }}
                   </p>
-                  <p class="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
+                  <p class="mt-0.5 text-xs text-zo-alert-600 dark:text-zo-alert-400">
                     {{
                       t(
                         "admin.settings.scheduling.accountSchedulingThresholdsDisabledHint",
@@ -5806,7 +5806,7 @@
                           !expandedProviders[pIdx] &&
                           provider.api_key_configured
                         "
-                        class="text-xs text-green-500"
+                        class="text-xs text-zo-signal-500"
                       >
                         {{
                           t(
@@ -6004,8 +6004,8 @@
                             quotaPercentage(provider) > 90
                               ? 'bg-red-500'
                               : quotaPercentage(provider) > 70
-                                ? 'bg-yellow-500'
-                                : 'bg-green-500'
+                                ? 'bg-zo-alert-500'
+                                : 'bg-zo-signal-500'
                           "
                           :style="{
                             width:
@@ -6189,7 +6189,7 @@
             <div class="space-y-6 p-6">
               <!-- Backend Mode -->
               <div
-                class="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20"
+                class="flex items-center justify-between rounded-lg border border-zo-alert-200 bg-zo-alert-50 p-4 dark:border-zo-alert-800 dark:bg-zo-alert-900/20"
               >
                 <div>
                   <h3 class="text-sm font-medium text-gray-900 dark:text-white">
@@ -6597,7 +6597,7 @@
                   {{ t("admin.settings.site.homeContentHint") }}
                 </p>
                 <!-- iframe CSP Warning -->
-                <p class="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                <p class="mt-2 text-xs text-zo-alert-600 dark:text-zo-alert-400">
                   {{ t("admin.settings.site.homeContentIframeWarning") }}
                 </p>
               </div>

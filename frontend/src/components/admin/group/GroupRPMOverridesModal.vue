@@ -130,7 +130,7 @@
                         :class="[
                           'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
                           entry.user_status === 'active'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            ? 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-400'
                             : 'bg-gray-100 text-gray-600 dark:bg-dark-600 dark:text-gray-400'
                         ]"
                       >
@@ -176,7 +176,7 @@
       <!-- 底部 -->
       <div class="flex items-center gap-3 border-t border-gray-200 pt-4 dark:border-dark-600">
         <template v-if="isDirty">
-          <span class="text-xs text-amber-600 dark:text-amber-400">{{ t('admin.groups.unsavedChanges') }}</span>
+          <span class="text-xs text-zo-alert-600 dark:text-zo-alert-400">{{ t('admin.groups.unsavedChanges') }}</span>
           <button
             type="button"
             class="text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
@@ -248,8 +248,8 @@ let searchTimeout: ReturnType<typeof setTimeout>
 
 const platformColorClass = computed(() => {
   switch (props.group?.platform) {
-    case 'anthropic': return 'text-orange-700 dark:text-orange-400'
-    case 'openai': return 'text-emerald-700 dark:text-emerald-400'
+    case 'anthropic': return 'text-zo-alert-700 dark:text-zo-alert-400'
+    case 'openai': return 'text-zo-signal-700 dark:text-zo-signal-400'
     case 'antigravity': return 'text-purple-700 dark:text-purple-400'
     default: return 'text-blue-700 dark:text-blue-400'
   }

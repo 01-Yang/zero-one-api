@@ -148,7 +148,7 @@ function openErrorDetail(errorId: number | null | undefined) {
 
 const kindBadgeClass = (kind: string) => {
   if (kind === 'error') return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-  return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+  return 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-300'
 }
 </script>
 

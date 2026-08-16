@@ -123,7 +123,7 @@
                   <span v-if="row.child_count > 0 && !row.is_child" class="flex-shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-normal text-gray-600 dark:bg-dark-700 dark:text-gray-300">
                     {{ t('batchImage.list.childCount', { n: row.child_count }, row.child_count) }}
                   </span>
-                  <span v-if="row.is_child" class="flex-shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-normal text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+                  <span v-if="row.is_child" class="flex-shrink-0 rounded-full bg-zo-alert-50 px-2 py-0.5 text-xs font-normal text-zo-alert-700 dark:bg-zo-alert-900/20 dark:text-zo-alert-300">
                     {{ t('batchImage.list.childBadge') }}
                   </span>
 	                </span>
@@ -156,7 +156,7 @@
 
           <template #cell-counts="{ row }">
             <div class="flex items-center justify-center gap-2 text-sm tabular-nums">
-              <span class="text-emerald-600 dark:text-emerald-300">{{ displayJob(row).success_count }}</span>
+              <span class="text-zo-signal-600 dark:text-zo-signal-300">{{ displayJob(row).success_count }}</span>
               <span class="text-gray-300 dark:text-dark-500">/</span>
               <span :class="displayJob(row).fail_count > 0 ? 'text-red-600 dark:text-red-300' : 'text-gray-400 dark:text-gray-500'">{{ displayJob(row).fail_count }}</span>
               <span class="text-xs text-gray-400 dark:text-gray-500">{{ t('batchImage.list.totalCount', { n: displayJob(row).item_count }) }}</span>
@@ -170,7 +170,7 @@
           </template>
 
           <template #cell-downloaded="{ row }">
-            <span class="block text-center text-sm" :class="row.downloaded_at ? 'text-emerald-700 dark:text-emerald-300' : 'text-gray-500 dark:text-gray-400'">
+            <span class="block text-center text-sm" :class="row.downloaded_at ? 'text-zo-signal-700 dark:text-zo-signal-300' : 'text-gray-500 dark:text-gray-400'">
               {{ row.downloaded_at ? formatDate(row.downloaded_at) : t('batchImage.list.notDownloaded') }}
             </span>
           </template>
@@ -189,7 +189,7 @@
               <button
                 type="button"
                 class="batch-row-action flex flex-col items-center gap-0.5 rounded-lg p-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30"
-                :class="canDownload(row) ? 'text-gray-500 hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400' : 'text-gray-300 dark:text-dark-500'"
+                :class="canDownload(row) ? 'text-gray-500 hover:bg-zo-signal-50 hover:text-zo-signal-600 dark:hover:bg-zo-signal-900/20 dark:hover:text-zo-signal-400' : 'text-gray-300 dark:text-dark-500'"
                 :disabled="!canDownload(row) || downloading"
                 :title="t('batchImage.actions.downloadZip')"
                 @click="downloadJob(row)"
@@ -290,7 +290,7 @@
             <button
               v-if="canRetry(job)"
               type="button"
-              class="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-700 disabled:opacity-60 dark:text-gray-200 dark:hover:bg-amber-900/20 dark:hover:text-amber-300"
+              class="flex w-full items-center gap-2 px-3 py-2 text-left text-gray-700 transition-colors hover:bg-zo-alert-50 hover:text-zo-alert-700 disabled:opacity-60 dark:text-gray-200 dark:hover:bg-zo-alert-900/20 dark:hover:text-zo-alert-300"
               :disabled="retryingBatchId === job.id"
               @click="retryFailedJob(job)"
             >
@@ -351,7 +351,7 @@
             <div class="min-w-0 text-center">
               <p class="text-xs text-gray-500 dark:text-gray-400">{{ hasChildJobs(currentJob.id) ? t('batchImage.detail.aggregatedResult') : t('batchImage.detail.result') }}</p>
               <p class="mt-1 flex items-center justify-center gap-2 font-medium tabular-nums">
-              <span class="text-emerald-600 dark:text-emerald-300">{{ (currentDisplayJob || currentJob).success_count }}</span>
+              <span class="text-zo-signal-600 dark:text-zo-signal-300">{{ (currentDisplayJob || currentJob).success_count }}</span>
               <span class="text-gray-300 dark:text-dark-500">/</span>
               <span :class="(currentDisplayJob || currentJob).fail_count > 0 ? 'text-red-600 dark:text-red-300' : 'text-gray-400 dark:text-gray-500'">{{ (currentDisplayJob || currentJob).fail_count }}</span>
             </p>
@@ -523,7 +523,7 @@
 
     <BaseDialog :show="!!previewImageItem" :title="previewImageItem?.custom_id || t('batchImage.imagePreview.title')" width="extra-wide" :z-index="60" @close="closeImagePreview">
       <div class="space-y-3">
-        <div class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+        <div class="rounded-lg border border-zo-alert-200 bg-zo-alert-50 px-3 py-2 text-sm text-zo-alert-900 dark:border-zo-alert-800 dark:bg-zo-alert-950/30 dark:text-zo-alert-100">
           {{ t('batchImage.imagePreview.notice') }}
         </div>
         <div class="flex min-h-[420px] items-center justify-center rounded-lg bg-gray-50 p-4 dark:bg-dark-900">
@@ -559,7 +559,7 @@
                 {{ key.name }} · {{ key.group?.name || 'Gemini' }}
               </option>
             </select>
-            <p v-if="!loadingKeys && geminiApiKeys.length === 0" class="input-hint text-amber-600 dark:text-amber-400">
+            <p v-if="!loadingKeys && geminiApiKeys.length === 0" class="input-hint text-zo-alert-600 dark:text-zo-alert-400">
               {{ t('batchImage.create.noKeysHint') }}
             </p>
           </div>
@@ -573,10 +573,10 @@
                 {{ model.label }}
               </option>
             </select>
-            <p v-if="modelLoadError" class="input-hint text-amber-600 dark:text-amber-400">
+            <p v-if="modelLoadError" class="input-hint text-zo-alert-600 dark:text-zo-alert-400">
               {{ modelLoadError }}
             </p>
-            <p v-else-if="selectedApiKey && !loadingModels && availableBatchImageModels.length === 0" class="input-hint text-amber-600 dark:text-amber-400">
+            <p v-else-if="selectedApiKey && !loadingModels && availableBatchImageModels.length === 0" class="input-hint text-zo-alert-600 dark:text-zo-alert-400">
               {{ batchImageText('noModelsHint') }}
             </p>
           </div>
@@ -696,7 +696,7 @@
           </div>
         </div>
 
-	        <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+	        <div class="rounded-lg border border-zo-alert-200 bg-zo-alert-50 p-3 text-sm leading-6 text-zo-alert-900 dark:border-zo-alert-800 dark:bg-zo-alert-950/30 dark:text-zo-alert-100">
 	          {{ t('batchImage.create.cancelNotice') }}
 	        </div>
 	        <div v-if="submitting" class="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm leading-6 text-sky-800 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-100">
@@ -2373,7 +2373,7 @@ function itemResultLabel(item: BatchImageDetailItem) {
 function itemResultClass(item: BatchImageDetailItem) {
   if (isRecoveredOriginalFailure(item)) return 'bg-gray-100 text-gray-500 ring-gray-200 dark:bg-dark-800 dark:text-gray-400 dark:ring-dark-700'
   if (item.error || item.status === 'failed' || item.status === 'cancelled') return 'bg-red-50 text-red-700 ring-red-100 dark:bg-red-950/30 dark:text-red-300 dark:ring-red-900/50'
-  if (item.status === 'succeeded' || item.status === 'success') return 'bg-emerald-50 text-emerald-700 ring-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 dark:ring-emerald-900/50'
+  if (item.status === 'succeeded' || item.status === 'success') return 'bg-zo-signal-50 text-zo-signal-700 ring-zo-signal-100 dark:bg-zo-signal-950/30 dark:text-zo-signal-300 dark:ring-zo-signal-900/50'
   return 'bg-gray-50 text-gray-500 ring-gray-200 dark:bg-dark-800 dark:text-gray-400 dark:ring-dark-700'
 }
 

@@ -671,14 +671,14 @@ function statusText(status: number): string {
 function statusBadgeClass(status: number): string {
   const base = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold '
   if (status >= 500) return base + 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-  if (status >= 400) return base + 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-  return base + 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+  if (status >= 400) return base + 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-300'
+  return base + 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-300'
 }
 
 function statusDotClass(status: number): string {
   if (status >= 500) return 'bg-red-500'
-  if (status >= 400) return 'bg-amber-500'
-  return 'bg-green-500'
+  if (status >= 400) return 'bg-zo-alert-500'
+  return 'bg-zo-signal-500'
 }
 
 onMounted(fetchLogs)

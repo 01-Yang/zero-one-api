@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { DISPLAY_API_ENDPOINT, consoleUrl, documentUrl } from '../siteConfig'
+import Action from './Action'
 import { copyText } from './copyText'
 
 type IntegrationId = 'cc-switch' | 'codex-plus-plus' | 'codex-cli' | 'claude-code'
@@ -167,14 +168,22 @@ export default function QuickStart({ docUrl }: QuickStartProps) {
             </ol>
 
             <div className="integration-actions">
-              <a className="integration-primary-action" href={consoleUrl('/keys')}>
+              <Action
+                className="integration-primary-action"
+                href={consoleUrl('/keys')}
+                highlight={false}
+              >
                 <KeyRound aria-hidden="true" />
                 创建 API Key
-              </a>
-              <a className="integration-secondary-action" href={docsHref}>
+              </Action>
+              <Action
+                className="integration-secondary-action"
+                href={docsHref}
+                highlight={false}
+              >
                 <BookOpen aria-hidden="true" />
                 查看接入教学文档
-              </a>
+              </Action>
             </div>
           </div>
 

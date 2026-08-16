@@ -35,7 +35,7 @@
       <!-- Cost (Account) -->
       <div class="flex items-center gap-1">
         <span class="text-gray-500 dark:text-gray-400">{{ t('usage.accountBilled') }}:</span>
-        <span class="font-medium text-emerald-600 dark:text-emerald-400">{{
+        <span class="font-medium text-zo-signal-600 dark:text-zo-signal-400">{{
           formatCurrency(props.stats.cost)
         }}</span>
       </div>

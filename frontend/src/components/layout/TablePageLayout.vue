@@ -12,7 +12,7 @@
 
     <!-- 滚动区域：表格 -->
     <div class="layout-section-scrollable">
-      <div class="card table-scroll-container">
+      <div class="card table-scroll-container frosted-table-shell console-skin-table">
         <slot name="table" />
       </div>
     </div>
@@ -30,7 +30,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 const isMobile = ref(false)
 
 const checkMobile = () => {
-  isMobile.value = window.innerWidth < 1024
+  isMobile.value = window.innerWidth <= 1024
 }
 
 onMounted(() => {
@@ -52,31 +52,37 @@ onUnmounted(() => {
 
 .layout-section-fixed {
   @apply flex-shrink-0;
+  animation: table-surface-stack-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.layout-section-fixed + .layout-section-fixed {
+  animation-delay: 40ms;
 }
 
 .layout-section-scrollable {
   @apply flex-1 min-h-0 flex flex-col;
+  animation: table-surface-stack-enter 240ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
 }
 
 /* 表格滚动容器 - 增强版表体滚动方案 */
 .table-scroll-container {
-  @apply flex h-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-card dark:border-dark-700 dark:bg-dark-800;
+  @apply flex h-full flex-col overflow-hidden;
+  position: relative;
+  isolation: isolate;
 }
 
 .table-scroll-container :deep(.table-wrapper) {
   @apply flex-1 overflow-x-auto overflow-y-auto;
   /* 确保横向滚动条显示在最底部 */
   scrollbar-gutter: stable;
+  position: relative;
+  z-index: 1;
 }
 
 .table-scroll-container :deep(table) {
   @apply w-full;
   min-width: max-content; /* 关键：确保表格宽度根据内容撑开，从而触发横向滚动 */
   display: table; /* 使用标准 table 布局以支持 sticky 列 */
-}
-
-.table-scroll-container :deep(thead) {
-  @apply bg-gray-50 dark:bg-dark-800;
 }
 
 .table-scroll-container :deep(tbody) {
@@ -104,5 +110,24 @@ onUnmounted(() => {
   @apply flex-none;
   display: table;
   min-width: 100%;
+}
+
+@keyframes table-surface-stack-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout-section-fixed,
+  .layout-section-scrollable {
+    animation: none;
+  }
 }
 </style>

@@ -9,15 +9,15 @@
         <!-- Status Icon -->
         <div class="text-center">
           <div v-if="isSuccess"
-            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-            <svg class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-zo-signal-100 dark:bg-zo-signal-900/30">
+            <svg class="h-10 w-10 text-zo-signal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
               stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <div v-else-if="isPending"
-            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/30">
-            <div class="h-10 w-10 animate-spin rounded-full border-4 border-yellow-500 border-t-transparent"></div>
+            class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-zo-alert-100 dark:bg-zo-alert-900/30">
+            <div class="h-10 w-10 animate-spin rounded-full border-4 border-zo-alert-500 border-t-transparent"></div>
           </div>
           <div v-else
             class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">

@@ -139,9 +139,9 @@
               :class="[
                 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
                 value === 'anthropic'
-                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                  ? 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400'
                   : value === 'openai'
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                    ? 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-400'
                     : value === 'antigravity'
                       ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
                       : value === 'grok'
@@ -270,7 +270,7 @@
                   t("admin.groups.accountsAvailable")
                 }}</span>
                 <span
-                  class="ml-1 font-medium text-emerald-600 dark:text-emerald-400"
+                  class="ml-1 font-medium text-zo-signal-600 dark:text-zo-signal-400"
                   >{{ row.active_account_count || 0 }}</span
                 >
                 <span
@@ -283,7 +283,7 @@
                   t("admin.groups.accountsRateLimited")
                 }}</span>
                 <span
-                  class="ml-1 font-medium text-amber-600 dark:text-amber-400"
+                  class="ml-1 font-medium text-zo-alert-600 dark:text-zo-alert-400"
                   >{{ row.rate_limited_account_count }}</span
                 >
                 <span
@@ -407,7 +407,7 @@
               </button>
               <button
                 @click="handleRPMOverrides(row)"
-                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-orange-600 dark:hover:bg-dark-700 dark:hover:text-orange-400"
+                class="flex flex-col items-center gap-0.5 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-zo-alert-600 dark:hover:bg-dark-700 dark:hover:text-zo-alert-400"
               >
                 <Icon name="bolt" size="sm" />
                 <span class="text-xs">{{
@@ -3948,9 +3948,9 @@
                   :class="[
                     'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
                     group.platform === 'anthropic'
-                      ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                      ? 'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-900/30 dark:text-zo-alert-400'
                       : group.platform === 'openai'
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        ? 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-400'
                         : group.platform === 'antigravity'
                           ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
                           : group.platform === 'grok'
@@ -5727,7 +5727,7 @@ const getQuotaUsageClass = (
     return "font-semibold text-red-600 dark:text-red-400";
   }
   if (ratio >= 0.8) {
-    return "font-semibold text-amber-600 dark:text-amber-400";
+    return "font-semibold text-zo-alert-600 dark:text-zo-alert-400";
   }
   return "font-medium text-gray-700 dark:text-gray-300";
 };

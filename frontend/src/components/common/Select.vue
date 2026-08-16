@@ -12,6 +12,7 @@
       :aria-describedby="ariaDescribedby"
       :class="[
         'select-trigger',
+        'console-skin-select-trigger',
         isOpen && 'select-trigger-open',
         error && 'select-trigger-error',
         disabled && 'select-trigger-disabled'
@@ -51,7 +52,7 @@
         <div
           v-if="isOpen"
           ref="dropdownRef"
-          class="select-dropdown-portal"
+          class="select-dropdown-portal console-skin-select-menu"
           :class="[instanceId]"
           :style="dropdownStyle"
           role="listbox"
@@ -473,11 +474,9 @@ onUnmounted(() => {
 <style scoped>
 .select-trigger {
   @apply flex w-full items-center justify-between gap-2;
-  @apply min-h-10 rounded-lg px-4 py-2.5 text-sm;
-  @apply bg-white dark:bg-dark-800;
-  @apply border border-gray-200 dark:border-dark-600;
+  @apply min-h-10 px-4 py-2.5 text-sm;
+  @apply border;
   @apply text-gray-900 dark:text-gray-100;
-  @apply transition-colors duration-200;
   @apply focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/20 dark:focus:border-white dark:focus:ring-white/20;
   @apply hover:border-gray-300 dark:hover:border-dark-500;
   @apply cursor-pointer;
@@ -508,15 +507,13 @@ onUnmounted(() => {
   @apply rounded text-gray-400 transition-colors;
   @apply hover:text-gray-600 dark:hover:text-gray-200;
 }
+
 </style>
 
 <style>
 .select-dropdown-portal {
   @apply w-max min-w-[200px];
-  @apply bg-white dark:bg-dark-800;
-  @apply rounded-lg;
-  @apply border border-gray-200 dark:border-dark-700;
-  @apply shadow-card;
+  @apply border;
   @apply overflow-hidden;
   pointer-events: auto !important;
 }
@@ -581,12 +578,24 @@ onUnmounted(() => {
 
 .select-dropdown-enter-active,
 .select-dropdown-leave-active {
-  transition: all 0.2s ease;
+  transition: opacity 180ms ease-out, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .select-dropdown-enter-from,
 .select-dropdown-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .select-dropdown-enter-active,
+  .select-dropdown-leave-active {
+    transition-duration: 1ms;
+  }
+
+  .select-dropdown-enter-from,
+  .select-dropdown-leave-to {
+    transform: none;
+  }
 }
 </style>

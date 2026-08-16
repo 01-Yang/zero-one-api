@@ -26,7 +26,7 @@
         <div>
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t('dashboard.apiKeys') }}</p>
           <p class="text-xl font-bold text-gray-900 dark:text-white">{{ stats?.total_api_keys || 0 }}</p>
-          <p class="text-xs text-green-600 dark:text-green-400">{{ stats?.active_api_keys || 0 }} {{ t('common.active') }}</p>
+          <p class="text-xs text-zo-signal-600 dark:text-zo-signal-400">{{ stats?.active_api_keys || 0 }} {{ t('common.active') }}</p>
         </div>
       </div>
     </div>
@@ -346,8 +346,8 @@ function calcPercent(usage: number, limit: number): number {
 
 function quotaBarClass(p: number): string {
   if (p >= 95) return 'bg-red-500'
-  if (p >= 75) return 'bg-amber-500'
-  return 'bg-green-500'
+  if (p >= 75) return 'bg-zo-alert-500'
+  return 'bg-zo-signal-500'
 }
 
 // 与 formatBalance 一致使用 Intl.NumberFormat 做半偶舍入，避免 toFixed 在不同 JS 引擎

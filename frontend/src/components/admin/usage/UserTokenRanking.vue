@@ -71,7 +71,7 @@
             <td class="whitespace-nowrap px-4 py-3 text-right text-sm tabular-nums text-gray-500 dark:text-gray-400">{{ fmtTokens(item.output_tokens) }}</td>
             <td class="whitespace-nowrap px-4 py-3 text-right text-sm tabular-nums text-gray-500 dark:text-gray-400">{{ fmtTokens(item.cache_tokens) }}</td>
             <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium tabular-nums text-gray-900 dark:text-gray-100">{{ fmtTokens(item.total_tokens) }}</td>
-            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium tabular-nums text-green-600 dark:text-green-400">${{ fmtCost(item.actual_cost) }}</td>
+            <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-medium tabular-nums text-zo-signal-600 dark:text-zo-signal-400">${{ fmtCost(item.actual_cost) }}</td>
           </tr>
         </tbody>
       </table>
@@ -118,9 +118,9 @@ const limitOptions = [
 
 // 前三名金/银/铜徽章
 const RANK_BADGE_CLASSES = [
-  'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
+  'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-500/20 dark:text-zo-alert-400',
   'bg-gray-200 text-gray-600 dark:bg-gray-500/20 dark:text-gray-300',
-  'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400',
+  'bg-zo-alert-100 text-zo-alert-700 dark:bg-zo-alert-500/20 dark:text-zo-alert-400',
 ]
 
 const items = ref<UserBreakdownItem[]>([])

@@ -17,7 +17,7 @@
               <span class="relative flex h-2 w-2 shrink-0">
                 <span
                   class="relative inline-flex h-2 w-2 rounded-full"
-                  :class="loading || refreshing ? 'bg-gray-400' : 'bg-green-500'"
+                  :class="loading || refreshing ? 'bg-gray-400' : 'bg-zo-signal-500'"
                 ></span>
               </span>
               <span v-if="refreshing" class="inline-flex items-center gap-1 text-primary-600 dark:text-primary-300">
@@ -919,21 +919,21 @@ onBeforeUnmount(() => {
   flex: none;
   border-radius: 9999px;
 }
-/* Multi-stop green → yellow → red score bands */
-.health-score10 { background: #16a34a; }
-.health-score9  { background: #22c55e; }
-.health-score8  { background: #4ade80; }
-.health-score7  { background: #a3e635; }
-.health-score6  { background: #facc15; }
-.health-score5  { background: #fbbf24; }
-.health-score4  { background: #f59e0b; }
-.health-score3  { background: #f97316; }
-.health-score2  { background: #fb7185; }
-.health-score1  { background: #f87171; }
-.health-score0  { background: rgb(239, 67, 67); }
-.health-healthy  { background: #22c55e; }
-.health-warning  { background: #f59e0b; }
-.health-critical { background: #ef4444; }
+/* Cool blue-violet health scale, with rose reserved for degraded states. */
+.health-score10 { background: #2563eb; }
+.health-score9  { background: #3b82f6; }
+.health-score8  { background: #60a5fa; }
+.health-score7  { background: #818cf8; }
+.health-score6  { background: #a78bfa; }
+.health-score5  { background: #c084fc; }
+.health-score4  { background: #fb7185; }
+.health-score3  { background: #f43f5e; }
+.health-score2  { background: #e11d48; }
+.health-score1  { background: #be123c; }
+.health-score0  { background: #881337; }
+.health-healthy  { background: #3b82f6; }
+.health-warning  { background: #fb7185; }
+.health-critical { background: #e11d48; }
 .health-unknown  { background: #9ca3af; }
 .matrix-select {
   min-width: 10rem;

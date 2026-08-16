@@ -5,7 +5,7 @@
     <div class="card-header mb-4 flex shrink-0 flex-wrap items-start justify-between gap-3 !border-0 !p-0">
       <div class="min-w-0">
         <h2 class="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
-          <span class="inline-flex h-4 w-4 text-emerald-500" aria-hidden="true">
+          <span class="inline-flex h-4 w-4 text-zo-signal-500" aria-hidden="true">
             <Icon name="grid" size="sm" />
           </span>
           {{ t('channelMonitorV2.matrix.title') }}
@@ -507,35 +507,35 @@ function formatBucketRange(value: string) {
   border-radius: 9999px;
 }
 
-/* Multi-stop green → yellow → red (score10 best … score0 worst) */
-.health-score10 { background: #16a34a; }
-.health-score9  { background: #22c55e; }
-.health-score8  { background: #4ade80; }
-.health-score7  { background: #a3e635; }
-.health-score6  { background: #facc15; }
-.health-score5  { background: #fbbf24; }
-.health-score4  { background: #f59e0b; }
-.health-score3  { background: #f97316; }
-.health-score2  { background: #fb7185; }
-.health-score1  { background: #f87171; }
-.health-score0  { background: rgb(239, 67, 67); }
+/* Cool blue-violet health scale, with rose reserved for degraded states. */
+.health-score10 { background: #2563eb; }
+.health-score9  { background: #3b82f6; }
+.health-score8  { background: #60a5fa; }
+.health-score7  { background: #818cf8; }
+.health-score6  { background: #a78bfa; }
+.health-score5  { background: #c084fc; }
+.health-score4  { background: #fb7185; }
+.health-score3  { background: #f43f5e; }
+.health-score2  { background: #e11d48; }
+.health-score1  { background: #be123c; }
+.health-score0  { background: #881337; }
 /* Coarse fallbacks (older payloads without score) */
-.health-healthy  { background: #22c55e; }
-.health-warning  { background: #f59e0b; }
-.health-critical { background: #ef4444; }
+.health-healthy  { background: #3b82f6; }
+.health-warning  { background: #fb7185; }
+.health-critical { background: #e11d48; }
 .health-unknown  { background: #9ca3af; }
 
 .score-legend {
   background: linear-gradient(
     90deg,
-    rgb(239, 67, 67) 0%,
-    #f87171 15%,
-    #f97316 30%,
-    #f59e0b 45%,
-    #facc15 55%,
-    #a3e635 70%,
-    #22c55e 85%,
-    #16a34a 100%
+    #881337 0%,
+    #be123c 15%,
+    #e11d48 30%,
+    #f43f5e 45%,
+    #c084fc 55%,
+    #a78bfa 70%,
+    #60a5fa 85%,
+    #2563eb 100%
   );
 }
 

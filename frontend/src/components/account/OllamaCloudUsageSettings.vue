@@ -12,7 +12,7 @@
       <span
         class="whitespace-nowrap rounded px-2 py-1 text-xs font-medium"
         :class="state.configured
-          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+          ? 'bg-zo-signal-100 text-zo-signal-700 dark:bg-zo-signal-900/30 dark:text-zo-signal-300'
           : 'bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-gray-300'"
       >
         {{ state.configured ? t('admin.accounts.ollamaCloud.configured') : t('admin.accounts.ollamaCloud.notConfigured') }}
@@ -23,7 +23,7 @@
       <Icon name="refresh" size="sm" class="animate-spin" />
     </div>
     <template v-else>
-      <div v-if="!state.encryption_key_configured" class="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-200">
+      <div v-if="!state.encryption_key_configured" class="rounded border border-zo-alert-200 bg-zo-alert-50 px-3 py-2 text-xs text-zo-alert-800 dark:border-zo-alert-800/50 dark:bg-zo-alert-900/20 dark:text-zo-alert-200">
         {{ t('admin.accounts.ollamaCloud.encryptionKeyRequired') }}
       </div>
 
@@ -48,7 +48,7 @@
           <span class="text-gray-500 dark:text-gray-400">{{ t('admin.accounts.ollamaCloud.updatedAt') }}</span>
           <span class="break-words text-gray-900 dark:text-white">{{ formatDate(snapshot.fetched_at || snapshot.last_attempt_at) }}</span>
         </div>
-        <p v-if="snapshot.last_error" class="mt-2 break-words border-t border-gray-100 pt-2 text-xs text-amber-700 dark:border-dark-700 dark:text-amber-300">
+        <p v-if="snapshot.last_error" class="mt-2 break-words border-t border-gray-100 pt-2 text-xs text-zo-alert-700 dark:border-dark-700 dark:text-zo-alert-300">
           {{ t(`admin.accounts.ollamaCloud.errors.${snapshot.last_error}`, snapshot.last_error) }}
         </p>
       </div>
