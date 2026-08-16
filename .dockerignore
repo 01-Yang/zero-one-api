@@ -31,6 +31,10 @@ Thumbs.db
 dist/
 build/
 
+# Managed marketing sources are versioned but never copied into images.
+assets/marketing/
+assets/posters/
+
 # Node modules (will be installed in container)
 frontend/node_modules/
 node_modules/

@@ -107,11 +107,14 @@ jobs:
           sh -n deploy/zero-one/test-live-routing.sh
           sh -n deploy/zero-one/test-routing.sh
           node --check deploy/zero-one/test-upstream.mjs
+          node --check deploy/zero-one/verify-marketing-sources.mjs
           node --check deploy/zero-one/verify-public-settings.mjs
       - name: Verify Caddy routing contract
         run: sh deploy/zero-one/test-routing.sh
       - name: Verify direct-upstream contract
         run: sh deploy/zero-one/test-direct-upstream.sh
+      - name: Verify managed marketing sources
+        run: node deploy/zero-one/verify-marketing-sources.mjs
       - name: Verify public-settings release gate
         run: |
           printf '%s' '{"code":0,"data":{"site_name":"零一 API","site_subtitle":"从零到一，连接每一次模型调用。","api_base_url":"https://api.01yapi.com","registration_enabled":true,"payment_enabled":false,"promo_code_enabled":false,"invitation_code_enabled":false}}' \
