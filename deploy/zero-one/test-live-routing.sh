@@ -1,10 +1,11 @@
 #!/bin/sh
 set -eu
 
-edge_image=${1:?usage: test-live-routing.sh EDGE_IMAGE}
+edge_image=${1:?usage: test-live-routing.sh EDGE_IMAGE [production|preview]}
+routing_mode=${2:-production}
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 test_dir=$(mktemp -d)
-test_suffix="${GITHUB_RUN_ID:-local}-$$"
+test_suffix="${GITHUB_RUN_ID:-local}-$routing_mode-$$"
 network_name="zero-one-routing-$test_suffix"
 upstream_name="zero-one-upstream-$test_suffix"
 edge_name="zero-one-edge-$test_suffix"
@@ -30,12 +31,28 @@ assert_text() {
 	printf '%s' "$value" | grep -Fq "$expected" || fail "$label"
 }
 
-sed \
-	-e 's/^api\.01yapi\.com {/http:\/\/api.01yapi.test:8080 {/' \
-	-e 's/^app\.01yapi\.com {/http:\/\/app.01yapi.test:8080 {/' \
-	-e 's/^api\.01yapi\.cc {/http:\/\/api-backup.01yapi.test:8080 {/' \
-	-e 's/^01yapi\.com, www\.01yapi\.com {/http:\/\/01yapi.test:8080, http:\/\/www.01yapi.test:8080 {/' \
-	"$repo_root/deploy/zero-one/Caddyfile" >"$test_dir/Caddyfile"
+case "$routing_mode" in
+	production)
+		sed \
+			-e 's/^api\.01yapi\.com {/http:\/\/api.01yapi.test:8080 {/' \
+			-e 's/^app\.01yapi\.com {/http:\/\/app.01yapi.test:8080 {/' \
+			-e 's/^api\.01yapi\.cc {/http:\/\/api-backup.01yapi.test:8080 {/' \
+			-e 's/^01yapi\.com, www\.01yapi\.com {/http:\/\/01yapi.test:8080, http:\/\/www.01yapi.test:8080 {/' \
+			"$repo_root/deploy/zero-one/Caddyfile" >"$test_dir/Caddyfile"
+		listen_port=8080
+		request_host=api.01yapi.test
+		;;
+	preview)
+		cp "$repo_root/deploy/zero-one/Caddyfile.preview" "$test_dir/Caddyfile"
+		listen_port=80
+		request_host=preview.01yapi.test
+		;;
+	*)
+		echo "unknown routing mode: $routing_mode" >&2
+		exit 2
+		;;
+esac
+cp "$repo_root/deploy/zero-one/Caddyfile.shared" "$test_dir/Caddyfile.shared"
 
 docker network create "$network_name" >/dev/null
 docker run -d \
@@ -48,17 +65,17 @@ docker run -d \
 docker run -d \
 	--name "$edge_name" \
 	--network "$network_name" \
-	-p 127.0.0.1::8080 \
+	-p "127.0.0.1::$listen_port" \
 	-e ACME_EMAIL=ci@example.invalid \
-	-v "$test_dir/Caddyfile:/etc/caddy/Caddyfile:ro" \
+	-v "$test_dir:/etc/caddy:ro" \
 	"$edge_image" >/dev/null
 
-edge_port=$(docker inspect --format '{{(index (index .NetworkSettings.Ports "8080/tcp") 0).HostPort}}' "$edge_name")
+edge_port=$(docker inspect --format "{{(index (index .NetworkSettings.Ports \"$listen_port/tcp\") 0).HostPort}}" "$edge_name")
 edge_url="http://127.0.0.1:$edge_port"
 
 attempt=0
-until curl -fsS -H 'Host: api.01yapi.test' "$edge_url/" >"$test_dir/landing.html" &&
-	curl -fsS -H 'Host: api.01yapi.test' "$edge_url/health-probe" >/dev/null; do
+until curl -fsS -H "Host: $request_host" "$edge_url/" >"$test_dir/landing.html" &&
+	curl -fsS -H "Host: $request_host" "$edge_url/health-probe" >/dev/null; do
 	attempt=$((attempt + 1))
 	if [ "$attempt" -ge 30 ]; then
 		fail 'edge did not become ready'
@@ -69,28 +86,28 @@ done
 landing=$(cat "$test_dir/landing.html")
 assert_text "$landing" '<title>零一 API</title>' 'primary root did not return the React page'
 
-head_headers=$(curl -fsSI -H 'Host: api.01yapi.test' "$edge_url/")
+head_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url/")
 assert_text "$head_headers" 'Cache-Control: no-cache, no-store, must-revalidate' 'primary HEAD root cache policy changed'
 
 asset_path=$(printf '%s' "$landing" | grep -o '/_landing/assets/[^" ]*\.js' | head -n 1)
 [ -n "$asset_path" ] || fail 'landing JavaScript asset was not discoverable'
-asset_headers=$(curl -fsSI -H 'Host: api.01yapi.test' "$edge_url$asset_path")
+asset_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url$asset_path")
 assert_text "$asset_headers" 'Cache-Control: public, max-age=31536000, immutable' 'hashed landing asset is not immutable'
 
-notice_headers=$(curl -fsSI -H 'Host: api.01yapi.test' "$edge_url/_landing/THIRD_PARTY_NOTICES.txt")
+notice_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url/_landing/THIRD_PARTY_NOTICES.txt")
 assert_text "$notice_headers" 'Cache-Control: no-cache' 'third-party notice cache policy changed'
 
-post_root=$(curl -fsS -X POST -H 'Host: api.01yapi.test' --data 'probe' "$edge_url/")
+post_root=$(curl -fsS -X POST -H "Host: $request_host" --data 'probe' "$edge_url/")
 assert_text "$post_root" '"method":"POST"' 'non-GET root did not reach Sub2API'
 assert_text "$post_root" '"url":"/"' 'proxied root path changed'
 
-for api_path in /v1/models /v1beta/models /responses /backend-api/codex /antigravity; do
-	api_response=$(curl -fsS -H 'Host: api.01yapi.test' "$edge_url$api_path")
+for api_path in /api/v1/settings/public /v1/models /v1beta/models /responses /backend-api/codex /antigravity; do
+	api_response=$(curl -fsS -H "Host: $request_host" "$edge_url$api_path")
 	assert_text "$api_response" "\"url\":\"$api_path\"" "$api_path did not reach Sub2API"
 done
 
 header_response=$(curl -fsS \
-	-H 'Host: api.01yapi.test' \
+	-H "Host: $request_host" \
 	-H 'session_id: underscore-ok' \
 	-H 'CF-Connecting-IP: 8.8.8.8' \
 	-H 'True-Client-IP: 8.8.4.4' \
@@ -108,36 +125,38 @@ for spoofed_ip in 8.8.8.8 8.8.4.4 1.1.1.1 9.9.9.9 208.67.222.222 208.67.220.220 
 	fi
 done
 
-console_root_get_headers=$(curl -fsS -D - -o /dev/null -H 'Host: app.01yapi.test' "$edge_url/?source=contract")
-assert_text "$console_root_get_headers" 'HTTP/1.1 307 Temporary Redirect' 'Console GET root redirect status changed'
-assert_text "$console_root_get_headers" 'Cache-Control: no-store' 'Console GET root redirect is cacheable'
-assert_text "$console_root_get_headers" 'Location: https://api.01yapi.com/?source=contract' 'Console GET root did not redirect to the public site'
+if [ "$routing_mode" = production ]; then
+	console_root_get_headers=$(curl -fsS -D - -o /dev/null -H 'Host: app.01yapi.test' "$edge_url/?source=contract")
+	assert_text "$console_root_get_headers" 'HTTP/1.1 307 Temporary Redirect' 'Console GET root redirect status changed'
+	assert_text "$console_root_get_headers" 'Cache-Control: no-store' 'Console GET root redirect is cacheable'
+	assert_text "$console_root_get_headers" 'Location: https://api.01yapi.com/?source=contract' 'Console GET root did not redirect to the public site'
 
-console_root_head_headers=$(curl -fsSI -H 'Host: app.01yapi.test' "$edge_url/?source=contract")
-assert_text "$console_root_head_headers" 'HTTP/1.1 307 Temporary Redirect' 'Console HEAD root redirect status changed'
-assert_text "$console_root_head_headers" 'Cache-Control: no-store' 'Console HEAD root redirect is cacheable'
-assert_text "$console_root_head_headers" 'Location: https://api.01yapi.com/?source=contract' 'Console HEAD root did not redirect to the public site'
+	console_root_head_headers=$(curl -fsSI -H 'Host: app.01yapi.test' "$edge_url/?source=contract")
+	assert_text "$console_root_head_headers" 'HTTP/1.1 307 Temporary Redirect' 'Console HEAD root redirect status changed'
+	assert_text "$console_root_head_headers" 'Cache-Control: no-store' 'Console HEAD root redirect is cacheable'
+	assert_text "$console_root_head_headers" 'Location: https://api.01yapi.com/?source=contract' 'Console HEAD root did not redirect to the public site'
 
-console_post_root=$(curl -fsS -X POST -H 'Host: app.01yapi.test' --data 'probe' "$edge_url/")
-assert_text "$console_post_root" '"method":"POST"' 'Console non-GET root did not reach Sub2API'
-assert_text "$console_post_root" '"url":"/"' 'Console proxied root path changed'
+	console_post_root=$(curl -fsS -X POST -H 'Host: app.01yapi.test' --data 'probe' "$edge_url/")
+	assert_text "$console_post_root" '"method":"POST"' 'Console non-GET root did not reach Sub2API'
+	assert_text "$console_post_root" '"url":"/"' 'Console proxied root path changed'
 
-console_response=$(curl -fsS -H 'Host: app.01yapi.test' "$edge_url/login")
-assert_text "$console_response" '"url":"/login"' 'Console host did not proxy unchanged'
+	console_response=$(curl -fsS -H 'Host: app.01yapi.test' "$edge_url/login")
+	assert_text "$console_response" '"url":"/login"' 'Console host did not proxy unchanged'
 
-backup_headers=$(curl -fsS -D - -o "$test_dir/backup.json" -H 'Host: api-backup.01yapi.test' "$edge_url/")
-assert_text "$backup_headers" 'Cache-Control: no-store' 'backup root is cacheable'
-backup_body=$(cat "$test_dir/backup.json")
-assert_text "$backup_body" '"automatic_failover":false' 'backup metadata changed'
+	backup_headers=$(curl -fsS -D - -o "$test_dir/backup.json" -H 'Host: api-backup.01yapi.test' "$edge_url/")
+	assert_text "$backup_headers" 'Cache-Control: no-store' 'backup root is cacheable'
+	backup_body=$(cat "$test_dir/backup.json")
+	assert_text "$backup_body" '"automatic_failover":false' 'backup metadata changed'
 
-backup_api=$(curl -fsS -H 'Host: api-backup.01yapi.test' "$edge_url/v1/models")
-assert_text "$backup_api" '"url":"/v1/models"' 'backup API path did not proxy unchanged'
+	backup_api=$(curl -fsS -H 'Host: api-backup.01yapi.test' "$edge_url/v1/models")
+	assert_text "$backup_api" '"url":"/v1/models"' 'backup API path did not proxy unchanged'
+fi
 
 set +e
 curl -sS --max-time 1 --no-buffer \
 	-D "$test_dir/sse.headers" \
 	-o "$test_dir/sse.body" \
-	-H 'Host: api.01yapi.test' \
+	-H "Host: $request_host" \
 	"$edge_url/sse"
 sse_status=$?
 set -e
@@ -151,7 +170,7 @@ fi
 set +e
 curl -sS --max-time 1 --no-buffer \
 	-o "$test_dir/sse-disconnect.body" \
-	-H 'Host: api.01yapi.test' \
+	-H "Host: $request_host" \
 	"$edge_url/sse-disconnect"
 disconnect_status=$?
 set -e
@@ -161,7 +180,7 @@ assert_text "$(cat "$test_dir/sse-disconnect.body")" 'data: connected' 'client-d
 disconnect_observed=false
 attempt=0
 while [ "$attempt" -lt 5 ]; do
-	disconnect_response=$(curl -fsS -H 'Host: api.01yapi.test' "$edge_url/sse-disconnect-status")
+	disconnect_response=$(curl -fsS -H "Host: $request_host" "$edge_url/sse-disconnect-status")
 	if printf '%s' "$disconnect_response" | grep -Fq '"observed":true'; then
 		disconnect_observed=true
 		break
@@ -173,7 +192,7 @@ done
 
 websocket_key='dGhlIHNhbXBsZSBub25jZQ==' # gitleaks:allow -- public RFC 6455 handshake fixture
 websocket_response=$(curl -sS -i --http1.1 --max-time 2 \
-	-H 'Host: api.01yapi.test' \
+	-H "Host: $request_host" \
 	-H 'Connection: Upgrade' \
 	-H 'Upgrade: websocket' \
 	-H 'Sec-WebSocket-Version: 13' \
@@ -181,8 +200,10 @@ websocket_response=$(curl -sS -i --http1.1 --max-time 2 \
 	"$edge_url/ws" 2>/dev/null || true)
 assert_text "$websocket_response" '101 Switching Protocols' 'WebSocket upgrade did not pass through Caddy'
 
-redirect_headers=$(curl -fsSI -H 'Host: 01yapi.test' "$edge_url/status?source=contract")
-assert_text "$redirect_headers" 'HTTP/1.1 308 Permanent Redirect' 'apex redirect status changed'
-assert_text "$redirect_headers" 'Location: https://api.01yapi.com/status?source=contract' 'apex redirect lost its path or query'
+if [ "$routing_mode" = production ]; then
+	redirect_headers=$(curl -fsSI -H 'Host: 01yapi.test' "$edge_url/status?source=contract")
+	assert_text "$redirect_headers" 'HTTP/1.1 308 Permanent Redirect' 'apex redirect status changed'
+	assert_text "$redirect_headers" 'Location: https://api.01yapi.com/status?source=contract' 'apex redirect lost its path or query'
+fi
 
-echo 'zero-one live Caddy routing contract OK'
+echo "zero-one live $routing_mode Caddy routing contract OK"

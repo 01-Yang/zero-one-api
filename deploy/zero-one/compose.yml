@@ -14,6 +14,7 @@ services:
       args:
         CADDY_IMAGE: ${CADDY_IMAGE:-caddy:2.8.4-alpine}
         NODE_IMAGE: ${NODE_IMAGE:-node:24-alpine}
+        VITE_LOCAL_EDGE_PREVIEW: "false"
     image: ${EDGE_IMAGE:-zero-one-edge:local}
     restart: unless-stopped
     logging: *default-logging

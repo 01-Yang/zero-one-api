@@ -92,7 +92,7 @@ docker compose --env-file "$env_file" -f "$script_dir/compose.yml" exec -T postg
 age -r "$age_recipient" -o "$tmp_encrypted" "$tmp_dump"
 mkdir -p "$state_stage/config" "$state_stage/state"
 cp "$env_file" "$state_stage/config/runtime.env"
-for config_file in Caddyfile Dockerfile.edge compose.bootstrap.yml compose.yml; do
+for config_file in Caddyfile Caddyfile.shared Dockerfile.edge compose.bootstrap.yml compose.yml; do
   cp "$script_dir/$config_file" "$state_stage/config/$config_file"
 done
 cp -R "$state_source" "$state_stage/state/sub2api"

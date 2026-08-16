@@ -1,0 +1,54 @@
+# Local, single-origin preview edge. Use together with docker-compose.dev.yml.
+# Build the two images serially on Docker Desktop, then start the real stack:
+# docker compose -f docker-compose.dev.yml -f docker-compose.preview.yml build sub2api
+# docker compose -f docker-compose.dev.yml -f docker-compose.preview.yml build edge
+# docker compose -f docker-compose.dev.yml -f docker-compose.preview.yml up -d --no-build
+services:
+  # Mailpit shares the backend network namespace so the real backend can use
+  # localhost SMTP. Go's smtp.PlainAuth intentionally rejects plaintext
+  # credentials for non-localhost hosts, while Mailpit remains reachable only
+  # through the loopback-bound UI port below.
+  mailpit:
+    image: axllent/mailpit:v1.30.0
+    container_name: zero-one-local-mailpit
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    network_mode: service:sub2api
+    depends_on:
+      sub2api:
+        condition: service_healthy
+        restart: true
+    environment:
+      MP_SMTP_BIND_ADDR: 127.0.0.1:1025
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      MP_MAX_MESSAGES: "100"
+      MP_DISABLE_VERSION_CHECK: "true"
+
+  # Replace the development backend port with only the Mailpit UI mapping.
+  # The real backend remains reachable through the single-origin edge.
+  sub2api:
+    ports: !override
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+
+  edge:
+    build:
+      context: ..
+      dockerfile: deploy/zero-one/Dockerfile.edge
+      args:
+        VITE_LOCAL_EDGE_PREVIEW: "true"
+    container_name: zero-one-local-edge-preview
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "127.0.0.1:${LANDING_PREVIEW_PORT:-3001}:80"
+    volumes:
+      - ./zero-one/Caddyfile.preview:/etc/caddy/Caddyfile:ro
+      - ./zero-one/Caddyfile.shared:/etc/caddy/Caddyfile.shared:ro
+    depends_on:
+      sub2api:
+        condition: service_healthy
+    networks:
+      - sub2api-network

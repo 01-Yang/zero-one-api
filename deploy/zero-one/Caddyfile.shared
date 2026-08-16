@@ -1,0 +1,60 @@
+# Shared routing implementation for the production and supported preview edges.
+
+(sub2api_proxy) {
+	reverse_proxy sub2api:8080 {
+		# These overwrite untrusted forwarding headers received from clients.
+		header_up Host {host}
+		header_up -CF-Connecting-IP
+		header_up -True-Client-IP
+		header_up -X-Client-IP
+		header_up -X-Cluster-Client-IP
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-Host {host}
+		transport http {
+			compression off
+		}
+	}
+}
+
+(landing_routes) {
+	@landing {
+		method GET HEAD
+		path /
+	}
+
+	handle @landing {
+		root * /srv/landing
+		rewrite * /index.html
+		encode zstd gzip
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		header Content-Security-Policy "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+		header Permissions-Policy "camera=(), geolocation=(), microphone=()"
+		header Referrer-Policy "no-referrer"
+		header X-Content-Type-Options "nosniff"
+		file_server
+	}
+
+	@landing_notice path /_landing/THIRD_PARTY_NOTICES.txt
+	handle @landing_notice {
+		root * /srv/landing
+		rewrite * /THIRD_PARTY_NOTICES.txt
+		header Cache-Control "no-cache"
+		header X-Content-Type-Options "nosniff"
+		file_server
+	}
+
+	handle_path /_landing/* {
+		root * /srv/landing
+		encode zstd gzip
+		header Cache-Control "public, max-age=31536000, immutable"
+		header X-Content-Type-Options "nosniff"
+		file_server
+	}
+
+	handle {
+		header X-Robots-Tag "noindex, nofollow"
+		import sub2api_proxy
+	}
+}

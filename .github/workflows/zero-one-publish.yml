@@ -137,6 +137,8 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ steps.source.outputs.source_sha }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          build-args: |
+            VITE_LOCAL_EDGE_PREVIEW=false
           sbom: true
           provenance: mode=max
 

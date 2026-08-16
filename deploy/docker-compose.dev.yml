@@ -15,6 +15,9 @@ services:
       dockerfile: Dockerfile
       args:
         NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-https://registry.npmmirror.com}
+        # The branded publish workflow builds this source baseline as v0.1.176.
+        # Keep local preview metadata aligned without changing application code.
+        VERSION: ${LOCAL_SUB2API_VERSION:-0.1.176}
     container_name: sub2api-dev
     restart: unless-stopped
     security_opt:

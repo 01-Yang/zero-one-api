@@ -5,7 +5,37 @@ modify the upstream Compose files or expose application, database, or cache
 ports. The root `Dockerfile` builds the branded Sub2API image; `Dockerfile.edge`
 builds `landing/` and packages its static output with Caddy.
 
-## Local Preview
+## Supported Local Edge Preview
+
+The supported preview runs the real source-built Sub2API backend with
+PostgreSQL and Redis, then serves the Landing and Console through one local
+Caddy origin. Mailpit shares the backend network namespace so SMTP can remain
+on `127.0.0.1:1025` inside that namespace.
+
+```bash
+cp deploy/.env.example deploy/.env.preview
+chmod 600 deploy/.env.preview
+docker compose --env-file deploy/.env.preview -f deploy/docker-compose.dev.yml -f deploy/docker-compose.preview.yml build sub2api
+docker compose --env-file deploy/.env.preview -f deploy/docker-compose.dev.yml -f deploy/docker-compose.preview.yml build edge
+docker compose --env-file deploy/.env.preview -f deploy/docker-compose.dev.yml -f deploy/docker-compose.preview.yml up -d --no-build
+```
+
+Replace the placeholder secrets in `deploy/.env.preview` before starting. Open
+the single-origin preview at `http://127.0.0.1:3001` and Mailpit at
+`http://127.0.0.1:8025`. The preview override removes the development
+backend's direct host port; backend and Console routes remain available through
+the edge. All published preview ports are hard-bound to loopback, regardless of
+the upstream `BIND_HOST` setting.
+
+The preview build explicitly sets `VITE_LOCAL_EDGE_PREVIEW=true`; production
+Compose, CI builds and published edge images explicitly set it to `false`.
+Stop the stack with the same file and environment arguments:
+
+```bash
+docker compose --env-file deploy/.env.preview -f deploy/docker-compose.dev.yml -f deploy/docker-compose.preview.yml down
+```
+
+## Production Bootstrap
 
 ```bash
 cp deploy/zero-one/.env.example deploy/zero-one/.env
@@ -57,12 +87,14 @@ Keep the previous image digests in the release record for rollback. The full
 settings, backup, monitoring, recovery and smoke-test procedure is in
 [`../../docs/OPERATIONS.md`](../../docs/OPERATIONS.md).
 
-The static repository check is available locally without Docker as
-`sh deploy/zero-one/test-routing.sh` and
-`sh deploy/zero-one/test-direct-upstream.sh`. When Docker is available, run
-`sh deploy/zero-one/test-live-routing.sh IMAGE` against a built edge image.
-CI validates the rendered Caddy configuration and runs that live contract
-against a disposable upstream service.
+The static repository checks are available as
+`sh deploy/zero-one/test-routing.sh`, `sh deploy/zero-one/test-compose.sh`,
+`sh deploy/zero-one/test-direct-upstream.sh`, and
+`node deploy/zero-one/verify-marketing-sources.mjs`. When Docker is available,
+run `sh deploy/zero-one/test-live-routing.sh IMAGE` for production and
+`sh deploy/zero-one/test-live-routing.sh IMAGE preview` for the supported
+preview. CI validates both rendered Caddy configurations and runs both live
+contracts against a disposable upstream service; no database is required.
 
 ## Host-local SuperAPI direct tunnel
 

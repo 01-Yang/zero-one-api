@@ -1,0 +1,16 @@
+{
+	auto_https off
+	servers {
+		max_header_size 64kb
+		timeouts {
+			read_header 10s
+			idle 2m
+		}
+	}
+}
+
+import Caddyfile.shared
+
+:80 {
+	import landing_routes
+}
