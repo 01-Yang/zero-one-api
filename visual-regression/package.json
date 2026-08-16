@@ -1,0 +1,16 @@
+{
+  "name": "zero-one-visual-regression",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:list": "playwright test --list",
+    "test": "playwright test --update-snapshots=none",
+    "test:update": "playwright test --update-snapshots=all"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.1",
+    "@types/node": "^20.10.5",
+    "typescript": "~5.6.3"
+  }
+}

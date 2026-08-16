@@ -118,6 +118,8 @@ backend/.installed
 tests
 !deploy/tests/
 !deploy/tests/**
+!visual-regression/tests/
+!visual-regression/tests/**
 CLAUDE.md
 .claude
 scripts

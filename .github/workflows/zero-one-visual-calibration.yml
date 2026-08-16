@@ -1,0 +1,53 @@
+name: Zero One Visual Calibration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chromium-calibration:
+    name: Chromium calibration (non-blocking)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.55.1-noble
+    env:
+      CI: "true"
+      TZ: Asia/Shanghai
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 9
+      - name: Install visual test dependencies
+        run: npm ci --prefix visual-regression
+      - name: Audit visual test dependencies
+        run: npm audit --prefix visual-regression --audit-level=high
+      - name: Install Landing dependencies
+        run: npm ci --prefix landing
+      - name: Install Console dependencies
+        run: pnpm --dir frontend install --frozen-lockfile
+      - name: Typecheck visual contracts
+        run: npm run typecheck --prefix visual-regression
+      - name: List visual contracts
+        run: npm run test:list --prefix visual-regression
+      - name: Run snapshot calibration without baseline updates
+        run: npm test --prefix visual-regression
+      - name: Upload visual calibration artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: zero-one-visual-calibration-${{ github.sha }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            visual-regression/playwright-report/
+            visual-regression/test-results/

@@ -135,6 +135,7 @@ export default function Threads({
   className = '',
 }: ThreadsProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const deterministicVisual = import.meta.env.VITE_VISUAL_TEST === 'true'
   const visualPropsRef = useRef({ color, amplitude, distance, enableMouseInteraction })
   visualPropsRef.current = { color, amplitude, distance, enableMouseInteraction }
 
@@ -257,7 +258,8 @@ export default function Threads({
         program.uniforms.uColor.value.set(...visual.color)
         program.uniforms.uAmplitude.value = visual.amplitude
         program.uniforms.uDistance.value = visual.distance
-        program.uniforms.iTime.value = reducedMotion || mode === 'static' ? 0 : time * 0.001
+        program.uniforms.iTime.value =
+          deterministicVisual || reducedMotion || mode === 'static' ? 0 : time * 0.001
 
         if (
           visual.enableMouseInteraction &&
@@ -279,6 +281,7 @@ export default function Threads({
 
       const shouldAnimate = () =>
         mode === 'animated' &&
+        !deterministicVisual &&
         !reducedMotion &&
         (persistent || isOnscreen) &&
         isDocumentVisible &&
@@ -324,6 +327,7 @@ export default function Threads({
           gl.canvas.width / Math.max(gl.canvas.height, 1),
         )
         renderFrame(0)
+        if (deterministicVisual) container.dataset.visualReady = 'true'
       }
 
       handlePointerMove = (event: PointerEvent) => {
@@ -415,7 +419,7 @@ export default function Threads({
       }
 
       resize()
-      if (reducedMotion || mode === 'static') renderFrame(0)
+      if (deterministicVisual || reducedMotion || mode === 'static') renderFrame(0)
       syncAnimation()
 
       return cleanup

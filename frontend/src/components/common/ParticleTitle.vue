@@ -71,6 +71,7 @@ const props = withDefaults(defineProps<Props>(), {
 const containerRef = ref<HTMLElement | null>(null)
 const fallbackRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
+const deterministicVisual = import.meta.env.VITE_VISUAL_TEST === 'true'
 const rendererState = ref<RendererState>('loading')
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
@@ -362,8 +363,12 @@ onMounted(() => {
       const targetY = target.y
 
       return {
-        x: targetX + Math.cos(angle) * distance + (seed - 0.5) * props.scatter * 0.45,
-        y: targetY + Math.sin(angle) * distance + (depth - 0.9) * props.scatter * 0.45,
+        x: deterministicVisual
+          ? targetX
+          : targetX + Math.cos(angle) * distance + (seed - 0.5) * props.scatter * 0.45,
+        y: deterministicVisual
+          ? targetY
+          : targetY + Math.sin(angle) * distance + (depth - 0.9) * props.scatter * 0.45,
         startX: targetX + Math.cos(angle) * distance + (seed - 0.5) * props.scatter * 0.45,
         startY: targetY + Math.sin(angle) * distance + (depth - 0.9) * props.scatter * 0.45,
         targetX,
@@ -386,10 +391,15 @@ onMounted(() => {
     pointer.smoothX = pointer.x
     pointer.smoothY = pointer.y
     gatherStart = performance.now()
-    gathering = true
+    gathering = !deterministicVisual
     interactionUntil = gatherStart + props.gatherDuration + props.stagger + 180
-    render(gatherStart)
+    render(
+      deterministicVisual
+        ? gatherStart + props.gatherDuration + props.stagger + 1
+        : gatherStart
+    )
     rendererState.value = 'ready'
+    if (deterministicVisual) container.dataset.visualReady = 'true'
     requestRender()
   }
 
