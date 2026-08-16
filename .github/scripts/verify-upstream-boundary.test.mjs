@@ -4,6 +4,7 @@ import test from 'node:test'
 import {
   evaluateApprovedBackportContents,
   evaluateChangedPaths,
+  evaluateReleaseTag,
   validateBaseline,
 } from './verify-upstream-boundary.mjs'
 
@@ -55,7 +56,7 @@ const approvedBackendHotfixPaths = [
   'backend/migrations/group_pricing_auth_cache_migration_test.go',
 ].sort()
 
-test('allows the additive brand surfaces', () => {
+test('assigns additive surfaces to the five named overlays', () => {
   assert.deepEqual(
     evaluateChangedPaths(
       [
@@ -64,6 +65,8 @@ test('allows the additive brand surfaces', () => {
         'deploy/zero-one/compose.yml',
         'frontend/src/style.css',
         'landing/src/App.tsx',
+        'artifacts/design-qa/latest-desktop-top-1440x900.png',
+        'assets/posters/zero-one-api-pricing-poster-v1.png',
       ],
       baseline,
     ),
@@ -71,12 +74,13 @@ test('allows the additive brand surfaces', () => {
   )
 })
 
-test('allows only the exact reviewed backend production-correctness hotfixes', () => {
+test('keeps production-correctness files in an expiring legacy hotfix block', () => {
   assert.deepEqual(evaluateChangedPaths(approvedBackendHotfixPaths, baseline), [])
   assert.deepEqual(
-    baseline.allowed_paths.filter((path) => path.startsWith('backend/')).sort(),
+    baseline.legacy_hotfixes.flatMap((hotfix) => hotfix.paths).sort(),
     approvedBackendHotfixPaths,
   )
+  assert.match(baseline.legacy_hotfixes[0].exit_condition, /stable upstream release/)
 })
 
 test('rejects adjacent backend and unrelated upstream changes', () => {
@@ -84,29 +88,54 @@ test('rejects adjacent backend and unrelated upstream changes', () => {
     evaluateChangedPaths(
       [
         'backend/internal/service/channel.go',
+        'backend/internal/server/routes/payment.go',
         'backend/migrations/223_unreviewed.sql',
-        'frontend/src/views/user/PaymentView.vue',
+        'frontend/src/views/user/AvailableChannelsView.vue',
       ],
       baseline,
     ),
     [
-      'backend/internal/service/channel.go is outside the approved brand overlay',
-      'backend/migrations/223_unreviewed.sql is outside the approved brand overlay',
-      'frontend/src/views/user/PaymentView.vue is outside the approved brand overlay',
+      'backend/internal/server/routes/payment.go is outside the approved overlay registry',
+      'backend/internal/service/channel.go is outside the approved overlay registry',
+      'backend/migrations/223_unreviewed.sql is outside the approved overlay registry',
+      'frontend/src/views/user/AvailableChannelsView.vue is outside the approved overlay registry',
     ],
   )
 })
 
-test('rejects immutable frontend contracts inside the otherwise allowed frontend', () => {
+test('allows named immutable exceptions while adjacent seam files still fail', () => {
   assert.deepEqual(
     evaluateChangedPaths(
-      ['frontend/src/api/client.ts', 'frontend/src/types/index.ts', 'frontend/vite.config.ts'],
+      [
+        'frontend/src/api/admin/settings.ts',
+        'frontend/src/types/index.ts',
+        'frontend/src/api/admin/users.ts',
+        'frontend/src/types/admin.ts',
+        'frontend/vite.config.ts',
+      ],
       baseline,
     ),
     [
-      'frontend/src/api/client.ts modifies immutable upstream path frontend/src/api/',
-      'frontend/src/types/index.ts modifies immutable upstream path frontend/src/types/',
+      'frontend/src/api/admin/users.ts modifies immutable upstream path frontend/src/api/',
+      'frontend/src/types/admin.ts modifies immutable upstream path frontend/src/types/',
       'frontend/vite.config.ts modifies immutable upstream path frontend/vite.config.ts',
+    ],
+  )
+  assert.deepEqual(
+    baseline.immutable_exceptions,
+    [
+      {
+        name: 'public-capabilities-admin-settings-api',
+        owner: 'Public Capabilities',
+        path: 'frontend/src/api/admin/settings.ts',
+        immutable_path: 'frontend/src/api/',
+      },
+      {
+        name: 'public-capabilities-shared-contract-types',
+        owner: 'Public Capabilities',
+        path: 'frontend/src/types/index.ts',
+        immutable_path: 'frontend/src/types/',
+      },
     ],
   )
 })
@@ -117,7 +146,36 @@ test('allows only exact-content upstream security backports', () => {
   assert.deepEqual(evaluateChangedPaths(approvedPaths, baseline), [])
   assert.deepEqual(evaluateApprovedBackportContents(baseline, readRepositoryPath), [])
   assert.ok(baseline.immutable_paths.includes('frontend/pnpm-lock.yaml'))
-  assert.ok(!baseline.allowed_paths.includes('frontend/pnpm-lock.yaml'))
+  assert.ok(!baseline.overlays.some(({ paths }) => paths.includes('frontend/pnpm-lock.yaml')))
+})
+
+test('requires the stable tag to peel to the pinned baseline commit', () => {
+  assert.deepEqual(evaluateReleaseTag(baseline, baseline.commit), [])
+  assert.deepEqual(evaluateReleaseTag(baseline, 'f'.repeat(40)), [
+    `upstream release tag ${baseline.release} peels to ${'f'.repeat(40)}, expected ${baseline.commit}`,
+  ])
+})
+
+test('rejects duplicate owners, overlapping paths, and unbound immutable exceptions', () => {
+  const duplicateOwner = structuredClone(baseline)
+  duplicateOwner.overlays[1].owner = duplicateOwner.overlays[0].owner
+  assert.throws(() => validateBaseline(duplicateOwner), /duplicate overlay owner/)
+
+  const overlappingPath = structuredClone(baseline)
+  overlappingPath.overlays[2].paths.push('landing/src/App.tsx')
+  assert.throws(() => validateBaseline(overlappingPath), /overlay path overlap/)
+
+  const globPath = structuredClone(baseline)
+  globPath.overlays[0].paths[0] = 'frontend/src/**/*.vue'
+  assert.throws(() => validateBaseline(globPath), /path is invalid/)
+
+  const wrongOwner = structuredClone(baseline)
+  wrongOwner.immutable_exceptions[0].owner = 'Console Skin'
+  assert.throws(() => validateBaseline(wrongOwner), /must bind to exactly one path owned by Console Skin/)
+
+  const directoryException = structuredClone(baseline)
+  directoryException.immutable_exceptions[0].path = 'frontend/src/api/admin/'
+  assert.throws(() => validateBaseline(directoryException), /path is invalid/)
 })
 
 test('rejects changed, missing, and non-regular approved backport files', () => {
@@ -194,5 +252,5 @@ test('rejects stale or malformed approved backport metadata', () => {
     sha256: '0'.repeat(64),
     mode: '100644',
   }
-  assert.throws(() => validateBaseline(alreadyAllowed), /already allowed by the brand overlay/)
+  assert.throws(() => validateBaseline(alreadyAllowed), /already owned by another registry block/)
 })

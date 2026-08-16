@@ -39,3 +39,15 @@ _Avoid_: 在线支付、购买促销码、优惠券
 **Promo Code（购买促销码）**:
 在线购买流程中调整订单价格的营销凭证。
 _Avoid_: Redeem Code
+
+**Public Announcement（公开公告）**:
+由 Administrator 明确标记为公开，并通过匿名官网接口投影为纯文本标题与正文的有效公告；历史公告默认不公开。
+_Avoid_: Console 内部公告、默认公开公告、富文本营销内容
+
+**Landing Notice（官网置顶通知）**:
+由 Administrator 单独配置的官网顶部短文本与可选跳转链接；它不读取 Announcement 记录，也不替代 `public_visible` 的逐条公开授权。
+_Avoid_: Public Announcement feed、历史公告、Console 弹窗公告
+
+**Public Channel Status（公开渠道状态）**:
+由独立公开开关授权，将全部已启用监控聚合为匿名窄摘要的官网状态；不表示任何渠道、供应商、模型或流量明细被公开。
+_Avoid_: Console 渠道监控、渠道明细、公开监控数据

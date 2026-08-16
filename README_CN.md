@@ -1,3 +1,9 @@
+> [!NOTE]
+> **零一 API** 产品同步与部署只跟随 `Wei-Shaw/sub2api` 正式稳定 Tag，
+> 并固定记录 Tag 对应的完整 commit SHA。不得使用 `upstream/main`、通用
+> `latest` 镜像、管理后台一键升级，或本文后续的上游一键安装/覆盖命令
+> 直接覆盖 Zero One 部署。以下原始 Sub2API 文档、许可证与免责声明保留。
+
 <div align="center">
 
 <img src="assets/logo.svg" alt="Sub2API Logo" width="128" />

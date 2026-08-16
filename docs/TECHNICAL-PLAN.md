@@ -9,7 +9,25 @@
 `upstream`。`zero-one/brand` 是零一 API 产品分支；`origin/main`
 仅保留上游开发主线镜像，不作为产品发布基线。
 
-默认边界禁止修改 Go 业务逻辑、数据库结构、计费、鉴权、账号池、路由守卫和兑换码规则；常规改动只有独立 Public Site、Vue 全局主题与共享壳层、边缘代理和项目文档。例外仅限稳定 tag 中会阻断生产正确性的缺陷，或基线依赖中可达的高危/严重供应链漏洞：必须有已合并的上游 PR/commit，或有可复现的本地根因；必须有回归测试、逐文件边界和后续收敛计划；不可变文件的临时安全 backport 还必须锁定文件 SHA-256 与 Git mode；不得借此扩大产品范围。
+`.github/upstream-baseline.json` 是 schema v3 Overlay Registry，所有常规回放路径必须唯一归属 `Console Skin`、`Public Capabilities`、`Supported Preview`、`Visual Regression` 或 `Marketing Source Assets`。Registry 只接受精确文件或精确目录，不接受 glob 或未命名的顺带改动。临时生产正确性修补保留在带退出条件的独立 legacy hotfix 区块；安全 backport 继续锁定逐文件 SHA-256 与 Git mode。`frontend/src/api/` 与 `frontend/src/types/` 默认不可变，只有 Registry 中绑定 `Public Capabilities` owner 的两个命名单文件例外可以通过，相邻文件仍被拒绝。
+
+| Overlay owner | Interface and seam |
+| --- | --- |
+| `Console Skin` | Console 表面、共享壳层、色板与展示组件；不授权数据或权限语义变更。 |
+| `Public Capabilities` | Public Site 及公告、公开状态与可选展示名的后端/Console/Landing 合约；只拥有列出的路径和两个 immutable 单文件例外。 |
+| `Supported Preview` | Zero One Compose、Caddy、镜像与 CI 合约；不授权通用上游部署路径。 |
+| `Visual Regression` | 固定环境的像素门禁及设计核对源 artifact；历史 `artifacts/design-qa/` 不是正式 snapshot baseline。 |
+| `Marketing Source Assets` | 四张受管海报及用途清单；不得进入运行时镜像或被产品代码引用。 |
+
+Owner 表示路径的冲突审阅责任，不允许重复 owner。机械色板迁移若必须触及
+同时含产品逻辑的文件，仍保留更敏感的 `Public Capabilities` owner，并在
+独立 `Console Skin` 提交中仅修改 class 使用点；不得为此新增共享目录权限。
+
+`Public Capabilities` 内部继续按窄接口拆分。`Console Channel Status Truth
+State` 只负责把空列表和未知探测状态 fail-closed 为 unavailable；`Public
+Pricing Projection` 只消费既有 `/api/v1/model-plaza` 并投影公开价目；
+`Public Site Content Composition` 只拥有 Landing 的静态文案、导航和交互编排。
+它们均不授权 CSS、色板、Action 高光实现或监控明细字段。
 
 ## Runtime Architecture
 
@@ -37,6 +55,8 @@ The React app lives in `landing/`, uses Vite with base `/_landing/`, and is buil
 | `api.01yapi.com`, exact `GET/HEAD /` | React Public Site |
 | `api.01yapi.com/_landing/assets/*` | Immutable hashed React static assets |
 | `api.01yapi.com/_landing/THIRD_PARTY_NOTICES.txt` | No-cache third-party notice |
+| `GET /api/v1/announcements/public` | Anonymous, field-limited Public Announcement feed |
+| `GET /api/v1/channel-status/summary` | Anonymous aggregate only when its independent public switch is enabled |
 | Every other `api.01yapi.com` request | Transparent Sub2API proxy |
 | `app.01yapi.com`, exact `GET/HEAD /` | Non-cacheable 307 redirect to `https://api.01yapi.com/` with URI retained |
 | Every other `app.01yapi.com` request | Sub2API and embedded Vue Console |
@@ -44,7 +64,20 @@ The React app lives in `landing/`, uses Vite with base `/_landing/`, and is buil
 | Every other `api.01yapi.cc` request | Transparent Sub2API proxy |
 | `01yapi.com` and `www.01yapi.com` | 308 redirect to the primary host with URI retained |
 
-The Zero One product overlay adds no new public product API. Stable upstream migrations and narrowly reviewed production-correctness backports may evolve the internal schema. The Public Site reads the existing `GET /api/v1/settings/public` endpoint and falls back to compiled brand defaults when it is unavailable.
+The Zero One overlay adds two deliberately narrow public product APIs. Public
+Announcements require explicit `public_visible` authorization and return only
+`id`, `title`, and `content`, with at most 20 active, enabled, currently effective
+rows. Public Channel Status is separately authorized by
+`public_channel_status_enabled`, defaults off, and fails closed when settings
+cannot be read. Its summary aggregates every enabled monitor without exposing
+channels, providers, models, groups, volumes, error details, or credentials. The
+Public Site also reads `GET /api/v1/settings/public`; capability switches remain
+off until that request succeeds rather than being inferred from a `404`. The
+Public Announcement entry is not one of those switches: an old backend `404`
+keeps the entry visible and produces a retryable unavailable state instead of
+silently removing it. The separate Landing Notice banner is a single site-level
+message and optional link from public settings; it does not read Announcement
+rows and cannot grant `public_visible` authorization.
 
 The Console keeps the server-provided site settings authoritative, but its compiled display fallback is also `零一 API` with the approved tagline. This prevents a settings timeout or first-paint race from exposing the upstream product name; it does not change the settings API or persistence behavior.
 
@@ -67,14 +100,20 @@ The proxy deliberately uses a catch-all rule. Sub2API exposes `/v1`, `/v1beta`, 
 5. Tag images with source revision and deploy by immutable digest. Do not deploy `latest`.
 6. Validate Compose and Caddy configuration before replacing running containers.
 
+The Sub2API and edge images must come from the same source commit. Apply and
+verify migrations, deploy and verify the Sub2API image, then switch the matching
+edge image. Image rollback does not reverse a database migration; see
+[ADR 0003](adr/0003-public-capabilities-and-coherent-release.md).
+
 上游同步以 `Wei-Shaw/sub2api` 正式稳定 tag 为唯一 baseline，不直接合并
-`upstream/main`。只有符合上述生产正确性例外的已审核提交才可临时 cherry-pick，且不得将它伪装成 stable tag baseline。更新时获取 `upstream` tags，从
+`upstream/main`。通用 `latest` 镜像、管理后台一键升级和上游 README
+中的一键安装/覆盖命令也不得用于 Zero One 产品部署。只有符合上述生产正确性例外的已审核提交才可临时 cherry-pick，且不得将它伪装成 stable tag baseline。更新时获取 `upstream` tags，从
 `zero-one/brand` 创建 `codex/sync-sub2api-vX.Y.Z` 短期集成分支，
 合并新的稳定 tag，运行全部测试、构建和视觉验收后，再通过 PR
 合回 `zero-one/brand`。每次同步同时更新本节的 tag 与完整提交 SHA。
 主题改动保持集中，使新增上游页面继承设计系统，避免逐页分叉。
 
-`v0.1.176` 当前携带一组临时 production-correctness backport：官方已合并的 [PR #5573](https://github.com/Wei-Shaw/sub2api/pull/5573) 中的 Grok 长上下文与媒体模型计费修复，以及本地验证的分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复。后端权限仅限 `.github/upstream-baseline.json` 中列出的精确路径。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应后端白名单，不得将临时权限永久化。
+`v0.1.176` 当前携带一组临时 production-correctness backport：官方已合并的 [PR #5573](https://github.com/Wei-Shaw/sub2api/pull/5573) 中的 Grok 长上下文与媒体模型计费修复，以及本地验证的分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复。后端权限仅限 `.github/upstream-baseline.json` 的 `legacy_hotfixes` 区块所列精确文件。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应 legacy path，不得将临时权限永久化。
 
 `v0.1.176` 还携带两项临时供应链安全 backport：上游 [PR #5639](https://github.com/Wei-Shaw/sub2api/pull/5639) 将 Go `1.26.5` 升级至 `1.26.6`，消除 `govulncheck` 确认可达的六项标准库漏洞；上游 [PR #5638](https://github.com/Wei-Shaw/sub2api/pull/5638) 将 PostCSS 传递依赖 `nanoid` 升级至修复版 `3.3.18`。两个 PR 的源 commit、适用的稳定基线、退出条件以及每个最终文件的 SHA-256/Git mode 都由 `.github/upstream-baseline.json` 精确锁定；它们不会将未发布的 `upstream/main` 伪装成稳定 baseline。首个包含等价修复的稳定 tag 成为新 baseline 时，必须删除对应 backport 记录。
 

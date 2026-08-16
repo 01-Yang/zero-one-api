@@ -16,6 +16,7 @@ function baselineForRelease(release) {
   const value = structuredClone(baseline)
   value.release = release
   for (const backport of value.approved_backports) backport.valid_for_release = release
+  for (const hotfix of value.legacy_hotfixes) hotfix.valid_for_release = release
   return value
 }
 

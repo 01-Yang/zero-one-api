@@ -19,8 +19,10 @@ jobs:
           node-version: '24'
       - name: Test upstream-boundary policy
         run: node --test .github/scripts/*.test.mjs
-      - name: Verify upstream boundary
+      - name: Verify committed upstream boundary
         run: node .github/scripts/verify-upstream-boundary.mjs
+      - name: Verify complete worktree upstream boundary
+        run: node .github/scripts/verify-upstream-boundary.mjs --worktree
 
   landing:
     runs-on: ubuntu-latest

@@ -4,7 +4,9 @@
 > baseline is the stable upstream release
 > [Wei-Shaw/sub2api v0.1.176@e803e3851c0a7e222cfadeafad7b8636ab959d11](https://github.com/Wei-Shaw/sub2api/tree/e803e3851c0a7e222cfadeafad7b8636ab959d11).
 > Only stable upstream tags are synchronized. The original Sub2API documentation,
-> license, and disclaimer continue below unchanged.
+> license, and disclaimer continue below unchanged. For Zero One, do not deploy
+> from `upstream/main`, a generic `latest` image, the Admin one-click updater, or
+> the upstream one-click install/overwrite commands shown later in this document.
 
 <div align="center">
 

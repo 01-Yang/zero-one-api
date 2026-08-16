@@ -4,35 +4,202 @@ import { lstatSync, readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 const DEFAULT_BASELINE_PATH = '.github/upstream-baseline.json'
+const REQUIRED_OVERLAY_OWNERS = [
+  'Console Skin',
+  'Public Capabilities',
+  'Supported Preview',
+  'Visual Regression',
+  'Marketing Source Assets',
+]
 
 function matchesPath(path, rule) {
   return rule.endsWith('/') ? path.startsWith(rule) : path === rule
+}
+
+function pathsOverlap(left, right) {
+  return left === right || matchesPath(left, right) || matchesPath(right, left)
+}
+
+function validatePathRule(path, label, { allowDirectory = true } = {}) {
+  if (
+    typeof path !== 'string' ||
+    !path ||
+    path.startsWith('/') ||
+    path.includes('\\') ||
+    /[*?[\]]/.test(path) ||
+    path.split('/').some((part) => part === '.' || part === '..') ||
+    (!allowDirectory && path.endsWith('/'))
+  ) {
+    throw new Error(`${label} path is invalid: ${path || '<empty>'}`)
+  }
+}
+
+function overlayRules(baseline) {
+  return baseline.overlays.flatMap(({ owner, paths }) => paths.map((path) => ({ owner, path })))
+}
+
+function legacyHotfixPaths(baseline) {
+  return new Set(baseline.legacy_hotfixes.flatMap((hotfix) => hotfix.paths))
 }
 
 export function validateBaseline(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('upstream baseline must be a JSON object')
   }
-  if (value.schema_version !== 2) throw new Error('unsupported upstream baseline schema_version')
+  if (value.schema_version !== 3) throw new Error('unsupported upstream baseline schema_version')
   if (typeof value.repository !== 'string' || !value.repository) {
     throw new Error('upstream baseline repository is required')
   }
-  if (typeof value.release !== 'string' || !value.release) {
-    throw new Error('upstream baseline release is required')
+  if (
+    typeof value.release !== 'string' ||
+    !/^v(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(value.release)
+  ) {
+    throw new Error('upstream baseline release must be a stable vMAJOR.MINOR.PATCH tag')
   }
   if (typeof value.commit !== 'string' || !/^[0-9a-f]{40}$/.test(value.commit)) {
     throw new Error('upstream baseline commit must be a lowercase 40-character SHA')
   }
-  for (const key of ['allowed_paths', 'immutable_paths']) {
-    if (!Array.isArray(value[key]) || value[key].some((item) => typeof item !== 'string' || !item)) {
-      throw new Error(`upstream baseline ${key} must be an array of non-empty strings`)
+  if (
+    !Array.isArray(value.immutable_paths) ||
+    value.immutable_paths.some((path) => typeof path !== 'string' || !path)
+  ) {
+    throw new Error('upstream baseline immutable_paths must be an array of non-empty strings')
+  }
+  value.immutable_paths.forEach((path) => validatePathRule(path, 'immutable'))
+
+  if (!Array.isArray(value.overlays)) throw new Error('upstream baseline overlays must be an array')
+  const owners = new Set()
+  const rules = []
+  for (const overlay of value.overlays) {
+    if (!overlay || typeof overlay !== 'object' || Array.isArray(overlay)) {
+      throw new Error('overlay must be an object')
     }
+    if (typeof overlay.owner !== 'string' || !overlay.owner.trim()) {
+      throw new Error('overlay owner is required')
+    }
+    if (owners.has(overlay.owner)) throw new Error(`duplicate overlay owner: ${overlay.owner}`)
+    if (!Array.isArray(overlay.paths) || overlay.paths.length === 0) {
+      throw new Error(`overlay ${overlay.owner} paths must be a non-empty array`)
+    }
+    owners.add(overlay.owner)
+    for (const path of overlay.paths) {
+      validatePathRule(path, `overlay ${overlay.owner}`)
+      for (const existing of rules) {
+        if (pathsOverlap(path, existing.path)) {
+          throw new Error(
+            `overlay path overlap: ${existing.owner}:${existing.path} and ${overlay.owner}:${path}`,
+          )
+        }
+      }
+      rules.push({ owner: overlay.owner, path })
+    }
+  }
+  const actualOwners = [...owners].sort()
+  const requiredOwners = [...REQUIRED_OVERLAY_OWNERS].sort()
+  if (JSON.stringify(actualOwners) !== JSON.stringify(requiredOwners)) {
+    throw new Error(`overlay owners must be exactly: ${REQUIRED_OVERLAY_OWNERS.join(', ')}`)
+  }
+
+  if (!Array.isArray(value.immutable_exceptions)) {
+    throw new Error('upstream baseline immutable_exceptions must be an array')
+  }
+  const exceptionNames = new Set()
+  const exceptionPaths = new Set()
+  for (const exception of value.immutable_exceptions) {
+    if (!exception || typeof exception !== 'object' || Array.isArray(exception)) {
+      throw new Error('immutable exception must be an object')
+    }
+    if (typeof exception.name !== 'string' || !exception.name.trim()) {
+      throw new Error('immutable exception name is required')
+    }
+    if (exceptionNames.has(exception.name)) {
+      throw new Error(`duplicate immutable exception name: ${exception.name}`)
+    }
+    if (!owners.has(exception.owner)) {
+      throw new Error(`immutable exception owner is not an overlay owner: ${exception.owner}`)
+    }
+    validatePathRule(exception.path, `immutable exception ${exception.name}`, {
+      allowDirectory: false,
+    })
+    if (exceptionPaths.has(exception.path)) {
+      throw new Error(`duplicate immutable exception path: ${exception.path}`)
+    }
+    if (!value.immutable_paths.includes(exception.immutable_path)) {
+      throw new Error(
+        `immutable exception ${exception.name} references unknown immutable path ${exception.immutable_path}`,
+      )
+    }
+    if (!matchesPath(exception.path, exception.immutable_path)) {
+      throw new Error(
+        `immutable exception ${exception.name} path is outside ${exception.immutable_path}`,
+      )
+    }
+    const matchingRules = rules.filter(({ path }) => matchesPath(exception.path, path))
+    if (matchingRules.length !== 1 || matchingRules[0].owner !== exception.owner) {
+      throw new Error(
+        `immutable exception ${exception.name} must bind to exactly one path owned by ${exception.owner}`,
+      )
+    }
+    exceptionNames.add(exception.name)
+    exceptionPaths.add(exception.path)
+  }
+
+  for (const rule of rules) {
+    for (const immutablePath of value.immutable_paths) {
+      if (!pathsOverlap(rule.path, immutablePath)) continue
+      const exception = value.immutable_exceptions.find(
+        (candidate) =>
+          candidate.path === rule.path &&
+          candidate.owner === rule.owner &&
+          candidate.immutable_path === immutablePath,
+      )
+      if (!exception || rule.path.endsWith('/')) {
+        throw new Error(
+          `overlay ${rule.owner} path ${rule.path} overlaps immutable path ${immutablePath} without an exact named exception`,
+        )
+      }
+    }
+  }
+
+  if (!Array.isArray(value.legacy_hotfixes)) {
+    throw new Error('upstream baseline legacy_hotfixes must be an array')
+  }
+  const hotfixNames = new Set()
+  const hotfixPaths = new Set()
+  for (const hotfix of value.legacy_hotfixes) {
+    if (!hotfix || typeof hotfix !== 'object' || Array.isArray(hotfix)) {
+      throw new Error('legacy hotfix must be an object')
+    }
+    if (typeof hotfix.name !== 'string' || !hotfix.name.trim()) {
+      throw new Error('legacy hotfix name is required')
+    }
+    if (hotfixNames.has(hotfix.name)) throw new Error(`duplicate legacy hotfix name: ${hotfix.name}`)
+    if (hotfix.valid_for_release !== value.release) {
+      throw new Error('legacy hotfix valid_for_release must match the baseline release')
+    }
+    if (typeof hotfix.exit_condition !== 'string' || !hotfix.exit_condition.trim()) {
+      throw new Error('legacy hotfix exit_condition is required')
+    }
+    if (!Array.isArray(hotfix.paths) || hotfix.paths.length === 0) {
+      throw new Error(`legacy hotfix ${hotfix.name} paths must be a non-empty array`)
+    }
+    for (const path of hotfix.paths) {
+      validatePathRule(path, `legacy hotfix ${hotfix.name}`, { allowDirectory: false })
+      if (hotfixPaths.has(path)) throw new Error(`duplicate legacy hotfix path: ${path}`)
+      if (rules.some((rule) => pathsOverlap(path, rule.path))) {
+        throw new Error(`legacy hotfix path overlaps an overlay: ${path}`)
+      }
+      if (value.immutable_paths.some((rule) => matchesPath(path, rule))) {
+        throw new Error(`legacy hotfix path modifies immutable upstream path: ${path}`)
+      }
+      hotfixPaths.add(path)
+    }
+    hotfixNames.add(hotfix.name)
   }
 
   if (!Array.isArray(value.approved_backports)) {
     throw new Error('upstream baseline approved_backports must be an array')
   }
-
   const approvedPaths = new Set()
   for (const backport of value.approved_backports) {
     if (!backport || typeof backport !== 'object' || Array.isArray(backport)) {
@@ -63,15 +230,7 @@ export function validateBaseline(value) {
     }
 
     for (const [path, file] of Object.entries(backport.files)) {
-      if (
-        !path ||
-        path.startsWith('/') ||
-        path.endsWith('/') ||
-        path.includes('\\') ||
-        path.split('/').some((part) => part === '.' || part === '..')
-      ) {
-        throw new Error(`approved backport path is invalid: ${path || '<empty>'}`)
-      }
+      validatePathRule(path, 'approved backport', { allowDirectory: false })
       if (approvedPaths.has(path)) throw new Error(`duplicate approved backport path: ${path}`)
       if (!file || typeof file !== 'object' || Array.isArray(file)) {
         throw new Error(`approved backport file metadata is invalid: ${path}`)
@@ -82,10 +241,8 @@ export function validateBaseline(value) {
       if (file.mode !== '100644' && file.mode !== '100755') {
         throw new Error(`approved backport mode is invalid: ${path}`)
       }
-      const immutableRule = value.immutable_paths.find((rule) => matchesPath(path, rule))
-      const allowedRule = value.allowed_paths.find((rule) => matchesPath(path, rule))
-      if (!immutableRule && allowedRule) {
-        throw new Error(`approved backport path is already allowed by the brand overlay: ${path}`)
+      if (rules.some((rule) => matchesPath(path, rule.path)) || hotfixPaths.has(path)) {
+        throw new Error(`approved backport path is already owned by another registry block: ${path}`)
       }
       approvedPaths.add(path)
     }
@@ -101,14 +258,26 @@ function approvedBackportFiles(baseline) {
   )
 }
 
+export function evaluateReleaseTag(baseline, peeledCommit) {
+  if (peeledCommit === baseline.commit) return []
+  return [
+    `upstream release tag ${baseline.release} peels to ${peeledCommit || '<missing>'}, expected ${baseline.commit}`,
+  ]
+}
+
 export function evaluateChangedPaths(paths, baseline) {
   const backportFiles = approvedBackportFiles(baseline)
+  const hotfixPaths = legacyHotfixPaths(baseline)
+  const rules = overlayRules(baseline)
+  const exceptions = new Set(baseline.immutable_exceptions.map(({ path }) => path))
   return [...new Set(paths)].sort().flatMap((path) => {
-    if (backportFiles.has(path)) return []
+    if (backportFiles.has(path) || hotfixPaths.has(path)) return []
     const immutableRule = baseline.immutable_paths.find((rule) => matchesPath(path, rule))
-    if (immutableRule) return [`${path} modifies immutable upstream path ${immutableRule}`]
-    if (!baseline.allowed_paths.some((rule) => matchesPath(path, rule))) {
-      return [`${path} is outside the approved brand overlay`]
+    if (immutableRule && !exceptions.has(path)) {
+      return [`${path} modifies immutable upstream path ${immutableRule}`]
+    }
+    if (!rules.some((rule) => matchesPath(path, rule.path))) {
+      return [`${path} is outside the approved overlay registry`]
     }
     return []
   })
@@ -171,7 +340,7 @@ function readWorktreePath(path) {
 
 function changedPaths(commit, includeWorktree) {
   const range = includeWorktree ? commit : `${commit}..HEAD`
-  const tracked = git(['diff', '--name-only', '--diff-filter=ACDMRTUXB', range, '--'])
+  const tracked = git(['diff', '--no-renames', '--name-only', '--diff-filter=ACDMRTUXB', range, '--'])
     .split('\n')
     .filter(Boolean)
   if (!includeWorktree) return tracked
@@ -184,10 +353,7 @@ export function main(argv = process.argv.slice(2)) {
   const unknown = argv.filter((argument) => argument !== '--worktree')
   if (unknown.length) throw new Error(`unknown argument: ${unknown[0]}`)
 
-  const baselineSource = includeWorktree
-    ? readFileSync(DEFAULT_BASELINE_PATH, 'utf8')
-    : git(['show', `HEAD:${DEFAULT_BASELINE_PATH}`])
-  const baseline = validateBaseline(JSON.parse(baselineSource))
+  const baseline = validateBaseline(JSON.parse(readFileSync(DEFAULT_BASELINE_PATH, 'utf8')))
   git(['cat-file', '-e', `${baseline.commit}^{commit}`])
   try {
     execFileSync('git', ['merge-base', '--is-ancestor', baseline.commit, 'HEAD'], { stdio: 'ignore' })
@@ -195,16 +361,24 @@ export function main(argv = process.argv.slice(2)) {
     throw new Error(`upstream baseline ${baseline.commit} is not an ancestor of HEAD`)
   }
 
+  let peeledCommit
+  try {
+    peeledCommit = git(['rev-parse', '--verify', `${baseline.release}^{commit}`])
+  } catch {
+    peeledCommit = null
+  }
+
   const paths = changedPaths(baseline.commit, includeWorktree)
   const readPath = includeWorktree ? readWorktreePath : readHeadPath
   const violations = [
+    ...evaluateReleaseTag(baseline, peeledCommit),
     ...evaluateChangedPaths(paths, baseline),
     ...evaluateApprovedBackportContents(baseline, readPath),
   ]
   if (violations.length) throw new Error(`upstream boundary violations:\n- ${violations.join('\n- ')}`)
 
   console.log(
-    `upstream boundary OK: ${baseline.repository}@${baseline.release} (${baseline.commit}), ${paths.length} changed paths checked, ${approvedBackportFiles(baseline).size} exact backports verified`,
+    `upstream boundary OK: ${baseline.repository}@${baseline.release} (${baseline.commit}), ${paths.length} changed paths checked across ${baseline.overlays.length} overlays, ${approvedBackportFiles(baseline).size} exact backports verified`,
   )
 }
 

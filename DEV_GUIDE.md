@@ -12,6 +12,14 @@
 | **数据库** | PostgreSQL 16 + Redis |
 | **包管理** | 后端: go modules, 前端: **pnpm**（不是 npm） |
 
+### Zero One 稳定基线规则
+
+`zero-one/brand` 的同步、构建和部署只跟随 `Wei-Shaw/sub2api` 的正式稳定
+Tag，并同时记录 Tag 与其 peel 后的完整 commit SHA。不得把
+`upstream/main`、通用 `latest` 镜像、管理后台一键升级，或上游 README
+中的一键安装/覆盖命令用于 Zero One 产品环境。那些说明仍适用于原始
+Sub2API，但不能覆盖 Zero One 的 Overlay Registry、双镜像或迁移发布流程。
+
 ## 二、本地环境配置
 
 ### PostgreSQL 16 (Windows 服务)
@@ -53,8 +61,9 @@ npm install -g pnpm
 
 ### CI 要求
 
-- Go 版本必须是 **1.26.5**：三个 workflow 都用 `go-version-file: backend/go.mod` 取版本，随后硬断言 `go version | grep -q 'go1.26.5'`。升级 Go 时要同时改 `backend/go.mod` 和 `backend-ci.yml`（两处）、`release.yml`、`security-scan.yml` 里的这句断言，否则 CI 会在版本校验步骤直接失败。
+- Go 版本必须是 **1.26.6**：相关 workflow 都用 `go-version-file: backend/go.mod` 取版本，随后硬断言 `go version | grep -q 'go1.26.6'`。升级 Go 时要同时改 `backend/go.mod`、`backend-ci.yml`（两处）、`release.yml`、`security-scan.yml` 和 `zero-one-ci.yml` 里的断言，否则 CI 会在版本校验步骤直接失败。
 - 前端使用 `pnpm install --frozen-lockfile`，必须提交 `pnpm-lock.yaml`
+- Zero One CI 必须同时校验提交态 Overlay Registry 与 `--worktree` 模式；本地回放未提交内容时也要运行后者。
 
 ### 本地测试命令
 
@@ -264,18 +273,18 @@ psql -U sub2api -h 127.0.0.1 -d sub2api -f migration.sql
 ### Git 操作
 
 ```bash
-# 同步上游
-git fetch upstream
-git checkout main
-git merge upstream/main
-git push origin main
+# Zero One：只获取正式 Tag，并确认 Tag 指向记录的 commit
+git fetch upstream --tags
+git rev-parse 'vX.Y.Z^{}'
 
-# 创建功能分支
-git checkout -b feature/xxx
+# 从产品基线创建短期稳定 Tag 同步分支
+git switch zero-one/brand
+git switch -c codex/sync-sub2api-vX.Y.Z
+git merge --no-ff vX.Y.Z
 
-# Rebase 到最新 main
-git fetch upstream
-git rebase upstream/main
+# Registry 的提交态与完整工作树检查
+node .github/scripts/verify-upstream-boundary.mjs
+node .github/scripts/verify-upstream-boundary.mjs --worktree
 ```
 
 ### 前端操作
