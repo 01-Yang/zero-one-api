@@ -1,16 +1,7 @@
-ARG NODE_IMAGE=node:24-alpine
 ARG CADDY_IMAGE=caddy:2.8.4-alpine
-
-FROM ${NODE_IMAGE} AS landing-builder
-ARG VITE_LOCAL_EDGE_PREVIEW=false
-ENV VITE_LOCAL_EDGE_PREVIEW=${VITE_LOCAL_EDGE_PREVIEW}
-WORKDIR /app/landing
-COPY landing/package.json landing/package-lock.json ./
-RUN npm ci
-COPY landing/ ./
-RUN npm run build
 
 FROM ${CADDY_IMAGE}
 COPY deploy/zero-one/Caddyfile /etc/caddy/Caddyfile
 COPY deploy/zero-one/Caddyfile.shared /etc/caddy/Caddyfile.shared
-COPY --from=landing-builder /app/landing/dist /srv/landing
+COPY deploy/zero-one/recovered-frontend/landing /srv/landing
+COPY deploy/zero-one/recovered-frontend/console /srv/console

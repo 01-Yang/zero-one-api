@@ -94,6 +94,11 @@ asset_path=$(printf '%s' "$landing" | grep -o '/_landing/assets/[^" ]*\.js' | he
 asset_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url$asset_path")
 assert_text "$asset_headers" 'Cache-Control: public, max-age=31536000, immutable' 'hashed landing asset is not immutable'
 
+console=$(curl -fsS -H "Host: $request_host" "$edge_url/login")
+assert_text "$console" '<title>零一 API - AI API Gateway</title>' 'primary login did not return the recovered console'
+console_asset_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url/assets/index-9xJBhx8B.js")
+assert_text "$console_asset_headers" 'Cache-Control: public, max-age=31536000, immutable' 'recovered console asset is not immutable'
+
 notice_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url/_landing/THIRD_PARTY_NOTICES.txt")
 assert_text "$notice_headers" 'Cache-Control: no-cache' 'third-party notice cache policy changed'
 
@@ -141,7 +146,7 @@ if [ "$routing_mode" = production ]; then
 	assert_text "$console_post_root" '"url":"/"' 'Console proxied root path changed'
 
 	console_response=$(curl -fsS -H 'Host: app.01yapi.test' "$edge_url/login")
-	assert_text "$console_response" '"url":"/login"' 'Console host did not proxy unchanged'
+	assert_text "$console_response" '<title>零一 API - AI API Gateway</title>' 'Console host did not return the recovered console'
 
 	backup_headers=$(curl -fsS -D - -o "$test_dir/backup.json" -H 'Host: api-backup.01yapi.test' "$edge_url/")
 	assert_text "$backup_headers" 'Cache-Control: no-store' 'backup root is cacheable'

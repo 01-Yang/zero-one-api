@@ -34,6 +34,8 @@ app.01yapi.com {
 	header @public_home Cache-Control "no-store"
 	redir @public_home https://api.01yapi.com{uri} 307
 
+	import recovered_console_routes
+
 	header X-Robots-Tag "noindex, nofollow"
 	import sub2api_proxy
 }
