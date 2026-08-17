@@ -17,6 +17,10 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
+      - name: Fetch declared upstream release tag
+        run: |
+          release="$(jq -er '.release | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))' .github/upstream-baseline.json)"
+          git fetch --no-tags --force https://github.com/Wei-Shaw/sub2api.git "refs/tags/$release:refs/tags/$release"
       - name: Test upstream-boundary policy
         run: node --test .github/scripts/*.test.mjs
       - name: Verify committed upstream boundary

@@ -93,7 +93,11 @@ func (c *PublicChannelStatusSummaryCache) Get(
 	if err != nil {
 		return nil, err
 	}
-	return result.(*PublicChannelStatusSummary), nil
+	summary, ok := result.(*PublicChannelStatusSummary)
+	if !ok || summary == nil {
+		return nil, fmt.Errorf("public channel status cache returned an invalid result")
+	}
+	return summary, nil
 }
 
 func (c *PublicChannelStatusSummaryCache) get(mode string) (*PublicChannelStatusSummary, bool) {
