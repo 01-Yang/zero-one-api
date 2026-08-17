@@ -44,6 +44,8 @@ services:
     logging: *default-logging
     security_opt:
       - no-new-privileges:true
+    sysctls:
+      net.ipv4.tcp_congestion_control: bbr
     ulimits:
       nofile:
         soft: 100000
