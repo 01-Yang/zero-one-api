@@ -3,7 +3,7 @@ import { appendFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { validateBaseline } from './verify-upstream-boundary.mjs'
 
-const BRAND_REF = 'refs/remotes/origin/zero-one/brand'
+const RELEASE_REF = 'refs/remotes/origin/main'
 
 export function validateCommitSha(value) {
   if (typeof value !== 'string' || !/^[0-9a-f]{40}$/.test(value)) {
@@ -30,12 +30,12 @@ function git(args) {
   return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
 }
 
-function requireCommitOnBrand(commitSha) {
+function requireCommitOnReleaseBranch(commitSha) {
   git(['cat-file', '-e', `${commitSha}^{commit}`])
   try {
-    execFileSync('git', ['merge-base', '--is-ancestor', commitSha, BRAND_REF], { stdio: 'ignore' })
+    execFileSync('git', ['merge-base', '--is-ancestor', commitSha, RELEASE_REF], { stdio: 'ignore' })
   } catch {
-    throw new Error(`${commitSha} is not part of origin/zero-one/brand`)
+    throw new Error(`${commitSha} is not part of origin/main`)
   }
   const baseline = JSON.parse(git(['show', `${commitSha}:.github/upstream-baseline.json`]))
   git(['cat-file', '-e', `${commitSha}:.github/scripts/verify-upstream-boundary.mjs`])
@@ -69,7 +69,7 @@ async function fetchSuccessfulRun(repository, token, commitSha) {
 
 export async function main(env = process.env) {
   const commitSha = validateCommitSha(env.COMMIT_SHA)
-  const sourceVersion = requireCommitOnBrand(commitSha)
+  const sourceVersion = requireCommitOnReleaseBranch(commitSha)
   const run = await fetchSuccessfulRun(env.GITHUB_REPOSITORY, env.GITHUB_TOKEN, commitSha)
 
   if (env.GITHUB_OUTPUT) {

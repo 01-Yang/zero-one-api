@@ -1,4 +1,4 @@
-import { ArrowRight, RefreshCw, Search } from 'lucide-react'
+import { ArrowRight, ExternalLink, RefreshCw, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import {
   LANDING_PLATFORM_FILTERS,
@@ -86,8 +86,8 @@ function PriceTable({ rows, onClear }: { rows: LandingPriceRow[]; onClear: () =>
               <th scope="col">计费</th>
               <th scope="col">输入（官方参考）</th>
               <th scope="col">输出（官方参考）</th>
-              <th scope="col">输入（零一 API）</th>
-              <th scope="col">输出（零一 API）</th>
+              <th scope="col" className="paid-price-column paid-price-column--start">输入（零一 API）</th>
+              <th scope="col" className="paid-price-column paid-price-column--end">输出（零一 API）</th>
             </tr>
           </thead>
           <tbody>
@@ -104,8 +104,8 @@ function PriceTable({ rows, onClear }: { rows: LandingPriceRow[]; onClear: () =>
                 </td>
                 <td><OfficialPrice value={row.officialInput} cache={row.officialCacheRead} /></td>
                 <td><OfficialPrice value={row.officialOutput} cache="—" /></td>
-                <td><PlatformPrice row={row} field="input" /></td>
-                <td><PlatformPrice row={row} field="output" />{row.peakNote ? <small className="peak-note">{row.peakNote}</small> : null}</td>
+                <td className="paid-price-column paid-price-column--start"><PlatformPrice row={row} field="input" /></td>
+                <td className="paid-price-column paid-price-column--end"><PlatformPrice row={row} field="output" />{row.peakNote ? <small className="peak-note">{row.peakNote}</small> : null}</td>
               </tr>
             )) : (
               <tr className="price-empty-row">
@@ -203,10 +203,15 @@ function PricingMessage({ state, onRetry }: PricingMessageProps) {
   )
 }
 
-export default function PricingSection({ enabled, requireAuth, serverUtcOffset }: PricingSectionProps) {
+export default function PricingSection({
+  enabled,
+  requireAuth,
+  serverUtcOffset,
+}: PricingSectionProps) {
   const [platform, setPlatform] = useState<LandingPlatformFilter>('all')
   const [search, setSearch] = useState('')
   const [attempt, setAttempt] = useState(0)
+  const [now, setNow] = useState(() => new Date())
   const [state, setState] = useState<PricingViewState>(() => {
     if (!enabled) return { status: 'disabled' }
     if (requireAuth) return { status: 'auth-required' }
@@ -226,10 +231,16 @@ export default function PricingSection({ enabled, requireAuth, serverUtcOffset }
     const controller = new AbortController()
     setState({ status: 'loading' })
     void fetchModelPlaza({ enabled: true, timeoutMs: 3_000, signal: controller.signal }).then((result) => {
-      if (!controller.signal.aborted) setState(result)
+      if (controller.signal.aborted) return
+      setState(result)
     })
     return () => controller.abort()
   }, [attempt, enabled, requireAuth])
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNow(new Date()), 30_000)
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   const rows = useMemo(() => {
     if (state.status !== 'success') return []
@@ -238,16 +249,25 @@ export default function PricingSection({ enabled, requireAuth, serverUtcOffset }
       search,
       limit: 8,
       serverUtcOffset,
+      now,
     })
-  }, [platform, search, serverUtcOffset, state])
+  }, [now, platform, search, serverUtcOffset, state])
 
   return (
     <section id="pricing" className="section pricing-section" aria-labelledby="pricing-title">
       <div className="pricing-heading-row" data-reveal>
         <div className="section-heading">
           <h2 id="pricing-title">实时价格</h2>
-          <p>价格来自公开模型广场配置。官方参考价与零一实付价分列展示，缺失数据保持为空。</p>
         </div>
+        <Action
+          className="button-secondary pricing-all-models"
+          href={consoleUrl('/model-plaza')}
+          size="md"
+          radius={8}
+        >
+          进入模型广场
+          <ExternalLink aria-hidden="true" />
+        </Action>
       </div>
 
       {state.status === 'success' ? (

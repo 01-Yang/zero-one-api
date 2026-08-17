@@ -2,11 +2,9 @@
   <div class="space-y-5">
     <!-- 页头(独立形态下展示标题;后台形态 AppHeader 已有页面标题) -->
     <div v-if="!embedded">
-      <ParticleTitle
-        as="h1"
-        :text="t('modelPlaza.title')"
-        class="text-2xl font-bold tracking-tight sm:text-3xl"
-      />
+      <h1 class="text-2xl font-bold tracking-tight sm:text-3xl">
+        {{ t('modelPlaza.title') }}
+      </h1>
       <p class="mt-1.5 text-sm text-gray-500 dark:text-dark-400">{{ t('modelPlaza.description') }}</p>
     </div>
 
@@ -54,7 +52,12 @@
 
       <!-- 分组分节的模型清单(默认按生效倍率升序) -->
       <div v-if="filteredGroups.length > 0" class="space-y-5">
-        <PlazaGroupSection v-for="g in filteredGroups" :key="g.id" :group="g" />
+        <PlazaGroupSection
+          v-for="g in filteredGroups"
+          :key="g.id"
+          :group="g"
+          :token-rate-multiplier="currentTokenRate(g)"
+        />
       </div>
       <div
         v-else
@@ -67,16 +70,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import Icon from '@/components/icons/Icon.vue'
-import ParticleTitle from '@/components/common/ParticleTitle.vue'
 import PlazaFilterBar from './PlazaFilterBar.vue'
 import PlazaGroupSection from './PlazaGroupSection.vue'
 import type { ModelPlazaGroup, ModelPlazaResponse } from '@/api/modelPlaza'
 import { useAuthStore } from '@/stores/auth'
+import { peakMultiplierAt } from '@/utils/peak-rate'
+import { useAppStore } from '@/stores/app'
 
 const props = defineProps<{
   response: ModelPlazaResponse | null
@@ -88,7 +92,18 @@ const props = defineProps<{
 
 const { t } = useI18n()
 const authStore = useAuthStore()
+const appStore = useAppStore()
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const now = ref(new Date())
+let rateClock: number | undefined
+
+onMounted(() => {
+  rateClock = window.setInterval(() => { now.value = new Date() }, 30_000)
+})
+
+onBeforeUnmount(() => {
+  if (rateClock !== undefined) window.clearInterval(rateClock)
+})
 
 const selectedPlatform = ref<string>('all')
 const selectedGroupId = ref<number | 'all'>('all')
@@ -106,6 +121,15 @@ const descriptionHtml = computed(() => {
 /** 生效倍率 = 用户专属倍率 ?? 分组默认倍率。 */
 function effectiveRate(g: ModelPlazaGroup): number {
   return g.user_rate_multiplier ?? g.rate_multiplier
+}
+
+function currentTokenRate(g: ModelPlazaGroup): number {
+  return effectiveRate(g) * peakMultiplierAt(
+    g,
+    g.subscription_type,
+    now.value,
+    appStore.cachedPublicSettings?.server_utc_offset
+  )
 }
 
 const platforms = computed(() =>

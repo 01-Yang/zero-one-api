@@ -31,3 +31,43 @@ export function formatPeakRateWindow(
   const base = `${fields.peak_start}-${fields.peak_end} ×${fields.peak_rate_multiplier ?? 1}`
   return tzLabel ? `${base} (${tzLabel})` : base
 }
+
+function parseOffsetMinutes(utcOffset?: string | null): number | null {
+  const match = /^([+-])(\d{2}):(\d{2})$/.exec(utcOffset ?? '')
+  if (!match) return null
+  const hours = Number(match[2])
+  const minutes = Number(match[3])
+  if (hours > 14 || minutes > 59 || (hours === 14 && minutes !== 0)) return null
+  return (match[1] === '-' ? -1 : 1) * (hours * 60 + minutes)
+}
+
+function parseTimeMinutes(value?: string): number | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value ?? '')
+  if (!match) return null
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  if (hours > 23 || minutes > 59) return null
+  return hours * 60 + minutes
+}
+
+/**
+ * Mirrors the server's Group.PeakMultiplierAt using the public server offset.
+ * Without a valid offset it fails closed to the base rate rather than guessing
+ * from the visitor's local timezone.
+ */
+export function peakMultiplierAt(
+  fields: PeakRateFields | null | undefined,
+  subscriptionType: string | undefined,
+  now: Date,
+  serverUtcOffset?: string | null
+): number {
+  if (!hasPeakRate(fields) || subscriptionType !== 'subscription' || !fields) return 1
+  const offset = parseOffsetMinutes(serverUtcOffset)
+  const start = parseTimeMinutes(fields.peak_start)
+  const end = parseTimeMinutes(fields.peak_end)
+  if (offset === null || start === null || end === null || start >= end || !Number.isFinite(now.getTime())) return 1
+
+  const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes()
+  const serverMinutes = (utcMinutes + offset + 1_440) % 1_440
+  return serverMinutes >= start && serverMinutes < end ? fields.peak_rate_multiplier ?? 1 : 1
+}

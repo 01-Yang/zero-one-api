@@ -6,7 +6,7 @@
         <template v-if="settings">
           <span
             v-if="siteLogo"
-            class="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gray-900 text-sm font-semibold text-white dark:bg-white dark:text-dark-950"
+            class="flex h-11 w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-950 p-1 dark:border-dark-700 dark:bg-dark-900"
           >
             <img :src="siteLogo" :alt="siteName" class="h-full w-full object-contain" />
           </span>
@@ -15,7 +15,7 @@
           </span>
         </template>
         <template v-else>
-          <span class="h-9 w-9 flex-shrink-0 animate-pulse rounded-xl bg-gray-200 dark:bg-dark-700" aria-hidden="true"></span>
+          <span class="h-11 w-11 flex-shrink-0 animate-pulse rounded-lg bg-gray-200 dark:bg-dark-700" aria-hidden="true"></span>
           <span class="h-5 w-28 animate-pulse rounded bg-gray-200 dark:bg-dark-700" aria-hidden="true"></span>
         </template>
       </div>

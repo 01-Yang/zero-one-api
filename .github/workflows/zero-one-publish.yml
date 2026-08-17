@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       commit_sha:
-        description: Full 40-character commit SHA from zero-one/brand
+        description: Full 40-character commit SHA from main
         required: true
         type: string
       confirmation:
@@ -50,10 +50,10 @@ jobs:
           test "$GITHUB_REF" = "refs/heads/$DEFAULT_BRANCH"
           test "$CONFIRMATION" = 'PUBLISH'
 
-      - name: Fetch brand branch
+      - name: Fetch release branch
         run: >-
           git fetch --no-tags --force origin
-          refs/heads/zero-one/brand:refs/remotes/origin/zero-one/brand
+          refs/heads/main:refs/remotes/origin/main
 
       - name: Test release guards
         run: node --test .github/scripts/*.test.mjs

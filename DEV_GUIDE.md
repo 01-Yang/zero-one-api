@@ -14,7 +14,7 @@
 
 ### Zero One 稳定基线规则
 
-`zero-one/brand` 的同步、构建和部署只跟随 `Wei-Shaw/sub2api` 的正式稳定
+`main` 是唯一产品、CI 和部署分支；它的同步、构建和部署只跟随 `Wei-Shaw/sub2api` 的正式稳定
 Tag，并同时记录 Tag 与其 peel 后的完整 commit SHA。不得把
 `upstream/main`、通用 `latest` 镜像、管理后台一键升级，或上游 README
 中的一键安装/覆盖命令用于 Zero One 产品环境。那些说明仍适用于原始
@@ -278,7 +278,7 @@ git fetch upstream --tags
 git rev-parse 'vX.Y.Z^{}'
 
 # 从产品基线创建短期稳定 Tag 同步分支
-git switch zero-one/brand
+git switch main
 git switch -c codex/sync-sub2api-vX.Y.Z
 git merge --no-ff vX.Y.Z
 

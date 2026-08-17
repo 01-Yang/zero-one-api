@@ -954,6 +954,9 @@ defineExpose({
 /* 表格横向滚动 */
 .table-wrapper {
   --select-col-width: 52px; /* 勾选列宽度：px-6 (24px*2) + checkbox (16px) */
+  --table-header-surface: rgb(249 250 251);
+  --table-header-hover-surface: rgb(243 244 246);
+  --table-header-foreground: rgb(75 85 99);
   position: relative;
   overflow-x: auto;
   overflow-y: auto;
@@ -962,16 +965,18 @@ defineExpose({
   isolation: isolate;
 }
 
+.dark .table-wrapper {
+  --table-header-surface: rgb(82 82 91 / 0.76);
+  --table-header-hover-surface: rgb(113 113 122 / 0.78);
+  --table-header-foreground: rgb(250 250 250);
+}
+
 /* 表头容器，确保在滚动时覆盖表体内容 */
 .table-wrapper .table-header {
   position: sticky;
   top: 0;
   z-index: 200;
-  background-color: rgb(249 250 251);
-}
-
-.dark .table-wrapper .table-header {
-  background-color: rgb(31 41 55);
+  background-color: var(--table-header-surface);
 }
 
 /* 表体保持在表头下方 */
@@ -985,11 +990,17 @@ defineExpose({
   position: sticky;
   top: 0;
   z-index: 210; /* 必须高于所有表体内容 */
-  background-color: rgb(249 250 251);
+  background-color: var(--table-header-surface);
+  color: var(--table-header-foreground);
 }
 
-.dark .sticky-header-cell {
-  background-color: rgb(31 41 55);
+.table-wrapper .table-header .sticky-header-cell:hover {
+  background-color: var(--table-header-hover-surface);
+}
+
+.dark .table-wrapper .table-header input[type='checkbox'] {
+  border-color: rgb(161 161 170);
+  background-color: rgb(244 244 245 / 0.94);
 }
 
 /* Sticky 列基础样式 */

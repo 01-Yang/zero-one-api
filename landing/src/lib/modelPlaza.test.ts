@@ -293,6 +293,56 @@ describe('landing price projection', () => {
     expect(request?.prices[0]?.request).toBe('$0.10')
   })
 
+  it('shows the server-time peak multiplier in token prices without changing request pricing', () => {
+    const data = dataFrom([
+      group({
+        id: 1,
+        name: '订阅高峰组',
+        subscription_type: 'subscription',
+        rate_multiplier: 0.5,
+        user_rate_multiplier: 0.4,
+        peak_rate_enabled: true,
+        peak_start: '09:00',
+        peak_end: '12:30',
+        peak_rate_multiplier: 1.5,
+        models: [
+          model('claude-sonnet-4-6', 'anthropic', {
+            pricing: pricing({ input_price: 3e-6, output_price: 15e-6 }),
+          }),
+          model('request-model', 'anthropic', {
+            pricing: pricing({
+              billing_mode: 'per_request',
+              input_price: null,
+              output_price: null,
+              per_request_price: 0.2,
+            }),
+          }),
+        ],
+      }),
+    ])
+
+    const duringPeak = selectRepresentativePriceRows(data, {
+      serverUtcOffset: '+08:00',
+      now: new Date('2026-08-16T01:00:00Z'),
+    })
+    const token = duringPeak.find((row) => row.billingMode === 'token')
+    const request = duringPeak.find((row) => row.billingMode === 'per_request')
+    expect(token?.effectiveRate).toBeCloseTo(0.6)
+    expect(token?.effectiveRateLabel).toBe('0.6×')
+    expect(token?.prices[0]).toMatchObject({ input: '$1.80', output: '$9.00' })
+    expect(request).toMatchObject({ effectiveRate: 0.4 })
+    expect(request?.prices[0]?.request).toBe('$0.08')
+
+    const afterPeak = selectRepresentativePriceRows(data, {
+      serverUtcOffset: '+08:00',
+      now: new Date('2026-08-16T04:30:00Z'),
+    })
+    expect(afterPeak.find((row) => row.billingMode === 'token')).toMatchObject({
+      effectiveRate: 0.4,
+      effectiveRateLabel: '0.4×',
+    })
+  })
+
   it('deduplicates across groups by the cheapest offer, filters platforms, and caps at eight', () => {
     const models = Array.from({ length: 10 }, (_, index) =>
       model(`gpt-${index}`, 'openai', {

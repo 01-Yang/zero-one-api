@@ -54,6 +54,7 @@
         :user-rate-multiplier="group.user_rate_multiplier ?? null"
         :image-rate-independent="group.image_rate_independent"
         :image-rate-multiplier="group.image_rate_multiplier"
+        :token-rate-multiplier="tokenRateMultiplier"
       />
       <p v-else class="px-5 py-4 text-center text-sm text-gray-400 dark:text-dark-500">
         {{ t('modelPlaza.detail.noModels') }}
@@ -76,6 +77,7 @@ import { useAppStore } from '@/stores/app'
 
 const props = defineProps<{
   group: ModelPlazaGroup
+  tokenRateMultiplier?: number
 }>()
 
 const { t } = useI18n()
@@ -92,4 +94,8 @@ const peakNote = computed(() => {
     multiplier: props.group.peak_rate_multiplier
   })
 })
+
+const tokenRateMultiplier = computed(
+  () => props.tokenRateMultiplier ?? props.group.user_rate_multiplier ?? props.group.rate_multiplier
+)
 </script>

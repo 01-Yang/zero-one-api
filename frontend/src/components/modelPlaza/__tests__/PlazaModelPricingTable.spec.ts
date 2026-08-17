@@ -43,7 +43,11 @@ function mountTable(
   models: PlazaModel[],
   rateMultiplier: number,
   userRateMultiplier?: number | null,
-  extraProps?: { imageRateIndependent?: boolean; imageRateMultiplier?: number | null }
+  extraProps?: {
+    imageRateIndependent?: boolean
+    imageRateMultiplier?: number | null
+    tokenRateMultiplier?: number
+  }
 ) {
   return mount(PlazaModelPricingTable, {
     props: { models, rateMultiplier, userRateMultiplier: userRateMultiplier ?? null, ...extraProps }
@@ -56,7 +60,6 @@ describe('PlazaModelPricingTable', () => {
     const text = wrapper.text()
     expect(text).toContain('$3.00')
     expect(text).toContain('$15.00')
-    // 缓存写 / 读(超过 2 位小数原样保留)
     expect(text).toContain('$3.75')
     expect(text).toContain('$0.30')
     // 倍率列
@@ -86,6 +89,17 @@ describe('PlazaModelPricingTable', () => {
     expect(struck.exists()).toBe(true)
     expect(struck.text()).toBe('1x')
     expect(text).toContain('0.8x')
+  })
+
+  it('uses the current token multiplier for prices and keeps the active-peak state visible', () => {
+    const wrapper = mountTable([tokenModel()], 0.5, 0.4, { tokenRateMultiplier: 0.6 })
+    const text = wrapper.text()
+
+    // 3 / 15 USD per 1M × (0.4 personal rate × 1.5 peak factor)
+    expect(text).toContain('$1.80')
+    expect(text).toContain('$9.00')
+    expect(text).toContain('0.6x')
+    expect(text).toContain('modelPlaza.table.peakActive')
   })
 
   it('模型按官方输出价从高到低排序,无官方价的排最后', () => {
@@ -182,7 +196,7 @@ describe('PlazaModelPricingTable', () => {
     const text = wrapper.text()
     expect(text).toContain('modelPlaza.table.paidPrice')
     expect(text).toContain('modelPlaza.table.officialPrice')
-    // token 行:模型 + 实付 3 列 + 官方 3 列 + 倍率
+    // token 行:模型 + 官方 3 列 + 实付 3 列 + 倍率
     expect(wrapper.findAll('tbody td')).toHaveLength(8)
   })
 
@@ -194,9 +208,9 @@ describe('PlazaModelPricingTable', () => {
     const withoutOfficial = mountTable([tokenModel({ official_pricing: null })], 1)
     const cells = withoutOfficial.findAll('tbody td')
     // 官方 输入/输出/缓存 三列均为 -
-    expect(cells[4].text().trim()).toBe('-')
-    expect(cells[5].text().trim()).toBe('-')
-    expect(cells[6].text().trim()).toBe('-')
+    expect(cells[1].text().trim()).toBe('-')
+    expect(cells[2].text().trim()).toBe('-')
+    expect(cells[3].text().trim()).toBe('-')
   })
 
   it('per_request 模型按单次价 × 倍率展示,官方价列显示 -', () => {

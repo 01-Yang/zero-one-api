@@ -6,8 +6,7 @@
 [`Wei-Shaw/sub2api v0.1.177@073e92d17178a1ccdb0a27017f572f10c9c7ab62`](https://github.com/Wei-Shaw/sub2api/tree/073e92d17178a1ccdb0a27017f572f10c9c7ab62)。
 公开 fork [`01-Yang/zero-one-api`](https://github.com/01-Yang/zero-one-api)
 配置为 `origin`，官方仓库 `Wei-Shaw/sub2api` 配置为只读
-`upstream`。`zero-one/brand` 是零一 API 产品分支；`origin/main`
-仅保留上游开发主线镜像，不作为产品发布基线。
+`upstream`。`main` 是零一 API 唯一产品、CI 和发布分支；不保留第二产品分支。
 
 `.github/upstream-baseline.json` 是 schema v3 Overlay Registry，所有常规回放路径必须唯一归属 `Console Skin`、`Public Capabilities`、`Supported Preview`、`Visual Regression` 或 `Marketing Source Assets`。Registry 只接受精确文件或精确目录，不接受 glob 或未命名的顺带改动。临时生产正确性修补保留在带退出条件的独立 legacy hotfix 区块；安全 backport 继续锁定逐文件 SHA-256 与 Git mode。`frontend/src/api/` 与 `frontend/src/types/` 默认不可变，只有 Registry 中绑定 `Public Capabilities` owner 的两个命名单文件例外可以通过，相邻文件仍被拒绝。
 
@@ -108,9 +107,9 @@ edge image. Image rollback does not reverse a database migration; see
 上游同步以 `Wei-Shaw/sub2api` 正式稳定 tag 为唯一 baseline，不直接合并
 `upstream/main`。通用 `latest` 镜像、管理后台一键升级和上游 README
 中的一键安装/覆盖命令也不得用于 Zero One 产品部署。只有符合上述生产正确性例外的已审核提交才可临时 cherry-pick，且不得将它伪装成 stable tag baseline。更新时获取 `upstream` tags，从
-`zero-one/brand` 创建 `codex/sync-sub2api-vX.Y.Z` 短期集成分支，
+`main` 创建 `codex/sync-sub2api-vX.Y.Z` 短期集成分支，
 合并新的稳定 tag，运行全部测试、构建和视觉验收后，再通过 PR
-合回 `zero-one/brand`。每次同步同时更新本节的 tag 与完整提交 SHA。
+合回 `main`。每次同步同时更新本节的 tag 与完整提交 SHA。
 主题改动保持集中，使新增上游页面继承设计系统，避免逐页分叉。
 
 `v0.1.177` 已包含上游 [PR #5573](https://github.com/Wei-Shaw/sub2api/pull/5573) 中 Grok 长上下文与媒体模型计费的等价修复，因此对应的六个 legacy path 已退出。Zero One 仍携带本地验证的分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复；`billing_service.go` 还保留本 Tag 未包含的分组定价传播加固。后端权限仅限 `.github/upstream-baseline.json` 的 `legacy_hotfixes` 区块所列精确文件。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应 legacy path，不得将临时权限永久化。
@@ -124,7 +123,7 @@ integration suites, Compose,
 the root Sub2API Docker build and the Caddy edge Docker build independently.
 It uses source-revision image tags as build artifacts only. The manual
 `Zero One Publish` workflow is the sole registry publisher: it accepts a full
-commit SHA from `zero-one/brand` plus the exact confirmation word `PUBLISH`,
+commit SHA from `main` plus the exact confirmation word `PUBLISH`,
 requires a successful Zero One CI run and publishes immutable multi-architecture
 GHCR images with SBOM and provenance attestations. It never publishes `latest`.
 Production deployment records the resulting digests and uses them with

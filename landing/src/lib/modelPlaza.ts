@@ -138,6 +138,7 @@ export interface SelectPriceRowsOptions {
   search?: string
   limit?: number
   serverUtcOffset?: string
+  now?: Date
 }
 
 function asRecord(value: unknown): UnknownRecord | null {
@@ -548,6 +549,37 @@ export function formatPeakNote(group: ModelPlazaGroup, serverUtcOffset = ''): st
   return `高峰时段 ${group.peakStart}–${group.peakEnd} 额外×${formatNumber(group.peakRateMultiplier, 0)}${timezone}`
 }
 
+function minutesFromTime(value: string): number | null {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value)
+  if (!match) return null
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  if (hours > 23 || minutes > 59) return null
+  return hours * 60 + minutes
+}
+
+/**
+ * Matches Group.PeakMultiplierAt on the server. The public settings offset is
+ * required so a visitor in another timezone still sees the server's current rate.
+ */
+export function peakMultiplierAt(
+  group: ModelPlazaGroup,
+  now: Date,
+  serverUtcOffset = '',
+): number {
+  if (!group.peakRateEnabled || group.subscriptionType !== 'subscription') return 1
+  const start = minutesFromTime(group.peakStart)
+  const end = minutesFromTime(group.peakEnd)
+  const offset = normalizeUtcOffset(serverUtcOffset)
+  if (start === null || end === null || start >= end || !offset || !Number.isFinite(now.getTime())) return 1
+
+  const sign = offset[0] === '-' ? -1 : 1
+  const offsetMinutes = sign * (Number(offset.slice(1, 3)) * 60 + Number(offset.slice(4, 6)))
+  const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes()
+  const serverMinutes = (utcMinutes + offsetMinutes + 1_440) % 1_440
+  return serverMinutes >= start && serverMinutes < end ? group.peakRateMultiplier : 1
+}
+
 export function platformFilterFor(platform: string): Exclude<LandingPlatformFilter, 'all'> {
   const normalized = platform.trim().toLowerCase()
   if (normalized === 'anthropic' || normalized === 'openai' || normalized === 'gemini') {
@@ -556,14 +588,15 @@ export function platformFilterFor(platform: string): Exclude<LandingPlatformFilt
   return 'other'
 }
 
-function effectiveRate(group: ModelPlazaGroup): number {
-  return group.userRateMultiplier ?? group.rateMultiplier
+function effectiveRate(group: ModelPlazaGroup, now?: Date, serverUtcOffset?: string): number {
+  const baseRate = group.userRateMultiplier ?? group.rateMultiplier
+  return baseRate * (now ? peakMultiplierAt(group, now, serverUtcOffset) : 1)
 }
 
 function requestRate(group: ModelPlazaGroup, mode: ModelBillingMode): number {
   return mode === 'image' && group.imageRateIndependent
     ? group.imageRateMultiplier
-    : effectiveRate(group)
+    : group.userRateMultiplier ?? group.rateMultiplier
 }
 
 function emptyLine(label: string): LandingPriceLine {
@@ -577,7 +610,13 @@ function emptyLine(label: string): LandingPriceLine {
   }
 }
 
-function buildPriceLines(group: ModelPlazaGroup, pricing: ModelPricing): LandingPriceLine[] {
+function buildPriceLines(
+  group: ModelPlazaGroup,
+  pricing: ModelPricing,
+  now?: Date,
+  serverUtcOffset?: string,
+): LandingPriceLine[] {
+  const tokenRate = effectiveRate(group, now, serverUtcOffset)
   if (pricing.billingMode === 'token') {
     const source = pricing.intervals.length
       ? pricing.intervals
@@ -595,15 +634,17 @@ function buildPriceLines(group: ModelPlazaGroup, pricing: ModelPricing): Landing
         ]
     return source.map((interval) => ({
       ...emptyLine(pricing.intervals.length ? formatIntervalLabel(interval) : ''),
-      input: formatPrice(interval.inputPrice === null ? null : interval.inputPrice * effectiveRate(group), PER_MILLION),
-      output: formatPrice(interval.outputPrice === null ? null : interval.outputPrice * effectiveRate(group), PER_MILLION),
+      input: formatPrice(interval.inputPrice === null ? null : interval.inputPrice * tokenRate, PER_MILLION),
+      output: formatPrice(interval.outputPrice === null ? null : interval.outputPrice * tokenRate, PER_MILLION),
       cacheWrite: formatPrice(
-        interval.cacheWritePrice === null ? null : interval.cacheWritePrice * effectiveRate(group),
+        interval.cacheWritePrice === null ? null : interval.cacheWritePrice * tokenRate,
         PER_MILLION,
+        2,
       ),
       cacheRead: formatPrice(
-        interval.cacheReadPrice === null ? null : interval.cacheReadPrice * effectiveRate(group),
+        interval.cacheReadPrice === null ? null : interval.cacheReadPrice * tokenRate,
         PER_MILLION,
+        2,
       ),
     }))
   }
@@ -630,17 +671,26 @@ function buildPriceLines(group: ModelPlazaGroup, pricing: ModelPricing): Landing
     ...emptyLine(intervals.length ? formatIntervalLabel(interval) : ''),
     request: formatPrice(
       interval.perRequestPrice === null ? null : interval.perRequestPrice * rate,
+      1,
+      2,
     ),
   }))
 }
 
-function rowScore(group: ModelPlazaGroup, pricing: ModelPricing): number {
+function rowScore(
+  group: ModelPlazaGroup,
+  pricing: ModelPricing,
+  now?: Date,
+  serverUtcOffset?: string,
+): number {
   if (pricing.billingMode === 'token') {
     const values = pricing.intervals.length
       ? pricing.intervals.flatMap((interval) => [interval.outputPrice, interval.inputPrice])
       : [pricing.outputPrice, pricing.inputPrice]
     const first = values.find((value): value is number => value !== null)
-    return first === undefined ? Number.POSITIVE_INFINITY : first * effectiveRate(group)
+    return first === undefined
+      ? Number.POSITIVE_INFINITY
+      : first * effectiveRate(group, now, serverUtcOffset)
   }
   const requestPrices = pricing.intervals
     .map((interval) => interval.perRequestPrice)
@@ -656,12 +706,15 @@ function toLandingPriceRow(
   group: ModelPlazaGroup,
   model: ModelPlazaModel,
   serverUtcOffset: string,
+  now?: Date,
 ): (LandingPriceRow & { score: number }) | null {
   if (!model.pricing) return null
-  const score = rowScore(group, model.pricing)
+  const score = rowScore(group, model.pricing, now, serverUtcOffset)
   if (!Number.isFinite(score)) return null
   const mode = model.pricing.billingMode
-  const rate = requestRate(group, mode)
+  const rate = mode === 'token'
+    ? effectiveRate(group, now, serverUtcOffset)
+    : requestRate(group, mode)
   return {
     key: `${model.platform.toLowerCase()}:${model.name.toLowerCase()}:${mode}`,
     model: model.name,
@@ -672,7 +725,7 @@ function toLandingPriceRow(
     subscriptionType: group.subscriptionType,
     billingMode: mode,
     unit: mode === 'token' ? '$/1M tokens' : mode === 'image' ? '$/张' : '$/次',
-    prices: buildPriceLines(group, model.pricing),
+    prices: buildPriceLines(group, model.pricing, now, serverUtcOffset),
     officialInput: formatPrice(model.officialPricing?.inputPrice, PER_MILLION),
     officialOutput: formatPrice(model.officialPricing?.outputPrice, PER_MILLION),
     officialCacheWrite: formatPrice(model.officialPricing?.cacheWritePrice, PER_MILLION),
@@ -720,7 +773,7 @@ export function selectRepresentativePriceRows(
   const byModel = new Map<string, LandingPriceRow & { score: number }>()
   for (const group of data.groups) {
     for (const model of group.models) {
-      const row = toLandingPriceRow(group, model, options.serverUtcOffset ?? '')
+      const row = toLandingPriceRow(group, model, options.serverUtcOffset ?? '', options.now)
       if (!row) continue
       const existing = byModel.get(row.key)
       const rowIsStandard = row.subscriptionType === 'standard'
