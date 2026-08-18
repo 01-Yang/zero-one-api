@@ -115,7 +115,6 @@ test('allows named immutable exceptions while adjacent seam files still fail', (
     [
       'frontend/src/api/admin/users.ts modifies immutable upstream path frontend/src/api/',
       'frontend/src/types/admin.ts modifies immutable upstream path frontend/src/types/',
-      'frontend/vite.config.ts modifies immutable upstream path frontend/vite.config.ts',
     ],
   )
   assert.deepEqual(
@@ -132,6 +131,12 @@ test('allows named immutable exceptions while adjacent seam files still fail', (
         owner: 'Public Capabilities',
         path: 'frontend/src/types/index.ts',
         immutable_path: 'frontend/src/types/',
+      },
+      {
+        name: 'console-skin-versioned-asset-directory',
+        owner: 'Console Skin',
+        path: 'frontend/vite.config.ts',
+        immutable_path: 'frontend/vite.config.ts',
       },
     ],
   )
