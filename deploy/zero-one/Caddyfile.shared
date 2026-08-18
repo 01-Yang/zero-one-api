@@ -19,17 +19,33 @@
 }
 
 (recovered_console_routes) {
+	root * /srv/console
+
+	@console_asset_files {
+		method GET HEAD
+		path /assets/*
+		file {
+			try_files {path}
+		}
+	}
+
+	handle @console_asset_files {
+		root * /srv/console
+		encode zstd gzip
+		header Cache-Control "public, max-age=31536000, immutable"
+		header X-Content-Type-Options "nosniff"
+		file_server
+	}
+
 	@console_assets {
 		method GET HEAD
 		path /assets/*
 	}
 
 	handle @console_assets {
-		root * /srv/console
-		encode zstd gzip
-		header Cache-Control "public, max-age=31536000, immutable"
+		header Cache-Control "no-store"
 		header X-Content-Type-Options "nosniff"
-		file_server
+		respond "" 404
 	}
 
 	@console_pages {

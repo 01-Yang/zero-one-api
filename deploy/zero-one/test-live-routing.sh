@@ -83,6 +83,12 @@ until curl -fsS -H "Host: $request_host" "$edge_url/" >"$test_dir/landing.html" 
 	sleep 1
 done
 
+docker cp "$edge_name:/srv/console" "$test_dir"
+docker run --rm \
+	-v "$repo_root/deploy/zero-one/verify-console-asset-closure.mjs:/verify-console-asset-closure.mjs:ro" \
+	-v "$test_dir/console:/srv/console:ro" \
+	node:24-alpine node /verify-console-asset-closure.mjs /srv/console || fail 'Console asset closure is incomplete'
+
 landing=$(cat "$test_dir/landing.html")
 assert_text "$landing" '<title>零一 API</title>' 'primary root did not return the React page'
 
@@ -100,6 +106,10 @@ console_asset_path=$(printf '%s' "$console" | grep -o '/assets/[^" ]*\.js' | hea
 [ -n "$console_asset_path" ] || fail 'console JavaScript asset was not discoverable'
 console_asset_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url$console_asset_path")
 assert_text "$console_asset_headers" 'Cache-Control: public, max-age=31536000, immutable' 'hashed console asset is not immutable'
+
+missing_console_asset_headers=$(curl -sS -D - -o /dev/null -H "Host: $request_host" "$edge_url/assets/not-found.css")
+assert_text "$missing_console_asset_headers" 'HTTP/1.1 404 Not Found' 'missing console asset did not return 404'
+assert_text "$missing_console_asset_headers" 'Cache-Control: no-store' 'missing console asset is cacheable'
 
 notice_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url/_landing/THIRD_PARTY_NOTICES.txt")
 assert_text "$notice_headers" 'Cache-Control: no-cache' 'third-party notice cache policy changed'

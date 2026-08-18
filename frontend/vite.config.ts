@@ -106,6 +106,9 @@ export default defineConfig(({ mode }) => {
   build: {
     outDir: '../backend/internal/web/dist',
     emptyOutDir: true,
+    // Asset URLs are content-addressed. Bump the directory after the prior
+    // incomplete release cached missing assets as immutable responses.
+    assetsDir: 'assets/repaired-20260818',
     rollupOptions: {
       output: {
         /**
