@@ -1,35 +1,13 @@
 {
   "schema_version": 3,
   "repository": "Wei-Shaw/sub2api",
-  "release": "v0.1.177",
-  "commit": "073e92d17178a1ccdb0a27017f572f10c9c7ab62",
-  "approved_backports": [
-    {
-      "source_repository": "Wei-Shaw/sub2api",
-      "source_pull_request": 5639,
-      "source_commit": "f278c067a03e1730a00ac6358381113cc289206f",
-      "valid_for_release": "v0.1.177",
-      "exit_condition": "Remove the remaining Docker build-file backport when the first stable upstream release containing the equivalent Go 1.26.6 build-image fixes becomes the baseline.",
-      "files": {
-        "Dockerfile": {
-          "sha256": "41c750711dc576cd1c7cc085218b5705adab94965ec69ea167c32fd598b461bb",
-          "mode": "100644"
-        },
-        "backend/Dockerfile": {
-          "sha256": "d238e59a1c5d1bf928997ace001cd1e26b7751a4a9212d7cf3ca20bee884417f",
-          "mode": "100644"
-        },
-        "deploy/Dockerfile": {
-          "sha256": "05923334a46abac80723f3e83431166762aacb9b3e1aea40b2f8f5fb4cd1d241",
-          "mode": "100644"
-        }
-      }
-    }
-  ],
+  "release": "v0.1.178",
+  "commit": "e0c48a19ed794a565e3858662520afe0a1f9f0ba",
+  "approved_backports": [],
   "legacy_hotfixes": [
     {
-      "name": "approved-v0.1.177-production-correctness",
-      "valid_for_release": "v0.1.177",
+      "name": "approved-v0.1.178-production-correctness",
+      "valid_for_release": "v0.1.178",
       "exit_condition": "Remove each path when the first stable upstream release containing its equivalent production-correctness fix becomes the baseline; remove the entire block when no listed path remains.",
       "paths": [
         "backend/internal/handler/admin/admin_basic_handlers_test.go",
@@ -42,7 +20,6 @@
         "backend/internal/service/admin_group_duplicate.go",
         "backend/internal/service/admin_group_duplicate_test.go",
         "backend/internal/service/admin_group_model_pricing_test.go",
-        "backend/internal/service/api_key_auth_cache.go",
         "backend/internal/service/api_key_auth_cache_group_pricing_test.go",
         "backend/internal/service/api_key_auth_cache_impl.go",
         "backend/internal/service/api_key_auth_cache_profit_test.go",
@@ -59,8 +36,8 @@
       ]
     },
     {
-      "name": "approved-v0.1.177-ci-timezone-correctness",
-      "valid_for_release": "v0.1.177",
+      "name": "approved-v0.1.178-ci-timezone-correctness",
+      "valid_for_release": "v0.1.178",
       "exit_condition": "Remove this test-only hotfix when the first stable upstream release makes the group usage rollup trigger tests session-timezone relative.",
       "paths": [
         "backend/internal/repository/group_usage_rollup_trigger_integration_test.go"

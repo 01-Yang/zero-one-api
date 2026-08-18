@@ -3,7 +3,7 @@
 ## Baseline And Change Boundary
 
 项目的稳定技术基线为
-[`Wei-Shaw/sub2api v0.1.177@073e92d17178a1ccdb0a27017f572f10c9c7ab62`](https://github.com/Wei-Shaw/sub2api/tree/073e92d17178a1ccdb0a27017f572f10c9c7ab62)。
+[`Wei-Shaw/sub2api v0.1.178@e0c48a19ed794a565e3858662520afe0a1f9f0ba`](https://github.com/Wei-Shaw/sub2api/tree/e0c48a19ed794a565e3858662520afe0a1f9f0ba)。
 公开 fork [`01-Yang/zero-one-api`](https://github.com/01-Yang/zero-one-api)
 配置为 `origin`，官方仓库 `Wei-Shaw/sub2api` 配置为只读
 `upstream`。`main` 是零一 API 唯一产品、CI 和发布分支；不保留第二产品分支。
@@ -112,11 +112,11 @@ edge image. Image rollback does not reverse a database migration; see
 合回 `main`。每次同步同时更新本节的 tag 与完整提交 SHA。
 主题改动保持集中，使新增上游页面继承设计系统，避免逐页分叉。
 
-`v0.1.177` 已包含上游 [PR #5573](https://github.com/Wei-Shaw/sub2api/pull/5573) 中 Grok 长上下文与媒体模型计费的等价修复，因此对应的六个 legacy path 已退出。Zero One 仍携带本地验证的分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复；`billing_service.go` 还保留本 Tag 未包含的分组定价传播加固。后端权限仅限 `.github/upstream-baseline.json` 的 `legacy_hotfixes` 区块所列精确文件。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应 legacy path，不得将临时权限永久化。
+`v0.1.178` 已包含上游的分组定价认证快照修复，因此已与上游一致的 `api_key_auth_cache.go` legacy path 退出。Zero One 仍携带本地验证的深拷贝隔离、分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复；`billing_service.go` 还保留本 Tag 未包含的分组定价传播加固。后端权限仅限 `.github/upstream-baseline.json` 的 `legacy_hotfixes` 区块所列精确文件。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应 legacy path，不得将临时权限永久化。
 
-`v0.1.177` 已包含 `nanoid 3.3.18` 锁文件修复，也在 `backend/go.mod` 和 CI workflow 中包含 Go `1.26.6` 的等价更新，因此 [PR #5638](https://github.com/Wei-Shaw/sub2api/pull/5638) backport 已整体退出，[PR #5639](https://github.com/Wei-Shaw/sub2api/pull/5639) backport 只保留尚未进入 Tag 的 `Dockerfile`、`backend/Dockerfile` 和 `deploy/Dockerfile`。两个 source commit 都不是 `v0.1.177` 的祖先；退出判定依据是稳定 Tag 中的等价内容，而不是将精确 commit 误记为已合并。保留文件的 SHA-256、Git mode、适用基线与退出条件继续由 `.github/upstream-baseline.json` 精确锁定。
+`v0.1.178` 已在 `backend/go.mod`、CI workflow 和三个 Dockerfile 中包含 Go `1.26.6` 的等价更新，因此 [PR #5639](https://github.com/Wei-Shaw/sub2api/pull/5639) 的剩余 backport 已全部退出，`.github/upstream-baseline.json` 的 `approved_backports` 恢复为空列表。退出判定依据是稳定 Tag 中的等价内容，而不是将精确 commit 误记为已合并。
 
-`v0.1.177` 新增的分组用量汇总触发器测试曾将集成连接的 UTC session 与上海日历日混用，在 UTC 16:00–23:59 会稳定误报水位回退。Zero One 只将这两项测试的“今日”改为 DB session 的 `CURRENT_DATE`，不修改 migration 或运行时语义。该精确测试路径位于独立的 CI timezone legacy hotfix 区块，下一个包含等价修复的稳定 Tag 必须将其移除。
+`v0.1.178` 仍未包含分组用量汇总触发器测试的 session-timezone 等价修复。Zero One 只将这两项测试的“今日”改为 DB session 的 `CURRENT_DATE`，不修改 migration 或运行时语义。该精确测试路径位于独立的 CI timezone legacy hotfix 区块，下一个包含等价修复的稳定 Tag 必须将其移除。
 
 The repository's dedicated Zero One CI job validates React, Vue, Go unit and
 integration suites, Compose,

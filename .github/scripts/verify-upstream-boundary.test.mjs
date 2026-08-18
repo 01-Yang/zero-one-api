@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { lstatSync, readFileSync } from 'node:fs'
 import test from 'node:test'
 import {
@@ -23,6 +24,30 @@ function readRepositoryPath(path) {
   }
 }
 
+function baselineWithApprovedBackport() {
+  const value = structuredClone(baseline)
+  const files = {}
+  for (const path of ['Dockerfile', 'backend/Dockerfile', 'deploy/Dockerfile']) {
+    const file = readRepositoryPath(path)
+    files[path] = {
+      sha256: createHash('sha256').update(file.content).digest('hex'),
+      mode: file.mode,
+    }
+  }
+  value.approved_backports = [
+    {
+      source_repository: value.repository,
+      source_pull_request: 5639,
+      source_commit: 'f'.repeat(40),
+      valid_for_release: value.release,
+      exit_condition:
+        'Remove when the first stable upstream release containing the equivalent change becomes the baseline.',
+      files,
+    },
+  ]
+  return validateBaseline(value)
+}
+
 const approvedLegacyHotfixPaths = [
   'backend/internal/handler/admin/admin_basic_handlers_test.go',
   'backend/internal/handler/admin/admin_service_stub_test.go',
@@ -35,7 +60,6 @@ const approvedLegacyHotfixPaths = [
   'backend/internal/service/admin_group_duplicate.go',
   'backend/internal/service/admin_group_duplicate_test.go',
   'backend/internal/service/admin_group_model_pricing_test.go',
-  'backend/internal/service/api_key_auth_cache.go',
   'backend/internal/service/api_key_auth_cache_group_pricing_test.go',
   'backend/internal/service/api_key_auth_cache_impl.go',
   'backend/internal/service/api_key_auth_cache_profit_test.go',
@@ -181,7 +205,8 @@ test('rejects duplicate owners, overlapping paths, and unbound immutable excepti
 })
 
 test('rejects changed, missing, and non-regular approved backport files', () => {
-  const changed = evaluateApprovedBackportContents(baseline, (path) => {
+  const approvedBaseline = baselineWithApprovedBackport()
+  const changed = evaluateApprovedBackportContents(approvedBaseline, (path) => {
     const file = readRepositoryPath(path)
     return path === 'backend/Dockerfile'
       ? { ...file, content: Buffer.concat([file.content, Buffer.from('\n')]) }
@@ -190,19 +215,19 @@ test('rejects changed, missing, and non-regular approved backport files', () => 
   assert.equal(changed.length, 1)
   assert.match(changed[0], /backend\/Dockerfile content mismatch/)
 
-  const missing = evaluateApprovedBackportContents(baseline, (path) => {
+  const missing = evaluateApprovedBackportContents(approvedBaseline, (path) => {
     if (path === 'deploy/Dockerfile') throw new Error('missing')
     return readRepositoryPath(path)
   })
   assert.deepEqual(missing, ['approved backport deploy/Dockerfile is missing'])
 
-  const nonRegular = evaluateApprovedBackportContents(baseline, (path) => {
+  const nonRegular = evaluateApprovedBackportContents(approvedBaseline, (path) => {
     const file = readRepositoryPath(path)
     return path === 'Dockerfile' ? { ...file, isRegularFile: false } : file
   })
   assert.deepEqual(nonRegular, ['approved backport Dockerfile is not a regular file'])
 
-  const executable = evaluateApprovedBackportContents(baseline, (path) => {
+  const executable = evaluateApprovedBackportContents(approvedBaseline, (path) => {
     const file = readRepositoryPath(path)
     return path === 'Dockerfile' ? { ...file, mode: '100755' } : file
   })
@@ -212,7 +237,8 @@ test('rejects changed, missing, and non-regular approved backport files', () => 
 })
 
 test('rejects stale or malformed approved backport metadata', () => {
-  const clone = () => structuredClone(baseline)
+  const approvedBaseline = baselineWithApprovedBackport()
+  const clone = () => structuredClone(approvedBaseline)
 
   const stale = clone()
   stale.release = 'v0.1.176'

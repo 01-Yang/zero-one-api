@@ -992,6 +992,12 @@ func normalizeGroupModelPricing(platform string, pricing []ChannelModelPricing) 
 		// partition overlapping patterns across fake platforms and bypass conflict
 		// detection.
 		out[i].Platform = platform
+		if out[i].TimePricing != nil && len(out[i].TimePricing.Periods) > 0 {
+			return nil, infraerrors.BadRequest(
+				"GROUP_MODEL_TIME_PRICING_UNSUPPORTED",
+				"group model pricing does not support time pricing",
+			)
+		}
 		if !out[i].BillingMode.IsValid() {
 			return nil, infraerrors.New(http.StatusBadRequest, "INVALID_BILLING_MODE", "invalid group model pricing billing mode")
 		}
