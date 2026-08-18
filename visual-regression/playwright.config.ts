@@ -62,7 +62,7 @@ export default defineConfig({
       timeout: 120_000,
     },
     {
-      command: 'pnpm exec vite --host 127.0.0.1 --port 4173 --strictPort',
+      command: './node_modules/.bin/vite --host 127.0.0.1 --port 4173 --strictPort',
       cwd: `${root}frontend`,
       env: { ...process.env, VITE_VISUAL_TEST: 'true' },
       url: 'http://127.0.0.1:4173',

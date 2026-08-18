@@ -101,11 +101,15 @@ asset_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url$asset_path")
 assert_text "$asset_headers" 'Cache-Control: public, max-age=31536000, immutable' 'hashed landing asset is not immutable'
 
 console=$(curl -fsS -H "Host: $request_host" "$edge_url/login")
-assert_text "$console" '<title>零一 API</title>' 'primary login did not return the branded console'
+assert_text "$console" '<title>零一 API - AI API Gateway</title>' 'primary login did not return the recovered console'
+assert_text "$console" 'fetch("/api/v1/settings/public"' 'recovered console did not bootstrap live public settings'
 console_asset_path=$(printf '%s' "$console" | grep -o '/assets/[^" ]*\.js' | head -n 1)
 [ -n "$console_asset_path" ] || fail 'console JavaScript asset was not discoverable'
 console_asset_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url$console_asset_path")
 assert_text "$console_asset_headers" 'Cache-Control: public, max-age=31536000, immutable' 'hashed console asset is not immutable'
+
+custom_page_headers=$(curl -fsSI -H "Host: $request_host" "$edge_url/custom/iframe-contract")
+assert_text "$custom_page_headers" 'https://checkout-demo.airwallex.com https:; frame-ancestors' 'custom page CSP does not permit configured HTTPS iframes'
 
 missing_console_asset_headers=$(curl -sS -D - -o /dev/null -H "Host: $request_host" "$edge_url/assets/not-found.css")
 assert_text "$missing_console_asset_headers" 'HTTP/1.1 404 Not Found' 'missing console asset did not return 404'
@@ -158,7 +162,7 @@ if [ "$routing_mode" = production ]; then
 	assert_text "$console_post_root" '"url":"/"' 'Console proxied root path changed'
 
 	console_response=$(curl -fsS -H 'Host: app.01yapi.test' "$edge_url/login")
-	assert_text "$console_response" '<title>零一 API</title>' 'Console host did not return the branded console'
+	assert_text "$console_response" '<title>零一 API - AI API Gateway</title>' 'Console host did not return the recovered console'
 
 	backup_headers=$(curl -fsS -D - -o "$test_dir/backup.json" -H 'Host: api-backup.01yapi.test' "$edge_url/")
 	assert_text "$backup_headers" 'Cache-Control: no-store' 'backup root is cacheable'

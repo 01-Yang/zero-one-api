@@ -586,10 +586,31 @@ func RedeemCodeFromServiceAdmin(rc *service.RedeemCode) *AdminRedeemCode {
 	}
 }
 
+// RedeemCodeFromServiceAdminRedacted is used by routine admin reads. Plaintext
+// card secrets are only returned by the one-time generation response.
+func RedeemCodeFromServiceAdminRedacted(rc *service.RedeemCode) *AdminRedeemCode {
+	out := RedeemCodeFromServiceAdmin(rc)
+	if out == nil || out.CodeRedacted {
+		return out
+	}
+	code := out.Code
+	if len(code) > 8 {
+		out.Code = code[:4] + "-****-" + code[len(code)-4:]
+	} else {
+		out.Code = "****"
+	}
+	out.CodeRedacted = true
+	return out
+}
+
 func redeemCodeFromServiceBase(rc *service.RedeemCode) RedeemCode {
 	out := RedeemCode{
 		ID:           rc.ID,
 		Code:         rc.Code,
+		CodeRedacted: rc.IsCodeRedacted(),
+		BatchID:      rc.BatchID,
+		MinValue:     rc.MinValue,
+		MaxValue:     rc.MaxValue,
 		Type:         rc.Type,
 		Value:        rc.Value,
 		Status:       rc.Status,

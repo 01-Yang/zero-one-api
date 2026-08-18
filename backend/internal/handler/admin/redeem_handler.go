@@ -35,8 +35,10 @@ func NewRedeemHandler(adminService service.AdminService, redeemService *service.
 // GenerateRedeemCodesRequest represents generate redeem codes request
 type GenerateRedeemCodesRequest struct {
 	Count         int        `json:"count" binding:"required,min=1,max=100"`
-	Type          string     `json:"type" binding:"required,oneof=balance concurrency subscription invitation"`
+	Type          string     `json:"type" binding:"required,oneof=balance concurrency subscription invitation benefit mystery_box"`
 	Value         float64    `json:"value"`
+	MinValue      float64    `json:"min_value"`
+	MaxValue      float64    `json:"max_value"`
 	GroupID       *int64     `json:"group_id"`      // 订阅类型必填
 	ValidityDays  int        `json:"validity_days"` // 订阅类型使用，正数增加/负数退款扣减
 	ExpiresAt     *time.Time `json:"expires_at"`
@@ -104,7 +106,7 @@ func (h *RedeemHandler) List(c *gin.Context) {
 
 	out := make([]dto.AdminRedeemCode, 0, len(codes))
 	for i := range codes {
-		out = append(out, *dto.RedeemCodeFromServiceAdmin(&codes[i]))
+		out = append(out, *dto.RedeemCodeFromServiceAdminRedacted(&codes[i]))
 	}
 	response.Paginated(c, out, total, page, pageSize)
 }
@@ -124,7 +126,7 @@ func (h *RedeemHandler) GetByID(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, dto.RedeemCodeFromServiceAdmin(code))
+	response.Success(c, dto.RedeemCodeFromServiceAdminRedacted(code))
 }
 
 // Generate handles generating new redeem codes
@@ -142,25 +144,30 @@ func (h *RedeemHandler) Generate(c *gin.Context) {
 		return
 	}
 
-	executeAdminIdempotentJSON(c, "admin.redeem_codes.generate", req, service.DefaultWriteIdempotencyTTL(), func(ctx context.Context) (any, error) {
-		codes, execErr := h.adminService.GenerateRedeemCodes(ctx, &service.GenerateRedeemCodesInput{
-			Count:        req.Count,
-			Type:         req.Type,
-			Value:        req.Value,
-			GroupID:      req.GroupID,
-			ValidityDays: req.ValidityDays,
-			ExpiresAt:    expiresAt,
-		})
-		if execErr != nil {
-			return nil, execErr
-		}
-
-		out := make([]dto.AdminRedeemCode, 0, len(codes))
-		for i := range codes {
-			out = append(out, *dto.RedeemCodeFromServiceAdmin(&codes[i]))
-		}
-		return out, nil
+	codes, err := h.adminService.GenerateRedeemCodes(c.Request.Context(), &service.GenerateRedeemCodesInput{
+		Count:        req.Count,
+		Type:         req.Type,
+		Value:        req.Value,
+		MinValue:     req.MinValue,
+		MaxValue:     req.MaxValue,
+		GroupID:      req.GroupID,
+		ValidityDays: req.ValidityDays,
+		ExpiresAt:    expiresAt,
 	})
+	if err != nil {
+		response.ErrorFrom(c, err)
+		return
+	}
+
+	out := make([]dto.AdminRedeemCode, 0, len(codes))
+	for i := range codes {
+		out = append(out, *dto.RedeemCodeFromServiceAdmin(&codes[i]))
+	}
+	// Plaintext codes are intentionally returned once and must not be cached by
+	// browsers, reverse proxies, or the database-backed idempotency coordinator.
+	c.Header("Cache-Control", "no-store")
+	c.Header("Pragma", "no-cache")
+	response.Success(c, out)
 }
 
 // CreateAndRedeem creates a fixed redeem code and redeems it for a target user in one step.
@@ -367,7 +374,7 @@ func (h *RedeemHandler) Expire(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, dto.RedeemCodeFromServiceAdmin(code))
+	response.Success(c, dto.RedeemCodeFromServiceAdminRedacted(code))
 }
 
 // GetStats handles getting redeem code statistics

@@ -23,4 +23,20 @@ describe('TablePageLayout responsive table scrolling', () => {
       true
     )
   })
+
+  it('keeps toolbar dropdowns above the sticky navigation header', () => {
+    const fixedSectionBlock = componentSource.match(
+      /\.layout-section-fixed\s*\{([\s\S]*?)\n\}/
+    )
+
+    expect(fixedSectionBlock).not.toBeNull()
+    expect(fixedSectionBlock?.[1]).toContain('position: relative;')
+    expect(fixedSectionBlock?.[1]).toContain('z-index: 40;')
+
+    const followingFixedSectionBlock = componentSource.match(
+      /\.layout-section-fixed \+ \.layout-section-fixed\s*\{([\s\S]*?)\n\}/
+    )
+    expect(followingFixedSectionBlock).not.toBeNull()
+    expect(followingFixedSectionBlock?.[1]).toContain('z-index: 30;')
+  })
 })

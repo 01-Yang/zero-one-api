@@ -10,8 +10,9 @@ permissions:
 
 jobs:
   chromium-calibration:
-    name: Chromium calibration (advisory)
+    name: Chromium calibration (non-blocking)
     runs-on: ubuntu-24.04
+    continue-on-error: true
     timeout-minutes: 30
     container:
       image: mcr.microsoft.com/playwright:v1.55.1-noble
@@ -39,20 +40,7 @@ jobs:
       - name: List visual contracts
         run: npm run test:list --prefix visual-regression
       - name: Run snapshot calibration without baseline updates
-        id: calibration
-        continue-on-error: true
         run: npm test --prefix visual-regression
-      - name: Report calibration result
-        if: always()
-        env:
-          CALIBRATION_OUTCOME: ${{ steps.calibration.outcome }}
-        run: |
-          if [ "$CALIBRATION_OUTCOME" = success ]; then
-            echo 'Visual calibration passed.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          echo 'Visual calibration is advisory until reviewed Linux baselines are committed.' >> "$GITHUB_STEP_SUMMARY"
-          echo '::warning::Visual calibration failed; inspect the uploaded Playwright report and artifacts.'
       - name: Upload visual calibration artifacts
         if: always()
         uses: actions/upload-artifact@v7

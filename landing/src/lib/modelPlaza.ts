@@ -95,7 +95,7 @@ export interface LandingPriceRow {
   groupName: string
   subscriptionType: string
   billingMode: ModelBillingMode
-  unit: '$/1M tokens' | '$/张' | '$/次'
+  unit: '¥/1M tokens' | '¥/张' | '¥/次'
   prices: LandingPriceLine[]
   officialInput: string
   officialOutput: string
@@ -509,14 +509,15 @@ function formatNumber(value: number, minFractionDigits: number): string {
   return output
 }
 
-/** Formats a non-negative USD value, preserving meaningful small decimals. */
+/** Formats a non-negative price, preserving meaningful small decimals. */
 export function formatPrice(
   value: number | null | undefined,
   scale = 1,
   minFractionDigits = 2,
+  currency = '$',
 ): string {
   if (value == null || !Number.isFinite(value) || value < 0) return '—'
-  return `$${formatNumber(value * scale, minFractionDigits)}`
+  return `${currency}${formatNumber(value * scale, minFractionDigits)}`
 }
 
 function formatTokenCount(value: number): string {
@@ -634,17 +635,19 @@ function buildPriceLines(
         ]
     return source.map((interval) => ({
       ...emptyLine(pricing.intervals.length ? formatIntervalLabel(interval) : ''),
-      input: formatPrice(interval.inputPrice === null ? null : interval.inputPrice * tokenRate, PER_MILLION),
-      output: formatPrice(interval.outputPrice === null ? null : interval.outputPrice * tokenRate, PER_MILLION),
+      input: formatPrice(interval.inputPrice === null ? null : interval.inputPrice * tokenRate, PER_MILLION, 2, '¥'),
+      output: formatPrice(interval.outputPrice === null ? null : interval.outputPrice * tokenRate, PER_MILLION, 2, '¥'),
       cacheWrite: formatPrice(
         interval.cacheWritePrice === null ? null : interval.cacheWritePrice * tokenRate,
         PER_MILLION,
         2,
+        '¥',
       ),
       cacheRead: formatPrice(
         interval.cacheReadPrice === null ? null : interval.cacheReadPrice * tokenRate,
         PER_MILLION,
         2,
+        '¥',
       ),
     }))
   }
@@ -673,6 +676,7 @@ function buildPriceLines(
       interval.perRequestPrice === null ? null : interval.perRequestPrice * rate,
       1,
       2,
+      '¥',
     ),
   }))
 }
@@ -724,7 +728,7 @@ function toLandingPriceRow(
     groupName: group.name,
     subscriptionType: group.subscriptionType,
     billingMode: mode,
-    unit: mode === 'token' ? '$/1M tokens' : mode === 'image' ? '$/张' : '$/次',
+    unit: mode === 'token' ? '¥/1M tokens' : mode === 'image' ? '¥/张' : '¥/次',
     prices: buildPriceLines(group, model.pricing, now, serverUtcOffset),
     officialInput: formatPrice(model.officialPricing?.inputPrice, PER_MILLION),
     officialOutput: formatPrice(model.officialPricing?.outputPrice, PER_MILLION),

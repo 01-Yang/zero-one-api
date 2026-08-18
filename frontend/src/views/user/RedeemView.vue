@@ -98,7 +98,7 @@
                 <div class="mt-2 text-sm text-zo-signal-700 dark:text-zo-signal-400">
                   <p>{{ redeemResult.message }}</p>
                   <div class="mt-3 space-y-1">
-                    <p v-if="redeemResult.type === 'balance'" class="font-medium">
+                    <p v-if="isBalanceType(redeemResult.type)" class="font-medium">
                       {{ t('redeem.added') }}: ${{ redeemResult.value.toFixed(2) }}
                     </p>
                     <p v-else-if="redeemResult.type === 'concurrency'" class="font-medium">
@@ -365,7 +365,12 @@ const contactInfo = ref('')
 
 // Helper functions for history display
 const isBalanceType = (type: string) => {
-  return type === 'balance' || type === 'admin_balance'
+  return (
+    type === 'balance' ||
+    type === 'benefit' ||
+    type === 'mystery_box' ||
+    type === 'admin_balance'
+  )
 }
 
 const isSubscriptionType = (type: string) => {
@@ -379,6 +384,10 @@ const isAdminAdjustment = (type: string) => {
 const getHistoryItemTitle = (item: RedeemHistoryItem) => {
   if (item.type === 'balance') {
     return t('redeem.balanceAddedRedeem')
+  } else if (item.type === 'benefit') {
+    return t('redeem.benefitAddedRedeem')
+  } else if (item.type === 'mystery_box') {
+    return t('redeem.mysteryBoxAddedRedeem')
   } else if (item.type === 'admin_balance') {
     return item.value >= 0 ? t('redeem.balanceAddedAdmin') : t('redeem.balanceDeductedAdmin')
   } else if (item.type === 'concurrency') {
@@ -454,7 +463,11 @@ const handleRedeem = async () => {
     // Show success toast
     appStore.showSuccess(t('redeem.codeRedeemSuccess'))
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.detail || t('redeem.failedToRedeem')
+    const errorCode = error.response?.data?.reason || error.response?.data?.code
+    errorMessage.value =
+      errorCode === 'REDEEM_BATCH_ALREADY_CLAIMED'
+        ? t('redeem.batchAlreadyClaimed')
+        : error.response?.data?.detail || t('redeem.failedToRedeem')
 
     appStore.showError(t('redeem.redeemFailed'))
   } finally {

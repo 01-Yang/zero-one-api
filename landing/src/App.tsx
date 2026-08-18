@@ -17,10 +17,12 @@ import {
   fetchPublicSettings,
   type PublicSettings,
 } from './lib/publicSettings'
+import type { ModelPlazaData } from './lib/modelPlaza'
 import { canLoadBrandImage } from './siteConfig'
 
 export default function App() {
   const [settings, setSettings] = useState<PublicSettings>({ ...DEFAULT_PUBLIC_SETTINGS })
+  const [modelPlazaData, setModelPlazaData] = useState<ModelPlazaData | null>(null)
   const [failedLogoUrls, setFailedLogoUrls] = useState<ReadonlySet<string>>(() => new Set())
   const [publicAnnouncementsOpen, setPublicAnnouncementsOpen] = useState(false)
   const shellRef = useRef<HTMLDivElement>(null)
@@ -123,8 +125,9 @@ export default function App() {
             enabled={settings.modelPlazaEnabled}
             requireAuth={settings.modelPlazaRequireAuth}
             serverUtcOffset={settings.serverUtcOffset}
+            onModelPlazaDataChange={setModelPlazaData}
           />
-          <ValuePricingSection modelPlazaEnabled={settings.modelPlazaEnabled} />
+          <ValuePricingSection modelPlazaData={modelPlazaData} />
           {settings.publicChannelStatusEnabled ? (
             <StatusSection enabled={settings.publicChannelStatusEnabled} />
           ) : null}

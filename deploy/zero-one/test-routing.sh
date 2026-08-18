@@ -5,12 +5,24 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 production_caddyfile="$repo_root/deploy/zero-one/Caddyfile"
 preview_caddyfile="$repo_root/deploy/zero-one/Caddyfile.preview"
 shared_caddyfile="$repo_root/deploy/zero-one/Caddyfile.shared"
+recovered_console_index="$repo_root/deploy/zero-one/recovered-frontend/console/index.html"
+recovered_pricing_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/useKeyedDebouncedSearch-BrW9dWBu.js"
+recovered_asset_alias="$repo_root/deploy/zero-one/recovered-frontend/console/assets/pricing-autofill-fix"
 
 require() {
 	file=$1
 	contract=$2
 	if ! grep -Fq "$contract" "$file"; then
 		echo "missing Caddy routing contract in ${file#"$repo_root"/}: $contract" >&2
+		exit 1
+	fi
+}
+
+forbid() {
+	file=$1
+	contract=$2
+	if grep -Fq "$contract" "$file"; then
+		echo "forbidden recovered Console behavior in ${file#"$repo_root"/}: $contract" >&2
 		exit 1
 	fi
 }
@@ -44,6 +56,16 @@ require "$shared_caddyfile" 'header_up -X-Client-IP'
 require "$shared_caddyfile" 'header_up -X-Cluster-Client-IP'
 require "$shared_caddyfile" 'header_up X-Real-IP {remote_host}'
 require "$shared_caddyfile" 'header_up X-Forwarded-For {remote_host}'
+require "$shared_caddyfile" 'https://checkout-demo.airwallex.com https:; frame-ancestors'
+
+require "$recovered_console_index" 'fetch("/api/v1/settings/public"'
+require "$recovered_console_index" 'await import("/assets/pricing-autofill-fix/index-9xJBhx8B.js")'
+forbid "$recovered_pricing_chunk" 'getModelDefaultPricing('
+
+if [ "$(readlink "$recovered_asset_alias")" != '.' ]; then
+	echo 'recovered Console cache-busting asset alias is missing' >&2
+	exit 1
+fi
 
 for shell_caddyfile in "$production_caddyfile" "$preview_caddyfile"; do
 	if grep -Fq 'reverse_proxy sub2api:8080' "$shell_caddyfile" ||

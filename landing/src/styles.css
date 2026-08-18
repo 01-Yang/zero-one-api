@@ -1868,3 +1868,174 @@ button { color: inherit; }
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Restored live-pricing, billing, and channel-health layouts. */
+.price-table .paid-price-column {
+  color: #c8c1ff;
+  background: linear-gradient(135deg, rgba(111, 87, 255, 0.24), rgba(62, 91, 226, 0.15));
+  box-shadow: inset 1px 0 0 rgba(197, 186, 255, 0.2), inset 0 1px 0 rgba(232, 228, 255, 0.08);
+}
+
+.price-table .paid-price-column--start { border-left: 1px solid rgba(169, 153, 255, 0.3); }
+.price-table .paid-price-column--end { border-right: 1px solid rgba(169, 153, 255, 0.18); }
+.price-table thead .paid-price-column { color: #d5ceff; font-weight: 700; }
+.price-table tbody tr:hover .paid-price-column { background: linear-gradient(135deg, rgba(125, 100, 255, 0.3), rgba(69, 101, 238, 0.2)); }
+.paid-price-column .platform-price-cell .price-values strong { color: #e8e4ff; }
+.paid-price-column .cache-note,
+.paid-price-column .price-unit,
+.paid-price-column .price-values small,
+.paid-price-column .peak-note { color: #b7b0ed; }
+
+.rate-badge {
+  padding: 4px 8px;
+  align-items: center;
+  gap: 5px;
+  border-color: rgba(185, 171, 255, 0.42);
+  color: #d8d2ff;
+  background: rgba(77, 58, 177, 0.4);
+  box-shadow: inset 0 1px 0 rgba(237, 234, 255, 0.18), 0 4px 14px rgba(83, 63, 197, 0.2);
+  font-weight: 800;
+}
+
+.rate-badge-rate { color: #c7beff; }
+.rate-badge-separator { color: rgba(225, 221, 255, 0.58); }
+.rate-badge-discount { color: #f0edff; }
+
+.value-pricing-section {
+  position: relative;
+  z-index: 3;
+  width: min(calc(100% - 48px), var(--page));
+  margin: 56px auto 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.value-pricing-title {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 20px;
+  color: #dcd7ff;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.16;
+  letter-spacing: 0;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .value-pricing-title,
+  .status-heading .section-heading h2 {
+    color: transparent;
+    background: linear-gradient(100deg, #f9f8ff 0%, #d8d2ff 45%, #9b91ff 70%, #74aaff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+}
+
+.value-pricing-main {
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(390px, 0.85fr);
+  align-items: stretch;
+  gap: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  background: rgba(9, 9, 9, 0.9);
+}
+
+.value-pricing-copy { padding: 32px 0 32px 32px; }
+.value-pricing-description { margin: 0; display: flex; flex-direction: column; color: #b9b9be; font-size: 16px; line-height: 1.65; }
+.value-pricing-description span:first-child { color: #e6e6eb; font-weight: 650; }
+.value-pricing-description span + span { margin-top: 8px; }
+.value-pricing-benefits { margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.value-pricing-benefits h3 { margin: 0; color: #f1f1f3; font-size: 20px; font-weight: 760; line-height: 1.35; letter-spacing: 0; }
+.value-pricing-reason-grid { margin-top: 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.value-pricing-reason-card { min-width: 0; padding-right: 12px; display: grid; grid-template-columns: 34px minmax(0, 1fr); grid-template-rows: auto auto; align-content: start; column-gap: 10px; }
+.value-pricing-reason-card + .value-pricing-reason-card { padding-left: 12px; border-left: 1px solid rgba(255, 255, 255, 0.1); }
+.value-pricing-reason-icon { grid-row: 1 / span 2; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #f1f1f2; background: rgba(255, 255, 255, 0.08); }
+.value-pricing-reason-icon svg { width: 17px; height: 17px; stroke-width: 1.8; }
+.value-pricing-reason-card h4 { margin: 0; color: #f1f1f2; font-size: 15px; font-weight: 760; line-height: 1.45; letter-spacing: 0; }
+.value-pricing-reason-card p { margin: 4px 0 0; color: #bababf; font-size: 14px; line-height: 1.65; }
+
+.value-pricing-card { align-self: stretch; margin: 32px 32px 32px 0; border: 1px solid rgba(255, 255, 255, 0.11); border-radius: 20px; background: rgba(14, 14, 14, 0.88); box-shadow: none; }
+.value-pricing-badge { min-height: 36px; margin: 20px 20px 0; padding: 0 14px; gap: 8px; border-color: rgba(255, 255, 255, 0.12); color: #c8c8cc; font-size: 13px; font-weight: 650; }
+.value-pricing-badge svg { width: 17px; height: 17px; color: #f4f4f5; stroke-width: 1.8; }
+.value-pricing-summary { margin: 20px 20px 0; min-height: 0; padding: 20px; display: block; border-color: rgba(255, 255, 255, 0.12); border-radius: 18px; background: #1b1b1b; }
+.value-pricing-summary h3 { color: #f8f8f8; font-size: 34px; font-weight: 800; line-height: 1.1; letter-spacing: 0; }
+.value-pricing-summary p { max-width: 420px; margin: 12px 0 0; color: #b9b9be; font-size: 14px; line-height: 1.65; }
+.value-pricing-action { padding: 20px; }
+.value-pricing-action .value-pricing-purchase { width: 100%; min-height: 52px; border: 1px solid #f4f4f5; border-radius: 16px; color: #080808; background: #f4f4f5; box-shadow: inset 0 1px 0 #fff, 0 12px 30px rgba(0, 0, 0, 0.32); font-size: 15px; font-weight: 700; }
+.value-pricing-action .value-pricing-purchase:hover { color: #050505; border-color: #fff; background: #fff; }
+
+.status-section { padding: 100px max(24px, calc((100vw - var(--page)) / 2)) 88px; }
+.status-heading .section-heading h2 { max-width: 970px; color: #dcd7ff; font-size: 52px; }
+.status-content { width: min(100%, var(--page)); margin: 46px auto 0; padding: 0; display: flex; flex-direction: column; gap: 18px; border: 0; background: transparent; }
+.status-monitor-panel { overflow: hidden; width: 100%; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; background: rgba(14, 14, 15, 0.88); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035); }
+.status-monitor-header { min-height: 66px; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+.status-monitor-heading, .status-legend { color: #b9b9c0; font-size: 13px; font-weight: 650; line-height: 1.4; }
+.status-legend { display: inline-flex; align-items: center; justify-content: flex-end; gap: 10px; color: #a4a4ab; }
+.status-legend-scale { overflow: hidden; width: 92px; height: 16px; display: grid; grid-template-columns: repeat(5, 1fr); border-radius: 6px; }
+.status-legend-scale i:nth-child(1) { background: #4f7dff; }
+.status-legend-scale i:nth-child(2) { background: #7e6cff; }
+.status-legend-scale i:nth-child(3) { background: #ae66f3; }
+.status-legend-scale i:nth-child(4) { background: #e65c87; }
+.status-legend-scale i:nth-child(5) { background: #f04461; }
+.status-monitor-row { padding: 28px; }
+.status-monitor-row + .status-monitor-row { border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.status-monitor-row-head { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.status-monitor-name, .status-monitor-metrics { display: inline-flex; align-items: center; min-width: 0; }
+.status-monitor-name { gap: 12px; }
+.status-monitor-name strong { color: #f4f4f5; font-size: 20px; font-weight: 760; line-height: 1.3; }
+.status-state-dot { width: 12px; height: 12px; flex: 0 0 12px; border-radius: 50%; background: #777780; box-shadow: 0 0 0 4px rgba(119, 119, 128, 0.12); }
+.status-state-dot--operational { background: #4f7dff; box-shadow: 0 0 0 4px rgba(79, 125, 255, 0.12); }
+.status-state-dot--degraded { background: #e65c87; box-shadow: 0 0 0 4px rgba(230, 92, 135, 0.12); }
+.status-monitor-metrics { flex-wrap: wrap; justify-content: flex-end; gap: 11px; color: #aaaab1; font-size: 14px; font-variant-numeric: tabular-nums; line-height: 1.5; text-align: right; }
+.status-monitor-metrics strong { color: #f4f4f5; font-weight: 760; }
+.status-value--operational { color: #86acff; }
+.status-value--degraded { color: #f07a9f; }
+.status-value--unknown { color: #b6b6c0; }
+.status-metric-divider { color: rgba(255, 255, 255, 0.22); }
+.status-availability-meter { min-height: 40px; margin-top: 24px; display: flex; gap: 2px; overflow: hidden; }
+.status-availability-meter span { flex: 1 1 0; min-width: 0; border-radius: 2px; background: rgba(255, 255, 255, 0.1); }
+.status-availability-meter .is-operational { background: #4f7dff; }
+.status-availability-meter .is-degraded { background: #e65c87; }
+.status-availability-meter .is-failed, .status-availability-meter .is-error { background: #f04461; }
+.status-availability-meter .is-unknown { background: rgba(255, 255, 255, 0.18); }
+.status-note { margin: 0; color: #898990; font-size: 12px; line-height: 1.65; }
+.status-actions { width: 100%; display: flex; }
+
+.site-footer { min-height: 0; padding: 56px 0 46px; grid-template-columns: minmax(260px, 1fr) repeat(3, max-content); row-gap: 32px; }
+
+@media (max-width: 1023px) {
+  .value-pricing-section { width: min(calc(100% - 40px), 920px); }
+  .value-pricing-main { grid-template-columns: 1fr; gap: 0; }
+  .value-pricing-copy { padding: 32px 32px 0; }
+  .value-pricing-card { margin: 24px 32px 32px; }
+}
+
+@media (max-width: 767px) {
+  .value-pricing-section { width: calc(100% - 28px); margin-top: 42px; padding: 0; }
+  .value-pricing-title { margin-bottom: 16px; font-size: 32px; line-height: 1.22; white-space: normal; }
+  .value-pricing-copy { padding: 24px 20px 0; }
+  .value-pricing-description { font-size: 15px; }
+  .value-pricing-benefits { margin-top: 20px; padding-top: 18px; }
+  .value-pricing-reason-grid { grid-template-columns: 1fr; gap: 14px; }
+  .value-pricing-reason-card, .value-pricing-reason-card + .value-pricing-reason-card { padding: 0; border: 0; }
+  .value-pricing-card { margin: 24px 20px 20px; border-radius: 16px; }
+  .value-pricing-badge { margin: 18px 18px 0; font-size: 12px; }
+  .value-pricing-summary { margin: 18px 18px 0; padding: 18px; border-radius: 14px; }
+  .value-pricing-summary h3 { font-size: 28px; }
+  .value-pricing-action { padding: 18px; }
+  .status-section { padding: 76px 14px 72px; }
+  .status-heading .section-heading h2 { font-size: 36px; }
+  .status-content { margin-top: 32px; }
+  .status-monitor-header { min-height: 0; padding: 18px; align-items: flex-start; flex-direction: column; gap: 12px; }
+  .status-legend { justify-content: flex-start; font-size: 12px; }
+  .status-monitor-row { padding: 20px 18px; }
+  .status-monitor-row-head { align-items: flex-start; flex-direction: column; gap: 12px; }
+  .status-monitor-metrics { justify-content: flex-start; text-align: left; }
+  .status-availability-meter { min-height: 28px; margin-top: 18px; }
+  .site-footer { min-height: 0; padding: 48px 0 38px; }
+}

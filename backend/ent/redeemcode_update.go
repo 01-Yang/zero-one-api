@@ -44,6 +44,46 @@ func (_u *RedeemCodeUpdate) SetNillableCode(v *string) *RedeemCodeUpdate {
 	return _u
 }
 
+// SetCodeHash sets the "code_hash" field.
+func (_u *RedeemCodeUpdate) SetCodeHash(v string) *RedeemCodeUpdate {
+	_u.mutation.SetCodeHash(v)
+	return _u
+}
+
+// SetNillableCodeHash sets the "code_hash" field if the given value is not nil.
+func (_u *RedeemCodeUpdate) SetNillableCodeHash(v *string) *RedeemCodeUpdate {
+	if v != nil {
+		_u.SetCodeHash(*v)
+	}
+	return _u
+}
+
+// ClearCodeHash clears the value of the "code_hash" field.
+func (_u *RedeemCodeUpdate) ClearCodeHash() *RedeemCodeUpdate {
+	_u.mutation.ClearCodeHash()
+	return _u
+}
+
+// SetBatchID sets the "batch_id" field.
+func (_u *RedeemCodeUpdate) SetBatchID(v string) *RedeemCodeUpdate {
+	_u.mutation.SetBatchID(v)
+	return _u
+}
+
+// SetNillableBatchID sets the "batch_id" field if the given value is not nil.
+func (_u *RedeemCodeUpdate) SetNillableBatchID(v *string) *RedeemCodeUpdate {
+	if v != nil {
+		_u.SetBatchID(*v)
+	}
+	return _u
+}
+
+// ClearBatchID clears the value of the "batch_id" field.
+func (_u *RedeemCodeUpdate) ClearBatchID() *RedeemCodeUpdate {
+	_u.mutation.ClearBatchID()
+	return _u
+}
+
 // SetType sets the "type" field.
 func (_u *RedeemCodeUpdate) SetType(v string) *RedeemCodeUpdate {
 	_u.mutation.SetType(v)
@@ -76,6 +116,48 @@ func (_u *RedeemCodeUpdate) SetNillableValue(v *float64) *RedeemCodeUpdate {
 // AddValue adds value to the "value" field.
 func (_u *RedeemCodeUpdate) AddValue(v float64) *RedeemCodeUpdate {
 	_u.mutation.AddValue(v)
+	return _u
+}
+
+// SetMinValue sets the "min_value" field.
+func (_u *RedeemCodeUpdate) SetMinValue(v float64) *RedeemCodeUpdate {
+	_u.mutation.ResetMinValue()
+	_u.mutation.SetMinValue(v)
+	return _u
+}
+
+// SetNillableMinValue sets the "min_value" field if the given value is not nil.
+func (_u *RedeemCodeUpdate) SetNillableMinValue(v *float64) *RedeemCodeUpdate {
+	if v != nil {
+		_u.SetMinValue(*v)
+	}
+	return _u
+}
+
+// AddMinValue adds value to the "min_value" field.
+func (_u *RedeemCodeUpdate) AddMinValue(v float64) *RedeemCodeUpdate {
+	_u.mutation.AddMinValue(v)
+	return _u
+}
+
+// SetMaxValue sets the "max_value" field.
+func (_u *RedeemCodeUpdate) SetMaxValue(v float64) *RedeemCodeUpdate {
+	_u.mutation.ResetMaxValue()
+	_u.mutation.SetMaxValue(v)
+	return _u
+}
+
+// SetNillableMaxValue sets the "max_value" field if the given value is not nil.
+func (_u *RedeemCodeUpdate) SetNillableMaxValue(v *float64) *RedeemCodeUpdate {
+	if v != nil {
+		_u.SetMaxValue(*v)
+	}
+	return _u
+}
+
+// AddMaxValue adds value to the "max_value" field.
+func (_u *RedeemCodeUpdate) AddMaxValue(v float64) *RedeemCodeUpdate {
+	_u.mutation.AddMaxValue(v)
 	return _u
 }
 
@@ -289,6 +371,16 @@ func (_u *RedeemCodeUpdate) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.code": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.CodeHash(); ok {
+		if err := redeemcode.CodeHashValidator(v); err != nil {
+			return &ValidationError{Name: "code_hash", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.code_hash": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.BatchID(); ok {
+		if err := redeemcode.BatchIDValidator(v); err != nil {
+			return &ValidationError{Name: "batch_id", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.batch_id": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.GetType(); ok {
 		if err := redeemcode.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.type": %w`, err)}
@@ -317,6 +409,18 @@ func (_u *RedeemCodeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(redeemcode.FieldCode, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.CodeHash(); ok {
+		_spec.SetField(redeemcode.FieldCodeHash, field.TypeString, value)
+	}
+	if _u.mutation.CodeHashCleared() {
+		_spec.ClearField(redeemcode.FieldCodeHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.BatchID(); ok {
+		_spec.SetField(redeemcode.FieldBatchID, field.TypeString, value)
+	}
+	if _u.mutation.BatchIDCleared() {
+		_spec.ClearField(redeemcode.FieldBatchID, field.TypeString)
+	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(redeemcode.FieldType, field.TypeString, value)
 	}
@@ -325,6 +429,18 @@ func (_u *RedeemCodeUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.AddedValue(); ok {
 		_spec.AddField(redeemcode.FieldValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.MinValue(); ok {
+		_spec.SetField(redeemcode.FieldMinValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedMinValue(); ok {
+		_spec.AddField(redeemcode.FieldMinValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.MaxValue(); ok {
+		_spec.SetField(redeemcode.FieldMaxValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedMaxValue(); ok {
+		_spec.AddField(redeemcode.FieldMaxValue, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(redeemcode.FieldStatus, field.TypeString, value)
@@ -445,6 +561,46 @@ func (_u *RedeemCodeUpdateOne) SetNillableCode(v *string) *RedeemCodeUpdateOne {
 	return _u
 }
 
+// SetCodeHash sets the "code_hash" field.
+func (_u *RedeemCodeUpdateOne) SetCodeHash(v string) *RedeemCodeUpdateOne {
+	_u.mutation.SetCodeHash(v)
+	return _u
+}
+
+// SetNillableCodeHash sets the "code_hash" field if the given value is not nil.
+func (_u *RedeemCodeUpdateOne) SetNillableCodeHash(v *string) *RedeemCodeUpdateOne {
+	if v != nil {
+		_u.SetCodeHash(*v)
+	}
+	return _u
+}
+
+// ClearCodeHash clears the value of the "code_hash" field.
+func (_u *RedeemCodeUpdateOne) ClearCodeHash() *RedeemCodeUpdateOne {
+	_u.mutation.ClearCodeHash()
+	return _u
+}
+
+// SetBatchID sets the "batch_id" field.
+func (_u *RedeemCodeUpdateOne) SetBatchID(v string) *RedeemCodeUpdateOne {
+	_u.mutation.SetBatchID(v)
+	return _u
+}
+
+// SetNillableBatchID sets the "batch_id" field if the given value is not nil.
+func (_u *RedeemCodeUpdateOne) SetNillableBatchID(v *string) *RedeemCodeUpdateOne {
+	if v != nil {
+		_u.SetBatchID(*v)
+	}
+	return _u
+}
+
+// ClearBatchID clears the value of the "batch_id" field.
+func (_u *RedeemCodeUpdateOne) ClearBatchID() *RedeemCodeUpdateOne {
+	_u.mutation.ClearBatchID()
+	return _u
+}
+
 // SetType sets the "type" field.
 func (_u *RedeemCodeUpdateOne) SetType(v string) *RedeemCodeUpdateOne {
 	_u.mutation.SetType(v)
@@ -477,6 +633,48 @@ func (_u *RedeemCodeUpdateOne) SetNillableValue(v *float64) *RedeemCodeUpdateOne
 // AddValue adds value to the "value" field.
 func (_u *RedeemCodeUpdateOne) AddValue(v float64) *RedeemCodeUpdateOne {
 	_u.mutation.AddValue(v)
+	return _u
+}
+
+// SetMinValue sets the "min_value" field.
+func (_u *RedeemCodeUpdateOne) SetMinValue(v float64) *RedeemCodeUpdateOne {
+	_u.mutation.ResetMinValue()
+	_u.mutation.SetMinValue(v)
+	return _u
+}
+
+// SetNillableMinValue sets the "min_value" field if the given value is not nil.
+func (_u *RedeemCodeUpdateOne) SetNillableMinValue(v *float64) *RedeemCodeUpdateOne {
+	if v != nil {
+		_u.SetMinValue(*v)
+	}
+	return _u
+}
+
+// AddMinValue adds value to the "min_value" field.
+func (_u *RedeemCodeUpdateOne) AddMinValue(v float64) *RedeemCodeUpdateOne {
+	_u.mutation.AddMinValue(v)
+	return _u
+}
+
+// SetMaxValue sets the "max_value" field.
+func (_u *RedeemCodeUpdateOne) SetMaxValue(v float64) *RedeemCodeUpdateOne {
+	_u.mutation.ResetMaxValue()
+	_u.mutation.SetMaxValue(v)
+	return _u
+}
+
+// SetNillableMaxValue sets the "max_value" field if the given value is not nil.
+func (_u *RedeemCodeUpdateOne) SetNillableMaxValue(v *float64) *RedeemCodeUpdateOne {
+	if v != nil {
+		_u.SetMaxValue(*v)
+	}
+	return _u
+}
+
+// AddMaxValue adds value to the "max_value" field.
+func (_u *RedeemCodeUpdateOne) AddMaxValue(v float64) *RedeemCodeUpdateOne {
+	_u.mutation.AddMaxValue(v)
 	return _u
 }
 
@@ -703,6 +901,16 @@ func (_u *RedeemCodeUpdateOne) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.code": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.CodeHash(); ok {
+		if err := redeemcode.CodeHashValidator(v); err != nil {
+			return &ValidationError{Name: "code_hash", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.code_hash": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.BatchID(); ok {
+		if err := redeemcode.BatchIDValidator(v); err != nil {
+			return &ValidationError{Name: "batch_id", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.batch_id": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.GetType(); ok {
 		if err := redeemcode.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.type": %w`, err)}
@@ -748,6 +956,18 @@ func (_u *RedeemCodeUpdateOne) sqlSave(ctx context.Context) (_node *RedeemCode, 
 	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(redeemcode.FieldCode, field.TypeString, value)
 	}
+	if value, ok := _u.mutation.CodeHash(); ok {
+		_spec.SetField(redeemcode.FieldCodeHash, field.TypeString, value)
+	}
+	if _u.mutation.CodeHashCleared() {
+		_spec.ClearField(redeemcode.FieldCodeHash, field.TypeString)
+	}
+	if value, ok := _u.mutation.BatchID(); ok {
+		_spec.SetField(redeemcode.FieldBatchID, field.TypeString, value)
+	}
+	if _u.mutation.BatchIDCleared() {
+		_spec.ClearField(redeemcode.FieldBatchID, field.TypeString)
+	}
 	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(redeemcode.FieldType, field.TypeString, value)
 	}
@@ -756,6 +976,18 @@ func (_u *RedeemCodeUpdateOne) sqlSave(ctx context.Context) (_node *RedeemCode, 
 	}
 	if value, ok := _u.mutation.AddedValue(); ok {
 		_spec.AddField(redeemcode.FieldValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.MinValue(); ok {
+		_spec.SetField(redeemcode.FieldMinValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedMinValue(); ok {
+		_spec.AddField(redeemcode.FieldMinValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.MaxValue(); ok {
+		_spec.SetField(redeemcode.FieldMaxValue, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedMaxValue(); ok {
+		_spec.AddField(redeemcode.FieldMaxValue, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(redeemcode.FieldStatus, field.TypeString, value)

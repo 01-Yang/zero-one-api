@@ -23,10 +23,15 @@ func NewRedeemCodeRepository(client *dbent.Client) service.RedeemCodeRepository 
 }
 
 func (r *redeemCodeRepository) Create(ctx context.Context, code *service.RedeemCode) error {
-	created, err := r.client.RedeemCode.Create().
-		SetCode(code.Code).
+	client := clientFromContext(ctx, r.client)
+	created, err := client.RedeemCode.Create().
+		SetCode(persistedRedeemCode(code)).
+		SetNillableCodeHash(code.CodeHash).
+		SetNillableBatchID(code.BatchID).
 		SetType(code.Type).
 		SetValue(code.Value).
+		SetMinValue(code.MinValue).
+		SetMaxValue(code.MaxValue).
 		SetStatus(code.Status).
 		SetNotes(code.Notes).
 		SetValidityDays(code.ValidityDays).
@@ -47,13 +52,18 @@ func (r *redeemCodeRepository) CreateBatch(ctx context.Context, codes []service.
 		return nil
 	}
 
+	client := clientFromContext(ctx, r.client)
 	builders := make([]*dbent.RedeemCodeCreate, 0, len(codes))
 	for i := range codes {
 		c := &codes[i]
-		b := r.client.RedeemCode.Create().
-			SetCode(c.Code).
+		b := client.RedeemCode.Create().
+			SetCode(persistedRedeemCode(c)).
+			SetNillableCodeHash(c.CodeHash).
+			SetNillableBatchID(c.BatchID).
 			SetType(c.Type).
 			SetValue(c.Value).
+			SetMinValue(c.MinValue).
+			SetMaxValue(c.MaxValue).
 			SetStatus(c.Status).
 			SetNotes(c.Notes).
 			SetValidityDays(c.ValidityDays).
@@ -64,7 +74,25 @@ func (r *redeemCodeRepository) CreateBatch(ctx context.Context, codes []service.
 		builders = append(builders, b)
 	}
 
-	return r.client.RedeemCode.CreateBulk(builders...).Exec(ctx)
+	created, err := client.RedeemCode.CreateBulk(builders...).Save(ctx)
+	if err != nil {
+		return err
+	}
+	for i := range created {
+		codes[i].ID = created[i].ID
+		codes[i].CreatedAt = created[i].CreatedAt
+	}
+	return nil
+}
+
+func persistedRedeemCode(code *service.RedeemCode) string {
+	if code == nil || code.CodeHash == nil {
+		if code == nil {
+			return ""
+		}
+		return code.Code
+	}
+	return service.RedactedRedeemCode(code.Code, *code.CodeHash)
 }
 
 func (r *redeemCodeRepository) GetByID(ctx context.Context, id int64) (*service.RedeemCode, error) {
@@ -81,8 +109,13 @@ func (r *redeemCodeRepository) GetByID(ctx context.Context, id int64) (*service.
 }
 
 func (r *redeemCodeRepository) GetByCode(ctx context.Context, code string) (*service.RedeemCode, error) {
+	code = strings.TrimSpace(code)
+	hash := service.RedeemCodeHash(code)
 	m, err := r.client.RedeemCode.Query().
-		Where(redeemcode.CodeEQ(code)).
+		Where(redeemcode.Or(
+			redeemcode.And(redeemcode.CodeEQ(code), redeemcode.CodeHashIsNil()),
+			redeemcode.CodeHashEQ(hash),
+		)).
 		Only(ctx)
 	if err != nil {
 		if dbent.IsNotFound(err) {
@@ -94,8 +127,24 @@ func (r *redeemCodeRepository) GetByCode(ctx context.Context, code string) (*ser
 }
 
 func (r *redeemCodeRepository) Delete(ctx context.Context, id int64) error {
-	_, err := r.client.RedeemCode.Delete().Where(redeemcode.IDEQ(id)).Exec(ctx)
-	return err
+	affected, err := r.client.RedeemCode.Delete().Where(
+		redeemcode.IDEQ(id),
+		redeemcode.StatusNEQ(service.StatusUsed),
+	).Exec(ctx)
+	if err != nil || affected > 0 {
+		return err
+	}
+	existing, err := r.client.RedeemCode.Query().Where(redeemcode.IDEQ(id)).Only(ctx)
+	if dbent.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if existing.Status == service.StatusUsed {
+		return service.ErrRedeemCodeUsed
+	}
+	return nil
 }
 
 func (r *redeemCodeRepository) List(ctx context.Context, params pagination.PaginationParams) ([]service.RedeemCode, *pagination.PaginationResult, error) {
@@ -198,8 +247,12 @@ func redeemCodeListOrder(params pagination.PaginationParams) []func(*entsql.Sele
 func (r *redeemCodeRepository) Update(ctx context.Context, code *service.RedeemCode) error {
 	up := r.client.RedeemCode.UpdateOneID(code.ID).
 		SetCode(code.Code).
+		SetNillableCodeHash(code.CodeHash).
+		SetNillableBatchID(code.BatchID).
 		SetType(code.Type).
 		SetValue(code.Value).
+		SetMinValue(code.MinValue).
+		SetMaxValue(code.MaxValue).
 		SetStatus(code.Status).
 		SetNotes(code.Notes).
 		SetValidityDays(code.ValidityDays)
@@ -331,6 +384,9 @@ func (r *redeemCodeRepository) Use(ctx context.Context, id, userID int64) error 
 		SetUsedAt(now).
 		Save(ctx)
 	if err != nil {
+		if dbent.IsConstraintError(err) {
+			return service.ErrRedeemBatchAlreadyClaimed
+		}
 		return err
 	}
 	if affected == 0 {
@@ -415,8 +471,12 @@ func redeemCodeEntityToService(m *dbent.RedeemCode) *service.RedeemCode {
 	out := &service.RedeemCode{
 		ID:           m.ID,
 		Code:         m.Code,
+		CodeHash:     m.CodeHash,
+		BatchID:      m.BatchID,
 		Type:         m.Type,
 		Value:        m.Value,
+		MinValue:     m.MinValue,
+		MaxValue:     m.MaxValue,
 		Status:       m.Status,
 		UsedBy:       m.UsedBy,
 		UsedAt:       m.UsedAt,

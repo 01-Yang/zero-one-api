@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
+	"math/big"
 	"strings"
 	"time"
 
@@ -16,12 +18,13 @@ import (
 )
 
 var (
-	ErrRedeemCodeNotFound  = infraerrors.NotFound("REDEEM_CODE_NOT_FOUND", "redeem code not found")
-	ErrRedeemCodeUsed      = infraerrors.Conflict("REDEEM_CODE_USED", "redeem code already used")
-	ErrRedeemCodeExpired   = infraerrors.Conflict("REDEEM_CODE_EXPIRED", "redeem code expired")
-	ErrInsufficientBalance = infraerrors.BadRequest("INSUFFICIENT_BALANCE", "insufficient balance")
-	ErrRedeemRateLimited   = infraerrors.TooManyRequests("REDEEM_RATE_LIMITED", "too many failed attempts, please try again later")
-	ErrRedeemCodeLocked    = infraerrors.Conflict("REDEEM_CODE_LOCKED", "redeem code is being processed, please try again")
+	ErrRedeemCodeNotFound        = infraerrors.NotFound("REDEEM_CODE_NOT_FOUND", "redeem code not found")
+	ErrRedeemCodeUsed            = infraerrors.Conflict("REDEEM_CODE_USED", "redeem code already used")
+	ErrRedeemCodeExpired         = infraerrors.Conflict("REDEEM_CODE_EXPIRED", "redeem code expired")
+	ErrInsufficientBalance       = infraerrors.BadRequest("INSUFFICIENT_BALANCE", "insufficient balance")
+	ErrRedeemRateLimited         = infraerrors.TooManyRequests("REDEEM_RATE_LIMITED", "too many failed attempts, please try again later")
+	ErrRedeemCodeLocked          = infraerrors.Conflict("REDEEM_CODE_LOCKED", "redeem code is being processed, please try again")
+	ErrRedeemBatchAlreadyClaimed = infraerrors.Conflict("REDEEM_BATCH_ALREADY_CLAIMED", "you have already redeemed a code from this batch")
 )
 
 const (
@@ -224,11 +227,13 @@ func (s *RedeemService) GenerateCodes(ctx context.Context, req GenerateCodesRequ
 			return nil, fmt.Errorf("generate code: %w", err)
 		}
 
+		codeHash := RedeemCodeHash(code)
 		codes = append(codes, RedeemCode{
-			Code:   code,
-			Type:   codeType,
-			Value:  value,
-			Status: StatusUnused,
+			Code:     code,
+			CodeHash: &codeHash,
+			Type:     codeType,
+			Value:    value,
+			Status:   StatusUnused,
 		})
 	}
 
@@ -384,8 +389,48 @@ func unsupportedRedeemTypeError(codeType string) error {
 	return infraerrors.BadRequest("REDEEM_CODE_UNSUPPORTED_TYPE", fmt.Sprintf("unsupported redeem type: %s", codeType))
 }
 
+func currencyCents(value float64) (int64, error) {
+	if math.IsNaN(value) || math.IsInf(value, 0) || value <= 0 || value > float64(math.MaxInt64)/100 {
+		return 0, errors.New("amount must be a positive finite value")
+	}
+	cents := math.Round(value * 100)
+	if math.Abs(value*100-cents) > 0.000001 {
+		return 0, errors.New("amount must have at most two decimal places")
+	}
+	return int64(cents), nil
+}
+
+func validateMysteryBoxRange(minValue, maxValue float64) (int64, int64, error) {
+	minCents, err := currencyCents(minValue)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid minimum amount: %w", err)
+	}
+	maxCents, err := currencyCents(maxValue)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid maximum amount: %w", err)
+	}
+	if maxCents < minCents {
+		return 0, 0, errors.New("maximum amount must be greater than or equal to minimum amount")
+	}
+	return minCents, maxCents, nil
+}
+
+func randomMysteryBoxAmount(minValue, maxValue float64) (float64, error) {
+	minCents, maxCents, err := validateMysteryBoxRange(minValue, maxValue)
+	if err != nil {
+		return 0, err
+	}
+	span := big.NewInt(maxCents - minCents + 1)
+	offset, err := rand.Int(rand.Reader, span)
+	if err != nil {
+		return 0, fmt.Errorf("generate random reward: %w", err)
+	}
+	return float64(minCents+offset.Int64()) / 100, nil
+}
+
 // Redeem 使用兑换码
 func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (*RedeemCode, error) {
+	code = strings.TrimSpace(code)
 	// 检查限流
 	if err := s.checkRedeemRateLimit(ctx, userID); err != nil {
 		return nil, err
@@ -418,8 +463,22 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 	}
 
 	// 验证兑换码类型的前置条件。邀请码属于注册流程，不能通过普通兑换接口使用。
+	var mysteryBoxAmount *float64
 	switch redeemCode.Type {
 	case RedeemTypeBalance, RedeemTypeConcurrency:
+	case RedeemTypeBenefit:
+		if redeemCode.BatchID == nil || redeemCode.Value <= 0 {
+			return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid benefit redeem code")
+		}
+	case RedeemTypeMysteryBox:
+		if redeemCode.BatchID == nil {
+			return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid mystery box redeem code")
+		}
+		amount, randomErr := randomMysteryBoxAmount(redeemCode.MinValue, redeemCode.MaxValue)
+		if randomErr != nil {
+			return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid mystery box reward range")
+		}
+		mysteryBoxAmount = &amount
 	case RedeemTypeSubscription:
 		if redeemCode.GroupID == nil {
 			return nil, infraerrors.BadRequest("REDEEM_CODE_INVALID", "invalid subscription redeem code: missing group_id")
@@ -447,15 +506,24 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 	// 【关键】先标记兑换码为已使用，确保并发安全
 	// 利用数据库乐观锁（WHERE status = 'unused'）保证原子性
 	if err := s.redeemRepo.Use(txCtx, redeemCode.ID, userID); err != nil {
+		if errors.Is(err, ErrRedeemBatchAlreadyClaimed) {
+			return nil, ErrRedeemBatchAlreadyClaimed
+		}
 		if errors.Is(err, ErrRedeemCodeNotFound) || errors.Is(err, ErrRedeemCodeUsed) {
 			return nil, ErrRedeemCodeUsed
 		}
 		return nil, fmt.Errorf("mark code as used: %w", err)
 	}
+	if mysteryBoxAmount != nil {
+		if err := tx.Client().RedeemCode.UpdateOneID(redeemCode.ID).SetValue(*mysteryBoxAmount).Exec(txCtx); err != nil {
+			return nil, fmt.Errorf("store mystery box reward: %w", err)
+		}
+		redeemCode.Value = *mysteryBoxAmount
+	}
 
 	// 执行兑换逻辑（兑换码已被锁定，此时可安全操作）
 	switch redeemCode.Type {
-	case RedeemTypeBalance:
+	case RedeemTypeBalance, RedeemTypeBenefit, RedeemTypeMysteryBox:
 		amount := redeemCode.Value
 		if amount < 0 {
 			if s.redeemUserRepo == nil {
@@ -533,7 +601,7 @@ func (s *RedeemService) Redeem(ctx context.Context, userID int64, code string) (
 // invalidateRedeemCaches 失效兑换相关的缓存
 func (s *RedeemService) invalidateRedeemCaches(ctx context.Context, userID int64, redeemCode *RedeemCode) {
 	switch redeemCode.Type {
-	case RedeemTypeBalance:
+	case RedeemTypeBalance, RedeemTypeBenefit, RedeemTypeMysteryBox:
 		if s.authCacheInvalidator != nil {
 			s.authCacheInvalidator.InvalidateAuthCacheByUserID(ctx, userID)
 		}

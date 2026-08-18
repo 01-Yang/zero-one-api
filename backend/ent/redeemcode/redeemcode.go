@@ -16,10 +16,18 @@ const (
 	FieldID = "id"
 	// FieldCode holds the string denoting the code field in the database.
 	FieldCode = "code"
+	// FieldCodeHash holds the string denoting the code_hash field in the database.
+	FieldCodeHash = "code_hash"
+	// FieldBatchID holds the string denoting the batch_id field in the database.
+	FieldBatchID = "batch_id"
 	// FieldType holds the string denoting the type field in the database.
 	FieldType = "type"
 	// FieldValue holds the string denoting the value field in the database.
 	FieldValue = "value"
+	// FieldMinValue holds the string denoting the min_value field in the database.
+	FieldMinValue = "min_value"
+	// FieldMaxValue holds the string denoting the max_value field in the database.
+	FieldMaxValue = "max_value"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldUsedBy holds the string denoting the used_by field in the database.
@@ -62,8 +70,12 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldCode,
+	FieldCodeHash,
+	FieldBatchID,
 	FieldType,
 	FieldValue,
+	FieldMinValue,
+	FieldMaxValue,
 	FieldStatus,
 	FieldUsedBy,
 	FieldUsedAt,
@@ -87,12 +99,20 @@ func ValidColumn(column string) bool {
 var (
 	// CodeValidator is a validator for the "code" field. It is called by the builders before save.
 	CodeValidator func(string) error
+	// CodeHashValidator is a validator for the "code_hash" field. It is called by the builders before save.
+	CodeHashValidator func(string) error
+	// BatchIDValidator is a validator for the "batch_id" field. It is called by the builders before save.
+	BatchIDValidator func(string) error
 	// DefaultType holds the default value on creation for the "type" field.
 	DefaultType string
 	// TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	TypeValidator func(string) error
 	// DefaultValue holds the default value on creation for the "value" field.
 	DefaultValue float64
+	// DefaultMinValue holds the default value on creation for the "min_value" field.
+	DefaultMinValue float64
+	// DefaultMaxValue holds the default value on creation for the "max_value" field.
+	DefaultMaxValue float64
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// StatusValidator is a validator for the "status" field. It is called by the builders before save.
@@ -116,6 +136,16 @@ func ByCode(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCode, opts...).ToFunc()
 }
 
+// ByCodeHash orders the results by the code_hash field.
+func ByCodeHash(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCodeHash, opts...).ToFunc()
+}
+
+// ByBatchID orders the results by the batch_id field.
+func ByBatchID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBatchID, opts...).ToFunc()
+}
+
 // ByType orders the results by the type field.
 func ByType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldType, opts...).ToFunc()
@@ -124,6 +154,16 @@ func ByType(opts ...sql.OrderTermOption) OrderOption {
 // ByValue orders the results by the value field.
 func ByValue(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldValue, opts...).ToFunc()
+}
+
+// ByMinValue orders the results by the min_value field.
+func ByMinValue(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMinValue, opts...).ToFunc()
+}
+
+// ByMaxValue orders the results by the max_value field.
+func ByMaxValue(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMaxValue, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.

@@ -70,7 +70,9 @@ export async function generate(
   value: number,
   groupId?: number | null,
   validityDays?: number,
-  expiresInDays?: number | null
+  expiresInDays?: number | null,
+  minValue?: number,
+  maxValue?: number
 ): Promise<RedeemCode[]> {
   const payload: GenerateRedeemCodesRequest = {
     count,
@@ -84,6 +86,10 @@ export async function generate(
     if (validityDays && validityDays > 0) {
       payload.validity_days = validityDays
     }
+  }
+  if (type === 'mystery_box') {
+    payload.min_value = minValue
+    payload.max_value = maxValue
   }
   if (expiresInDays && expiresInDays > 0) {
     payload.expires_in_days = expiresInDays

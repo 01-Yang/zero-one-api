@@ -21,10 +21,18 @@ type RedeemCode struct {
 	ID int64 `json:"id,omitempty"`
 	// Code holds the value of the "code" field.
 	Code string `json:"code,omitempty"`
+	// CodeHash holds the value of the "code_hash" field.
+	CodeHash *string `json:"code_hash,omitempty"`
+	// BatchID holds the value of the "batch_id" field.
+	BatchID *string `json:"batch_id,omitempty"`
 	// Type holds the value of the "type" field.
 	Type string `json:"type,omitempty"`
 	// Value holds the value of the "value" field.
 	Value float64 `json:"value,omitempty"`
+	// MinValue holds the value of the "min_value" field.
+	MinValue float64 `json:"min_value,omitempty"`
+	// MaxValue holds the value of the "max_value" field.
+	MaxValue float64 `json:"max_value,omitempty"`
 	// Status holds the value of the "status" field.
 	Status string `json:"status,omitempty"`
 	// UsedBy holds the value of the "used_by" field.
@@ -85,11 +93,11 @@ func (*RedeemCode) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case redeemcode.FieldValue:
+		case redeemcode.FieldValue, redeemcode.FieldMinValue, redeemcode.FieldMaxValue:
 			values[i] = new(sql.NullFloat64)
 		case redeemcode.FieldID, redeemcode.FieldUsedBy, redeemcode.FieldGroupID, redeemcode.FieldValidityDays:
 			values[i] = new(sql.NullInt64)
-		case redeemcode.FieldCode, redeemcode.FieldType, redeemcode.FieldStatus, redeemcode.FieldNotes:
+		case redeemcode.FieldCode, redeemcode.FieldCodeHash, redeemcode.FieldBatchID, redeemcode.FieldType, redeemcode.FieldStatus, redeemcode.FieldNotes:
 			values[i] = new(sql.NullString)
 		case redeemcode.FieldUsedAt, redeemcode.FieldCreatedAt, redeemcode.FieldExpiresAt:
 			values[i] = new(sql.NullTime)
@@ -120,6 +128,20 @@ func (_m *RedeemCode) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Code = value.String
 			}
+		case redeemcode.FieldCodeHash:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field code_hash", values[i])
+			} else if value.Valid {
+				_m.CodeHash = new(string)
+				*_m.CodeHash = value.String
+			}
+		case redeemcode.FieldBatchID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field batch_id", values[i])
+			} else if value.Valid {
+				_m.BatchID = new(string)
+				*_m.BatchID = value.String
+			}
 		case redeemcode.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
@@ -131,6 +153,18 @@ func (_m *RedeemCode) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field value", values[i])
 			} else if value.Valid {
 				_m.Value = value.Float64
+			}
+		case redeemcode.FieldMinValue:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field min_value", values[i])
+			} else if value.Valid {
+				_m.MinValue = value.Float64
+			}
+		case redeemcode.FieldMaxValue:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field max_value", values[i])
+			} else if value.Valid {
+				_m.MaxValue = value.Float64
 			}
 		case redeemcode.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -234,11 +268,27 @@ func (_m *RedeemCode) String() string {
 	builder.WriteString("code=")
 	builder.WriteString(_m.Code)
 	builder.WriteString(", ")
+	if v := _m.CodeHash; v != nil {
+		builder.WriteString("code_hash=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.BatchID; v != nil {
+		builder.WriteString("batch_id=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
 	builder.WriteString("type=")
 	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("value=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Value))
+	builder.WriteString(", ")
+	builder.WriteString("min_value=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MinValue))
+	builder.WriteString(", ")
+	builder.WriteString("max_value=")
+	builder.WriteString(fmt.Sprintf("%v", _m.MaxValue))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(_m.Status)

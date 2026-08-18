@@ -52,10 +52,13 @@ onUnmounted(() => {
 
 .layout-section-fixed {
   @apply flex-shrink-0;
+  position: relative;
+  z-index: 40;
   animation: table-surface-stack-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .layout-section-fixed + .layout-section-fixed {
+  z-index: 30;
   animation-delay: 40ms;
 }
 

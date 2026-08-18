@@ -234,9 +234,9 @@ describe('landing price projection', () => {
     expect(row?.prices).toEqual([
       expect.objectContaining({
         label: '≤200K',
-        input: '$1.20',
-        output: '$6.00',
-        cacheRead: '$0.12',
+        input: '¥1.20',
+        output: '¥6.00',
+        cacheRead: '¥0.12',
       }),
     ])
     expect(row?.effectiveRateLabel).toBe('0.4×')
@@ -287,10 +287,10 @@ describe('landing price projection', () => {
 
     const image = rows.find((row) => row.model === 'imagen-4')
     const request = rows.find((row) => row.model === 'request-model')
-    expect(image).toMatchObject({ unit: '$/张', effectiveRate: 0.25 })
-    expect(image?.prices[0]?.request).toBe('$0.01')
-    expect(request).toMatchObject({ unit: '$/次', effectiveRate: 0.5 })
-    expect(request?.prices[0]?.request).toBe('$0.10')
+    expect(image).toMatchObject({ unit: '¥/张', effectiveRate: 0.25 })
+    expect(image?.prices[0]?.request).toBe('¥0.01')
+    expect(request).toMatchObject({ unit: '¥/次', effectiveRate: 0.5 })
+    expect(request?.prices[0]?.request).toBe('¥0.10')
   })
 
   it('shows the server-time peak multiplier in token prices without changing request pricing', () => {
@@ -329,9 +329,9 @@ describe('landing price projection', () => {
     const request = duringPeak.find((row) => row.billingMode === 'per_request')
     expect(token?.effectiveRate).toBeCloseTo(0.6)
     expect(token?.effectiveRateLabel).toBe('0.6×')
-    expect(token?.prices[0]).toMatchObject({ input: '$1.80', output: '$9.00' })
+    expect(token?.prices[0]).toMatchObject({ input: '¥1.80', output: '¥9.00' })
     expect(request).toMatchObject({ effectiveRate: 0.4 })
-    expect(request?.prices[0]?.request).toBe('$0.08')
+    expect(request?.prices[0]?.request).toBe('¥0.08')
 
     const afterPeak = selectRepresentativePriceRows(data, {
       serverUtcOffset: '+08:00',

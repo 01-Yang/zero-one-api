@@ -6,6 +6,7 @@ import {
   selectRepresentativePriceRows,
   type LandingPlatformFilter,
   type LandingPriceRow,
+  type ModelPlazaData,
   type ModelPlazaResult,
 } from '../lib/modelPlaza'
 import { consoleUrl } from '../siteConfig'
@@ -15,6 +16,7 @@ interface PricingSectionProps {
   enabled: boolean
   requireAuth: boolean
   serverUtcOffset: string
+  onModelPlazaDataChange?: (data: ModelPlazaData | null) => void
 }
 
 type PricingViewState = { status: 'loading' } | ModelPlazaResult
@@ -28,6 +30,10 @@ const FILTER_LABELS: Record<LandingPlatformFilter, string> = {
 }
 
 const VISIBLE_FILTERS = LANDING_PLATFORM_FILTERS.filter((filter) => filter !== 'other')
+
+function discountLabel(rateLabel: string): string {
+  return rateLabel.endsWith('×') ? `${rateLabel.slice(0, -1)}折` : rateLabel
+}
 
 function PriceValues({ row, field }: { row: LandingPriceRow; field: 'input' | 'output' | 'request' }) {
   return (
@@ -53,7 +59,13 @@ function PlatformPrice({ row, field }: { row: LandingPriceRow; field: 'input' | 
         </small>
       ) : null}
       <small className="price-unit">{row.unit}</small>
-      {field === 'input' ? <span className="rate-badge">{row.effectiveRateLabel}</span> : null}
+      {field === 'input' ? (
+        <span className="rate-badge">
+          <span className="rate-badge-rate">{row.effectiveRateLabel}</span>
+          <span className="rate-badge-separator" aria-hidden="true">·</span>
+          <span className="rate-badge-discount">{discountLabel(row.effectiveRateLabel)}</span>
+        </span>
+      ) : null}
     </div>
   )
 }
@@ -207,6 +219,7 @@ export default function PricingSection({
   enabled,
   requireAuth,
   serverUtcOffset,
+  onModelPlazaDataChange,
 }: PricingSectionProps) {
   const [platform, setPlatform] = useState<LandingPlatformFilter>('all')
   const [search, setSearch] = useState('')
@@ -220,22 +233,26 @@ export default function PricingSection({
 
   useEffect(() => {
     if (!enabled) {
+      onModelPlazaDataChange?.(null)
       setState({ status: 'disabled' })
       return
     }
     if (requireAuth) {
+      onModelPlazaDataChange?.(null)
       setState({ status: 'auth-required' })
       return
     }
 
     const controller = new AbortController()
+    onModelPlazaDataChange?.(null)
     setState({ status: 'loading' })
     void fetchModelPlaza({ enabled: true, timeoutMs: 3_000, signal: controller.signal }).then((result) => {
       if (controller.signal.aborted) return
+      onModelPlazaDataChange?.(result.status === 'success' ? result.data : null)
       setState(result)
     })
     return () => controller.abort()
-  }, [attempt, enabled, requireAuth])
+  }, [attempt, enabled, onModelPlazaDataChange, requireAuth])
 
   useEffect(() => {
     const intervalId = window.setInterval(() => setNow(new Date()), 30_000)

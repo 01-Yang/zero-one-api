@@ -87,10 +87,11 @@
             />
           </template>
 
-          <template #cell-code="{ value }">
+          <template #cell-code="{ value, row }">
             <div class="flex items-center space-x-2">
               <code class="font-mono text-sm text-gray-900 dark:text-gray-100">{{ value }}</code>
               <button
+                v-if="!row.code_redacted"
                 @click="copyToClipboard(value)"
                 :class="[
                   'flex items-center transition-colors',
@@ -119,6 +120,8 @@
                 'badge',
                 value === 'balance'
                   ? 'badge-success'
+                  : value === 'benefit' || value === 'mystery_box'
+                    ? 'badge-warning'
                   : value === 'subscription'
                     ? 'badge-warning'
                     : 'badge-primary'
@@ -130,7 +133,17 @@
 
           <template #cell-value="{ value, row }">
             <span class="text-sm font-medium text-gray-900 dark:text-white">
-              <template v-if="row.type === 'balance'">${{ value.toFixed(2) }}</template>
+              <template v-if="row.type === 'balance' || row.type === 'benefit'"
+                >${{ value.toFixed(2) }}</template
+              >
+              <template v-else-if="row.type === 'mystery_box'">
+                <span v-if="row.status === 'used'">${{ value.toFixed(2) }}</span>
+                <span v-else
+                  >${{ Number(row.min_value || 0).toFixed(2) }}–${{
+                    Number(row.max_value || 0).toFixed(2)
+                  }}</span
+                >
+              </template>
               <template v-else-if="row.type === 'subscription'">
                 {{ row.validity_days || 30 }} {{ t('admin.redeem.days') }}
                 <span v-if="row.group" class="ml-1 text-xs text-gray-500 dark:text-gray-400"
@@ -288,10 +301,16 @@
               <Select v-model="generateForm.type" :options="typeOptions" />
             </div>
             <!-- 余额/并发类型：显示数值输入 -->
-            <div v-if="generateForm.type !== 'subscription' && generateForm.type !== 'invitation'">
+            <div
+              v-if="
+                generateForm.type !== 'subscription' &&
+                generateForm.type !== 'invitation' &&
+                generateForm.type !== 'mystery_box'
+              "
+            >
               <label class="input-label">
                 {{
-                  generateForm.type === 'balance'
+                  generateForm.type === 'balance' || generateForm.type === 'benefit'
                     ? t('admin.redeem.amount')
                     : t('admin.redeem.columns.value')
                 }}
@@ -299,12 +318,55 @@
               <input
                 v-model.number="generateForm.value"
                 type="number"
-                :step="generateForm.type === 'balance' ? '0.01' : '1'"
-                :min="generateForm.type === 'balance' ? '0.01' : '1'"
+                :step="
+                  generateForm.type === 'balance' || generateForm.type === 'benefit' ? '0.01' : '1'
+                "
+                :min="
+                  generateForm.type === 'balance' || generateForm.type === 'benefit' ? '0.01' : '1'
+                "
                 required
                 class="input"
               />
             </div>
+            <div
+              v-if="generateForm.type === 'benefit'"
+              class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20"
+            >
+              <p class="text-sm text-blue-700 dark:text-blue-300">
+                {{ t('admin.redeem.benefitHint') }}
+              </p>
+            </div>
+            <template v-if="generateForm.type === 'mystery_box'">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="input-label">{{ t('admin.redeem.minAmount') }}</label>
+                  <input
+                    v-model.number="generateForm.min_value"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    required
+                    class="input"
+                  />
+                </div>
+                <div>
+                  <label class="input-label">{{ t('admin.redeem.maxAmount') }}</label>
+                  <input
+                    v-model.number="generateForm.max_value"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    required
+                    class="input"
+                  />
+                </div>
+              </div>
+              <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                <p class="text-sm text-blue-700 dark:text-blue-300">
+                  {{ t('admin.redeem.mysteryBoxHint') }}
+                </p>
+              </div>
+            </template>
             <!-- 邀请码类型：显示提示信息 -->
             <div v-if="generateForm.type === 'invitation'" class="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
               <p class="text-sm text-blue-700 dark:text-blue-300">
@@ -565,6 +627,9 @@
           </div>
           <!-- Content -->
           <div class="p-5">
+            <p class="mb-3 text-sm text-amber-700 dark:text-amber-300">
+              {{ t('admin.redeem.oneTimeCodeWarning') }}
+            </p>
             <div class="relative">
               <textarea
                 readonly
@@ -604,6 +669,7 @@
         </div>
       </div>
     </Teleport>
+    <TotpStepUpDialog :controller="stepUp" />
   </AppLayout>
 </template>
 
@@ -613,6 +679,12 @@ import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { useClipboard } from '@/composables/useClipboard'
 import { useTableSelection } from '@/composables/useTableSelection'
+import {
+  useStepUp,
+  isStepUpBlocked,
+  isStepUpCancelled,
+  stepUpBlockReason
+} from '@/composables/useStepUp'
 import { getPersistedPageSize } from '@/composables/usePersistedPageSize'
 import { adminAPI } from '@/api/admin'
 import { formatDateTime } from '@/utils/format'
@@ -634,10 +706,20 @@ import Select from '@/components/common/Select.vue'
 import GroupBadge from '@/components/common/GroupBadge.vue'
 import GroupOptionItem from '@/components/common/GroupOptionItem.vue'
 import Icon from '@/components/icons/Icon.vue'
+import TotpStepUpDialog from '@/components/auth/TotpStepUpDialog.vue'
 
 const { t } = useI18n()
 const appStore = useAppStore()
 const { copyToClipboard: clipboardCopy } = useClipboard()
+const stepUp = useStepUp()
+
+const showStepUpError = (error: unknown) => {
+  appStore.showError(
+    stepUpBlockReason(error) === 'STEP_UP_ADMIN_API_KEY_FORBIDDEN'
+      ? t('stepUp.adminApiKeyForbidden')
+      : t('stepUp.notEnabled')
+  )
+}
 
 interface GroupOption {
   value: number
@@ -733,6 +815,8 @@ const columns = computed<Column[]>(() => [
 
 const typeOptions = computed(() => [
   { value: 'balance', label: t('admin.redeem.balance') },
+  { value: 'benefit', label: t('admin.redeem.benefit') },
+  { value: 'mystery_box', label: t('admin.redeem.mysteryBox') },
   { value: 'concurrency', label: t('admin.redeem.concurrency') },
   { value: 'subscription', label: t('admin.redeem.subscription') },
   { value: 'invitation', label: t('admin.redeem.invitation') }
@@ -741,6 +825,8 @@ const typeOptions = computed(() => [
 const filterTypeOptions = computed(() => [
   { value: '', label: t('admin.redeem.allTypes') },
   { value: 'balance', label: t('admin.redeem.balance') },
+  { value: 'benefit', label: t('admin.redeem.benefit') },
+  { value: 'mystery_box', label: t('admin.redeem.mysteryBox') },
   { value: 'concurrency', label: t('admin.redeem.concurrency') },
   { value: 'subscription', label: t('admin.redeem.subscription') },
   { value: 'invitation', label: t('admin.redeem.invitation') }
@@ -830,6 +916,8 @@ const redeemCodeExpiryOptions = computed<{ value: RedeemCodeExpiryOption; label:
 const generateForm = reactive({
   type: 'balance' as RedeemCodeType,
   value: 10,
+  min_value: 1,
+  max_value: 10,
   count: 1,
   group_id: null as number | null,
   validity_days: 30,
@@ -841,7 +929,7 @@ const generateForm = reactive({
 watch(
   () => generateForm.type,
   (newType) => {
-    if (newType === 'invitation') {
+    if (newType === 'invitation' || newType === 'mystery_box') {
       generateForm.value = 0
     } else if (generateForm.value === 0) {
       generateForm.value = 10
@@ -1024,6 +1112,17 @@ const handleGenerateCodes = async () => {
     return
   }
 
+  if (
+    generateForm.type === 'mystery_box' &&
+    (!Number.isFinite(generateForm.min_value) ||
+      !Number.isFinite(generateForm.max_value) ||
+      generateForm.min_value <= 0 ||
+      generateForm.max_value < generateForm.min_value)
+  ) {
+    appStore.showError(t('admin.redeem.invalidMysteryBoxRange'))
+    return
+  }
+
   const expiresInDays = getRedeemCodeExpiresInDays()
   if (expiresInDays === null) {
     appStore.showError(t('admin.redeem.expiryDaysRequired'))
@@ -1032,13 +1131,17 @@ const handleGenerateCodes = async () => {
 
   generating.value = true
   try {
-    const result = await adminAPI.redeem.generate(
-      generateForm.count,
-      generateForm.type,
-      generateForm.value,
-      generateForm.type === 'subscription' ? generateForm.group_id : undefined,
-      generateForm.type === 'subscription' ? generateForm.validity_days : undefined,
-      expiresInDays
+    const result = await stepUp.run(() =>
+      adminAPI.redeem.generate(
+        generateForm.count,
+        generateForm.type,
+        generateForm.value,
+        generateForm.type === 'subscription' ? generateForm.group_id : undefined,
+        generateForm.type === 'subscription' ? generateForm.validity_days : undefined,
+        expiresInDays,
+        generateForm.type === 'mystery_box' ? generateForm.min_value : undefined,
+        generateForm.type === 'mystery_box' ? generateForm.max_value : undefined
+      )
     )
     showGenerateDialog.value = false
     generatedCodes.value = result
@@ -1050,6 +1153,11 @@ const handleGenerateCodes = async () => {
     generateForm.custom_expiry_days = 7
     loadCodes()
   } catch (error: any) {
+    if (isStepUpCancelled(error)) return
+    if (isStepUpBlocked(error)) {
+      showStepUpError(error)
+      return
+    }
     appStore.showError(error.response?.data?.detail || t('admin.redeem.failedToGenerate'))
     console.error('Error generating codes:', error)
   } finally {
@@ -1069,7 +1177,7 @@ const copyToClipboard = async (text: string) => {
 
 const handleExportCodes = async () => {
   try {
-    const blob = await adminAPI.redeem.exportCodes(buildRedeemQueryFilters())
+    const blob = await stepUp.run(() => adminAPI.redeem.exportCodes(buildRedeemQueryFilters()))
 
     // Create download link
     const url = window.URL.createObjectURL(blob)
@@ -1083,6 +1191,11 @@ const handleExportCodes = async () => {
 
     appStore.showSuccess(t('admin.redeem.codesExported'))
   } catch (error: any) {
+    if (isStepUpCancelled(error)) return
+    if (isStepUpBlocked(error)) {
+      showStepUpError(error)
+      return
+    }
     appStore.showError(error.response?.data?.detail || t('admin.redeem.failedToExport'))
     console.error('Error exporting codes:', error)
   }

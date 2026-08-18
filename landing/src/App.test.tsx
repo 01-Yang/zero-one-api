@@ -243,39 +243,23 @@ describe("public site", () => {
 
     const billing = document.querySelector<HTMLElement>("#billing");
     expect(billing).not.toBeNull();
-    expect(billing?.querySelector(".value-pricing-kicker")?.textContent).toBe(
-      "按量计费",
-    );
-    expect(
-      billing?.querySelectorAll("#value-pricing-title > span"),
-    ).toHaveLength(2);
     expect(billing?.querySelector(".value-pricing-card")).not.toBeNull();
-    expect(billing?.textContent).toContain("每一份 token");
+    expect(billing?.textContent).toContain("每一份 token 按实际配置结算");
+    expect(billing?.textContent).toContain("人民币：美金1:1充值，按量付费，实际用多少付多少。");
     expect(billing?.textContent).toContain("按实际配置结算");
-    expect(billing?.textContent).not.toContain("为什么选择零一 API？");
-    expect(billing?.textContent).not.toContain("一个平台，接入多种接口");
-    expect(billing?.textContent).not.toContain("分组与用量，清晰可查");
-    expect(billing?.textContent).not.toContain("调用记录，集中查看");
-    expect(billing?.textContent).not.toContain("每一次调用");
-    expect(billing?.textContent).not.toContain(
-      "统一入口，保留调用的每一处细节",
-    );
     expect(
       within(billing!)
-        .getByRole("link", { name: "兑换额度" })
+        .getByRole("link", { name: "购买额度" })
         .getAttribute("href"),
-    ).toBe("http://127.0.0.1:8080/redeem");
+    ).toBe("http://127.0.0.1:8080/purchase");
     expect(document.querySelector("#advantages")).toBeNull();
   });
 
   it("keeps value-pricing copy accurate when the public model plaza is disabled", () => {
     render(<App />);
 
-    expect(screen.getByText("实际结算请以登录后的调用记录为准。")).toBeTruthy();
-    const explanation = screen.getByRole("button", { name: "显示计费说明" });
-    expect(explanation.getAttribute("aria-describedby")).toBe(
-      "billing-pricing-tooltip",
-    );
+    expect(screen.getByText("按实际配置结算")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "显示计费说明" })).toBeNull();
   });
 
   it("merges pricing and model plaza navigation without a separate advantages entry", () => {

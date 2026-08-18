@@ -8,13 +8,11 @@ The versioned Playwright container is the source of truth for Linux, bundled
 Chromium and system font packages; local runs are smoke tests only.
 
 No reviewed Linux baselines are checked in yet, so the dedicated calibration
-workflow is intentionally advisory. It runs in the versioned
+workflow is intentionally non-blocking. It runs in the versioned
 `mcr.microsoft.com/playwright:v1.55.1-noble` image and passes
 `--update-snapshots=none`; CI cannot update the repository baselines. Missing
-or mismatched snapshots produce an Actions warning, while their Playwright
-report, actual, diff and trace files are uploaded when produced. Once reviewed
-Linux baselines exist, make this job blocking so visual regressions fail the
-commit status.
+or mismatched snapshots remain failures inside that job and their Playwright
+report, actual, diff and trace files are uploaded when produced.
 
 The files under `artifacts/design-qa/` are manual review artifacts. They do not
 record this module's network fixture, frozen time, Linux image, font set or

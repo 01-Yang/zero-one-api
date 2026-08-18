@@ -1245,8 +1245,30 @@ func (s *adminServiceImpl) GetRedeemCode(ctx context.Context, id int64) (*Redeem
 }
 
 func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *GenerateRedeemCodesInput) ([]RedeemCode, error) {
+	if input == nil || input.Count < 1 || input.Count > 100 {
+		return nil, infraerrors.BadRequest("REDEEM_CODE_COUNT_INVALID", "count must be between 1 and 100")
+	}
 	if input.ExpiresAt != nil && !input.ExpiresAt.After(time.Now()) {
 		return nil, ErrRedeemCodeExpired
+	}
+
+	var batchID *string
+	switch input.Type {
+	case RedeemTypeBenefit:
+		if _, err := currencyCents(input.Value); err != nil {
+			return nil, infraerrors.BadRequest("REDEEM_CODE_VALUE_INVALID", err.Error())
+		}
+	case RedeemTypeMysteryBox:
+		if _, _, err := validateMysteryBoxRange(input.MinValue, input.MaxValue); err != nil {
+			return nil, infraerrors.BadRequest("REDEEM_CODE_RANGE_INVALID", err.Error())
+		}
+	}
+	if input.Type == RedeemTypeBenefit || input.Type == RedeemTypeMysteryBox {
+		value, err := GenerateRedeemCode()
+		if err != nil {
+			return nil, err
+		}
+		batchID = &value
 	}
 
 	// 如果是订阅类型，验证必须有 GroupID
@@ -1270,10 +1292,15 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 		if err != nil {
 			return nil, err
 		}
+		codeHash := RedeemCodeHash(codeValue)
 		code := RedeemCode{
 			Code:      codeValue,
+			CodeHash:  &codeHash,
+			BatchID:   batchID,
 			Type:      input.Type,
 			Value:     input.Value,
+			MinValue:  input.MinValue,
+			MaxValue:  input.MaxValue,
 			Status:    StatusUnused,
 			ExpiresAt: input.ExpiresAt,
 		}
@@ -1285,10 +1312,10 @@ func (s *adminServiceImpl) GenerateRedeemCodes(ctx context.Context, input *Gener
 				code.ValidityDays = 30 // 默认30天
 			}
 		}
-		if err := s.redeemCodeRepo.Create(ctx, &code); err != nil {
-			return nil, err
-		}
 		codes = append(codes, code)
+	}
+	if err := s.redeemCodeRepo.CreateBatch(ctx, codes); err != nil {
+		return nil, err
 	}
 	return codes, nil
 }
@@ -1311,6 +1338,9 @@ func (s *adminServiceImpl) ExpireRedeemCode(ctx context.Context, id int64) (*Red
 	code, err := s.redeemCodeRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	if code.IsUsed() {
+		return nil, ErrRedeemCodeUsed
 	}
 	code.Status = StatusExpired
 	if err := s.redeemCodeRepo.Update(ctx, code); err != nil {

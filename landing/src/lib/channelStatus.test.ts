@@ -25,6 +25,7 @@ describe("channel status summary", () => {
       latencyMs: 218,
       availability7d: 99.98,
       observedAt: "2026-08-16T08:25:00Z",
+      items: [],
     });
 
     expect(

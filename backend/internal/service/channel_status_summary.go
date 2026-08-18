@@ -5,24 +5,40 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
 	"golang.org/x/sync/singleflight"
 )
 
-// PublicChannelStatusSummary is the deliberately small status contract used by
-// the public landing page. It never contains monitor identity, provider,
-// model, group, upstream error, request volume, or credential information.
+// PublicChannelStatusSummary is the public landing-page status contract. It
+// exposes only the monitor display name, health state, availability, and check
+// timestamps; provider, model, group, upstream error, request volume, and
+// credential information remain private.
 type PublicChannelStatusSummary struct {
 	// Mode defines the provenance of the aggregate so consumers never label
 	// traffic-derived metrics as active-probe metrics.
-	Mode           string     `json:"mode,omitempty"`
-	State          string     `json:"state"`
-	Reason         string     `json:"reason,omitempty"`
-	LatencyMs      *int       `json:"latency_ms"`
-	Availability7d *float64   `json:"availability_7d"`
-	ObservedAt     *time.Time `json:"observed_at"`
+	Mode           string                    `json:"mode,omitempty"`
+	State          string                    `json:"state"`
+	Reason         string                    `json:"reason,omitempty"`
+	LatencyMs      *int                      `json:"latency_ms"`
+	Availability7d *float64                  `json:"availability_7d"`
+	ObservedAt     *time.Time                `json:"observed_at"`
+	Items          []PublicChannelStatusItem `json:"items,omitempty"`
+}
+
+type PublicChannelStatusItem struct {
+	Name           string                             `json:"name"`
+	State          string                             `json:"state"`
+	Availability7d *float64                           `json:"availability_7d"`
+	ObservedAt     *time.Time                         `json:"observed_at"`
+	Timeline       []PublicChannelStatusTimelinePoint `json:"timeline"`
+}
+
+type PublicChannelStatusTimelinePoint struct {
+	Status    string    `json:"status"`
+	CheckedAt time.Time `json:"checked_at"`
 }
 
 const (
@@ -168,7 +184,97 @@ func (s *ChannelMonitorService) GetPublicChannelStatusSummary(ctx context.Contex
 	}
 
 	summary := buildPublicChannelStatusSummaryV1(monitors, primaryByID, latestByMonitor, availabilityByMonitor)
+	if summary.State != PublicChannelStatusUnknown {
+		historyByMonitor, historyErr := s.repo.ListRecentHistoryForMonitors(
+			ctx,
+			ids,
+			primaryByID,
+			monitorTimelineMaxPoints,
+		)
+		if historyErr == nil {
+			summary.Items = buildPublicChannelStatusItemsV1(
+				monitors,
+				primaryByID,
+				latestByMonitor,
+				availabilityByMonitor,
+				historyByMonitor,
+			)
+		}
+	}
 	return &summary, nil
+}
+
+func buildPublicChannelStatusItemsV1(
+	monitors []*ChannelMonitor,
+	primaryByID map[int64]string,
+	latestByMonitor map[int64][]*ChannelMonitorLatest,
+	availabilityByMonitor map[int64][]*ChannelMonitorAvailability,
+	historyByMonitor map[int64][]*ChannelMonitorHistoryEntry,
+) []PublicChannelStatusItem {
+	items := make([]PublicChannelStatusItem, 0, len(monitors))
+	for _, monitor := range monitors {
+		if monitor == nil || strings.TrimSpace(monitor.Name) == "" {
+			return nil
+		}
+		primaryModel := primaryByID[monitor.ID]
+		latest := pickLatest(latestByMonitor[monitor.ID], primaryModel)
+		availability := indexAvailabilityByModel(availabilityByMonitor[monitor.ID])[primaryModel]
+		if latest == nil || latest.CheckedAt.IsZero() || availability == nil || availability.TotalChecks <= 0 {
+			return nil
+		}
+
+		operationalChecks := availability.OperationalChecks
+		if operationalChecks < 0 {
+			operationalChecks = 0
+		}
+		if operationalChecks > availability.TotalChecks {
+			operationalChecks = availability.TotalChecks
+		}
+		availability7d := float64(operationalChecks) / float64(availability.TotalChecks) * 100
+		observedAt := latest.CheckedAt.UTC()
+		item := PublicChannelStatusItem{
+			Name:           strings.TrimSpace(monitor.Name),
+			State:          publicChannelStatusItemState(latest.Status),
+			Availability7d: &availability7d,
+			ObservedAt:     &observedAt,
+			Timeline:       publicChannelStatusTimeline(historyByMonitor[monitor.ID]),
+		}
+		items = append(items, item)
+	}
+	return items
+}
+
+func publicChannelStatusItemState(status string) string {
+	if status == MonitorStatusOperational {
+		return PublicChannelStatusOperational
+	}
+	if status == "" {
+		return PublicChannelStatusUnknown
+	}
+	return PublicChannelStatusDegraded
+}
+
+func publicChannelStatusTimeline(history []*ChannelMonitorHistoryEntry) []PublicChannelStatusTimelinePoint {
+	timeline := make([]PublicChannelStatusTimelinePoint, 0, len(history))
+	for _, entry := range history {
+		if entry == nil || entry.CheckedAt.IsZero() {
+			continue
+		}
+		timeline = append(timeline, PublicChannelStatusTimelinePoint{
+			Status:    publicChannelStatusTimelineState(entry.Status),
+			CheckedAt: entry.CheckedAt.UTC(),
+		})
+	}
+	return timeline
+}
+
+func publicChannelStatusTimelineState(status string) string {
+	switch status {
+	case MonitorStatusOperational, MonitorStatusDegraded, "failed", "error":
+		return status
+	default:
+		return PublicChannelStatusUnknown
+	}
 }
 
 // buildPublicChannelStatusSummaryV1 is kept pure so status semantics can be
@@ -316,7 +422,12 @@ func (s *ChannelMonitorV2Service) GetPublicChannelStatusSummary(ctx context.Cont
 	if err != nil {
 		return nil, fmt.Errorf("load channel monitor v2 summary: %w", err)
 	}
+	matrix, err := s.Matrix(ctx, filter, ChannelMonitorV2GroupByPlatform, true)
+	if err != nil {
+		return nil, fmt.Errorf("load channel monitor v2 matrix: %w", err)
+	}
 	summary := buildPublicChannelStatusSummaryV2(snapshot)
+	summary.Items = buildPublicChannelStatusItemsV2(matrix)
 	return &summary, nil
 }
 
@@ -341,4 +452,62 @@ func buildPublicChannelStatusSummaryV2(snapshot *ChannelMonitorV2Snapshot) Publi
 		summary.LatencyMs = &latency
 	}
 	return summary
+}
+
+func buildPublicChannelStatusItemsV2(matrix *ChannelMonitorV2Matrix) []PublicChannelStatusItem {
+	if matrix == nil {
+		return nil
+	}
+
+	observedAt := matrix.Coverage.DataThrough.UTC()
+	if observedAt.IsZero() {
+		observedAt = matrix.Coverage.ComputedAt.UTC()
+	}
+	items := make([]PublicChannelStatusItem, 0, len(matrix.Items))
+	for _, row := range matrix.Items {
+		name := strings.TrimSpace(row.Platform)
+		if name == "" {
+			continue
+		}
+
+		item := PublicChannelStatusItem{
+			Name:     name,
+			State:    publicChannelStatusV2State(row.Health.Overall, row.Metrics.RequestCount),
+			Timeline: make([]PublicChannelStatusTimelinePoint, 0, len(row.Buckets)),
+		}
+		if !observedAt.IsZero() {
+			value := observedAt
+			item.ObservedAt = &value
+		}
+		if row.Metrics.RequestCount > 0 && !math.IsNaN(row.Metrics.ErrorRate) && !math.IsInf(row.Metrics.ErrorRate, 0) {
+			errorRate := math.Max(0, math.Min(1, row.Metrics.ErrorRate))
+			availability := (1 - errorRate) * 100
+			item.Availability7d = &availability
+		}
+		for _, bucket := range row.Buckets {
+			if bucket.BucketStart.IsZero() {
+				continue
+			}
+			item.Timeline = append(item.Timeline, PublicChannelStatusTimelinePoint{
+				Status:    publicChannelStatusV2State(bucket.Health.Overall, bucket.Metrics.RequestCount),
+				CheckedAt: bucket.BucketStart.UTC(),
+			})
+		}
+		items = append(items, item)
+	}
+	return items
+}
+
+func publicChannelStatusV2State(health string, requestCount int64) string {
+	if requestCount <= 0 {
+		return PublicChannelStatusUnknown
+	}
+	switch health {
+	case "healthy":
+		return PublicChannelStatusOperational
+	case "warning", "critical":
+		return PublicChannelStatusDegraded
+	default:
+		return PublicChannelStatusUnknown
+	}
 }

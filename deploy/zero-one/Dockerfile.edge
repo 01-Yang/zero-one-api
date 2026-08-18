@@ -1,21 +1,7 @@
-ARG NODE_IMAGE=node:24-alpine
 ARG CADDY_IMAGE=caddy:2.8.4-alpine
-
-FROM --platform=${BUILDPLATFORM} ${NODE_IMAGE} AS console-builder
-WORKDIR /app/frontend
-
-RUN corepack enable && corepack prepare pnpm@9 --activate
-
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
-RUN --mount=type=cache,id=zero-one-edge-pnpm-store,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --prefer-offline
-
-COPY frontend/ ./
-COPY docs/legal/ /app/docs/legal/
-RUN pnpm run build
 
 FROM ${CADDY_IMAGE}
 COPY deploy/zero-one/Caddyfile /etc/caddy/Caddyfile
 COPY deploy/zero-one/Caddyfile.shared /etc/caddy/Caddyfile.shared
 COPY deploy/zero-one/recovered-frontend/landing /srv/landing
-COPY --from=console-builder /app/backend/internal/web/dist /srv/console
+COPY deploy/zero-one/recovered-frontend/console /srv/console

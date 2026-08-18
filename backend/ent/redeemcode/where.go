@@ -60,6 +60,16 @@ func Code(v string) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldEQ(FieldCode, v))
 }
 
+// CodeHash applies equality check predicate on the "code_hash" field. It's identical to CodeHashEQ.
+func CodeHash(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldCodeHash, v))
+}
+
+// BatchID applies equality check predicate on the "batch_id" field. It's identical to BatchIDEQ.
+func BatchID(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldBatchID, v))
+}
+
 // Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
 func Type(v string) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldEQ(FieldType, v))
@@ -68,6 +78,16 @@ func Type(v string) predicate.RedeemCode {
 // Value applies equality check predicate on the "value" field. It's identical to ValueEQ.
 func Value(v float64) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldEQ(FieldValue, v))
+}
+
+// MinValue applies equality check predicate on the "min_value" field. It's identical to MinValueEQ.
+func MinValue(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldMinValue, v))
+}
+
+// MaxValue applies equality check predicate on the "max_value" field. It's identical to MaxValueEQ.
+func MaxValue(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldMaxValue, v))
 }
 
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
@@ -175,6 +195,156 @@ func CodeContainsFold(v string) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldContainsFold(FieldCode, v))
 }
 
+// CodeHashEQ applies the EQ predicate on the "code_hash" field.
+func CodeHashEQ(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldCodeHash, v))
+}
+
+// CodeHashNEQ applies the NEQ predicate on the "code_hash" field.
+func CodeHashNEQ(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNEQ(FieldCodeHash, v))
+}
+
+// CodeHashIn applies the In predicate on the "code_hash" field.
+func CodeHashIn(vs ...string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIn(FieldCodeHash, vs...))
+}
+
+// CodeHashNotIn applies the NotIn predicate on the "code_hash" field.
+func CodeHashNotIn(vs ...string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotIn(FieldCodeHash, vs...))
+}
+
+// CodeHashGT applies the GT predicate on the "code_hash" field.
+func CodeHashGT(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGT(FieldCodeHash, v))
+}
+
+// CodeHashGTE applies the GTE predicate on the "code_hash" field.
+func CodeHashGTE(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGTE(FieldCodeHash, v))
+}
+
+// CodeHashLT applies the LT predicate on the "code_hash" field.
+func CodeHashLT(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLT(FieldCodeHash, v))
+}
+
+// CodeHashLTE applies the LTE predicate on the "code_hash" field.
+func CodeHashLTE(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLTE(FieldCodeHash, v))
+}
+
+// CodeHashContains applies the Contains predicate on the "code_hash" field.
+func CodeHashContains(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldContains(FieldCodeHash, v))
+}
+
+// CodeHashHasPrefix applies the HasPrefix predicate on the "code_hash" field.
+func CodeHashHasPrefix(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldHasPrefix(FieldCodeHash, v))
+}
+
+// CodeHashHasSuffix applies the HasSuffix predicate on the "code_hash" field.
+func CodeHashHasSuffix(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldHasSuffix(FieldCodeHash, v))
+}
+
+// CodeHashIsNil applies the IsNil predicate on the "code_hash" field.
+func CodeHashIsNil() predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIsNull(FieldCodeHash))
+}
+
+// CodeHashNotNil applies the NotNil predicate on the "code_hash" field.
+func CodeHashNotNil() predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotNull(FieldCodeHash))
+}
+
+// CodeHashEqualFold applies the EqualFold predicate on the "code_hash" field.
+func CodeHashEqualFold(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEqualFold(FieldCodeHash, v))
+}
+
+// CodeHashContainsFold applies the ContainsFold predicate on the "code_hash" field.
+func CodeHashContainsFold(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldContainsFold(FieldCodeHash, v))
+}
+
+// BatchIDEQ applies the EQ predicate on the "batch_id" field.
+func BatchIDEQ(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldBatchID, v))
+}
+
+// BatchIDNEQ applies the NEQ predicate on the "batch_id" field.
+func BatchIDNEQ(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNEQ(FieldBatchID, v))
+}
+
+// BatchIDIn applies the In predicate on the "batch_id" field.
+func BatchIDIn(vs ...string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIn(FieldBatchID, vs...))
+}
+
+// BatchIDNotIn applies the NotIn predicate on the "batch_id" field.
+func BatchIDNotIn(vs ...string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotIn(FieldBatchID, vs...))
+}
+
+// BatchIDGT applies the GT predicate on the "batch_id" field.
+func BatchIDGT(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGT(FieldBatchID, v))
+}
+
+// BatchIDGTE applies the GTE predicate on the "batch_id" field.
+func BatchIDGTE(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGTE(FieldBatchID, v))
+}
+
+// BatchIDLT applies the LT predicate on the "batch_id" field.
+func BatchIDLT(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLT(FieldBatchID, v))
+}
+
+// BatchIDLTE applies the LTE predicate on the "batch_id" field.
+func BatchIDLTE(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLTE(FieldBatchID, v))
+}
+
+// BatchIDContains applies the Contains predicate on the "batch_id" field.
+func BatchIDContains(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldContains(FieldBatchID, v))
+}
+
+// BatchIDHasPrefix applies the HasPrefix predicate on the "batch_id" field.
+func BatchIDHasPrefix(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldHasPrefix(FieldBatchID, v))
+}
+
+// BatchIDHasSuffix applies the HasSuffix predicate on the "batch_id" field.
+func BatchIDHasSuffix(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldHasSuffix(FieldBatchID, v))
+}
+
+// BatchIDIsNil applies the IsNil predicate on the "batch_id" field.
+func BatchIDIsNil() predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIsNull(FieldBatchID))
+}
+
+// BatchIDNotNil applies the NotNil predicate on the "batch_id" field.
+func BatchIDNotNil() predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotNull(FieldBatchID))
+}
+
+// BatchIDEqualFold applies the EqualFold predicate on the "batch_id" field.
+func BatchIDEqualFold(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEqualFold(FieldBatchID, v))
+}
+
+// BatchIDContainsFold applies the ContainsFold predicate on the "batch_id" field.
+func BatchIDContainsFold(v string) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldContainsFold(FieldBatchID, v))
+}
+
 // TypeEQ applies the EQ predicate on the "type" field.
 func TypeEQ(v string) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldEQ(FieldType, v))
@@ -278,6 +448,86 @@ func ValueLT(v float64) predicate.RedeemCode {
 // ValueLTE applies the LTE predicate on the "value" field.
 func ValueLTE(v float64) predicate.RedeemCode {
 	return predicate.RedeemCode(sql.FieldLTE(FieldValue, v))
+}
+
+// MinValueEQ applies the EQ predicate on the "min_value" field.
+func MinValueEQ(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldMinValue, v))
+}
+
+// MinValueNEQ applies the NEQ predicate on the "min_value" field.
+func MinValueNEQ(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNEQ(FieldMinValue, v))
+}
+
+// MinValueIn applies the In predicate on the "min_value" field.
+func MinValueIn(vs ...float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIn(FieldMinValue, vs...))
+}
+
+// MinValueNotIn applies the NotIn predicate on the "min_value" field.
+func MinValueNotIn(vs ...float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotIn(FieldMinValue, vs...))
+}
+
+// MinValueGT applies the GT predicate on the "min_value" field.
+func MinValueGT(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGT(FieldMinValue, v))
+}
+
+// MinValueGTE applies the GTE predicate on the "min_value" field.
+func MinValueGTE(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGTE(FieldMinValue, v))
+}
+
+// MinValueLT applies the LT predicate on the "min_value" field.
+func MinValueLT(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLT(FieldMinValue, v))
+}
+
+// MinValueLTE applies the LTE predicate on the "min_value" field.
+func MinValueLTE(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLTE(FieldMinValue, v))
+}
+
+// MaxValueEQ applies the EQ predicate on the "max_value" field.
+func MaxValueEQ(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldEQ(FieldMaxValue, v))
+}
+
+// MaxValueNEQ applies the NEQ predicate on the "max_value" field.
+func MaxValueNEQ(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNEQ(FieldMaxValue, v))
+}
+
+// MaxValueIn applies the In predicate on the "max_value" field.
+func MaxValueIn(vs ...float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldIn(FieldMaxValue, vs...))
+}
+
+// MaxValueNotIn applies the NotIn predicate on the "max_value" field.
+func MaxValueNotIn(vs ...float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldNotIn(FieldMaxValue, vs...))
+}
+
+// MaxValueGT applies the GT predicate on the "max_value" field.
+func MaxValueGT(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGT(FieldMaxValue, v))
+}
+
+// MaxValueGTE applies the GTE predicate on the "max_value" field.
+func MaxValueGTE(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldGTE(FieldMaxValue, v))
+}
+
+// MaxValueLT applies the LT predicate on the "max_value" field.
+func MaxValueLT(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLT(FieldMaxValue, v))
+}
+
+// MaxValueLTE applies the LTE predicate on the "max_value" field.
+func MaxValueLTE(v float64) predicate.RedeemCode {
+	return predicate.RedeemCode(sql.FieldLTE(FieldMaxValue, v))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.

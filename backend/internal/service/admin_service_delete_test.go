@@ -405,8 +405,11 @@ func (s *proxyRepoStub) CountExpiringSoon(_ context.Context, _ time.Time) (int64
 }
 
 type redeemRepoStub struct {
-	deleteErrByID map[int64]error
-	deletedIDs    []int64
+	deleteErrByID  map[int64]error
+	deletedIDs     []int64
+	createdBatches [][]RedeemCode
+	codeByID       map[int64]*RedeemCode
+	updatedCodes   []*RedeemCode
 
 	batchUpdateIDs    []int64
 	batchUpdateFields RedeemCodeBatchUpdateFields
@@ -420,10 +423,15 @@ func (s *redeemRepoStub) Create(ctx context.Context, code *RedeemCode) error {
 }
 
 func (s *redeemRepoStub) CreateBatch(ctx context.Context, codes []RedeemCode) error {
-	panic("unexpected CreateBatch call")
+	cloned := append([]RedeemCode(nil), codes...)
+	s.createdBatches = append(s.createdBatches, cloned)
+	return nil
 }
 
 func (s *redeemRepoStub) GetByID(ctx context.Context, id int64) (*RedeemCode, error) {
+	if code, ok := s.codeByID[id]; ok {
+		return code, nil
+	}
 	panic("unexpected GetByID call")
 }
 
@@ -432,7 +440,8 @@ func (s *redeemRepoStub) GetByCode(ctx context.Context, code string) (*RedeemCod
 }
 
 func (s *redeemRepoStub) Update(ctx context.Context, code *RedeemCode) error {
-	panic("unexpected Update call")
+	s.updatedCodes = append(s.updatedCodes, code)
+	return nil
 }
 
 func (s *redeemRepoStub) BatchUpdate(ctx context.Context, ids []int64, fields RedeemCodeBatchUpdateFields) (int64, error) {
@@ -767,6 +776,19 @@ func TestAdminService_DeleteRedeemCode_Error(t *testing.T) {
 	require.Equal(t, []int64{1}, repo.deletedIDs)
 }
 
+func TestAdminService_ExpireRedeemCodeRejectsUsedBatchClaim(t *testing.T) {
+	batchID := "claimed-benefit-batch"
+	repo := &redeemRepoStub{codeByID: map[int64]*RedeemCode{
+		1: {ID: 1, Status: StatusUsed, BatchID: &batchID},
+	}}
+	svc := &adminServiceImpl{redeemCodeRepo: repo}
+
+	_, err := svc.ExpireRedeemCode(context.Background(), 1)
+
+	require.ErrorIs(t, err, ErrRedeemCodeUsed)
+	require.Empty(t, repo.updatedCodes)
+}
+
 func TestAdminService_BatchDeleteRedeemCodes_Success(t *testing.T) {
 	repo := &redeemRepoStub{}
 	svc := &adminServiceImpl{redeemCodeRepo: repo}
@@ -789,4 +811,61 @@ func TestAdminService_BatchDeleteRedeemCodes_PartialFailures(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int64(2), deleted)
 	require.Equal(t, []int64{1, 2, 3}, repo.deletedIDs)
+}
+
+func TestAdminService_GenerateBenefitCodesCreatesOneAtomicBatch(t *testing.T) {
+	repo := &redeemRepoStub{}
+	svc := &adminServiceImpl{redeemCodeRepo: repo}
+
+	codes, err := svc.GenerateRedeemCodes(context.Background(), &GenerateRedeemCodesInput{
+		Count: 10,
+		Type:  RedeemTypeBenefit,
+		Value: 5,
+	})
+
+	require.NoError(t, err)
+	require.Len(t, codes, 10)
+	require.Len(t, repo.createdBatches, 1)
+	batchID := requireBatchID(t, codes[0])
+	seenCodes := make(map[string]struct{}, len(codes))
+	seenHashes := make(map[string]struct{}, len(codes))
+	for _, code := range codes {
+		require.Equal(t, batchID, requireBatchID(t, code))
+		require.NotNil(t, code.CodeHash)
+		require.NotEqual(t, code.Code, RedactedRedeemCode(code.Code, *code.CodeHash))
+		seenCodes[code.Code] = struct{}{}
+		seenHashes[*code.CodeHash] = struct{}{}
+	}
+	require.Len(t, seenCodes, 10)
+	require.Len(t, seenHashes, 10)
+}
+
+func TestAdminService_GenerateMysteryBoxCodesPersistsRewardRange(t *testing.T) {
+	repo := &redeemRepoStub{}
+	svc := &adminServiceImpl{redeemCodeRepo: repo}
+
+	codes, err := svc.GenerateRedeemCodes(context.Background(), &GenerateRedeemCodesInput{
+		Count:    3,
+		Type:     RedeemTypeMysteryBox,
+		MinValue: 1.25,
+		MaxValue: 8.75,
+	})
+
+	require.NoError(t, err)
+	require.Len(t, codes, 3)
+	require.Len(t, repo.createdBatches, 1)
+	batchID := requireBatchID(t, codes[0])
+	for _, code := range codes {
+		require.Equal(t, batchID, requireBatchID(t, code))
+		require.Equal(t, 1.25, code.MinValue)
+		require.Equal(t, 8.75, code.MaxValue)
+		require.Zero(t, code.Value)
+	}
+}
+
+func requireBatchID(t *testing.T, code RedeemCode) string {
+	t.Helper()
+	require.NotNil(t, code.BatchID)
+	require.NotEmpty(t, *code.BatchID)
+	return *code.BatchID
 }

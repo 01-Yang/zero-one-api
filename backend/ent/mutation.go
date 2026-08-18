@@ -38542,9 +38542,15 @@ type RedeemCodeMutation struct {
 	typ              string
 	id               *int64
 	code             *string
+	code_hash        *string
+	batch_id         *string
 	_type            *string
 	value            *float64
 	addvalue         *float64
+	min_value        *float64
+	addmin_value     *float64
+	max_value        *float64
+	addmax_value     *float64
 	status           *string
 	used_at          *time.Time
 	notes            *string
@@ -38696,6 +38702,104 @@ func (m *RedeemCodeMutation) ResetCode() {
 	m.code = nil
 }
 
+// SetCodeHash sets the "code_hash" field.
+func (m *RedeemCodeMutation) SetCodeHash(s string) {
+	m.code_hash = &s
+}
+
+// CodeHash returns the value of the "code_hash" field in the mutation.
+func (m *RedeemCodeMutation) CodeHash() (r string, exists bool) {
+	v := m.code_hash
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCodeHash returns the old "code_hash" field's value of the RedeemCode entity.
+// If the RedeemCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RedeemCodeMutation) OldCodeHash(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCodeHash is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCodeHash requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCodeHash: %w", err)
+	}
+	return oldValue.CodeHash, nil
+}
+
+// ClearCodeHash clears the value of the "code_hash" field.
+func (m *RedeemCodeMutation) ClearCodeHash() {
+	m.code_hash = nil
+	m.clearedFields[redeemcode.FieldCodeHash] = struct{}{}
+}
+
+// CodeHashCleared returns if the "code_hash" field was cleared in this mutation.
+func (m *RedeemCodeMutation) CodeHashCleared() bool {
+	_, ok := m.clearedFields[redeemcode.FieldCodeHash]
+	return ok
+}
+
+// ResetCodeHash resets all changes to the "code_hash" field.
+func (m *RedeemCodeMutation) ResetCodeHash() {
+	m.code_hash = nil
+	delete(m.clearedFields, redeemcode.FieldCodeHash)
+}
+
+// SetBatchID sets the "batch_id" field.
+func (m *RedeemCodeMutation) SetBatchID(s string) {
+	m.batch_id = &s
+}
+
+// BatchID returns the value of the "batch_id" field in the mutation.
+func (m *RedeemCodeMutation) BatchID() (r string, exists bool) {
+	v := m.batch_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBatchID returns the old "batch_id" field's value of the RedeemCode entity.
+// If the RedeemCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RedeemCodeMutation) OldBatchID(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBatchID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBatchID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBatchID: %w", err)
+	}
+	return oldValue.BatchID, nil
+}
+
+// ClearBatchID clears the value of the "batch_id" field.
+func (m *RedeemCodeMutation) ClearBatchID() {
+	m.batch_id = nil
+	m.clearedFields[redeemcode.FieldBatchID] = struct{}{}
+}
+
+// BatchIDCleared returns if the "batch_id" field was cleared in this mutation.
+func (m *RedeemCodeMutation) BatchIDCleared() bool {
+	_, ok := m.clearedFields[redeemcode.FieldBatchID]
+	return ok
+}
+
+// ResetBatchID resets all changes to the "batch_id" field.
+func (m *RedeemCodeMutation) ResetBatchID() {
+	m.batch_id = nil
+	delete(m.clearedFields, redeemcode.FieldBatchID)
+}
+
 // SetType sets the "type" field.
 func (m *RedeemCodeMutation) SetType(s string) {
 	m._type = &s
@@ -38786,6 +38890,118 @@ func (m *RedeemCodeMutation) AddedValue() (r float64, exists bool) {
 func (m *RedeemCodeMutation) ResetValue() {
 	m.value = nil
 	m.addvalue = nil
+}
+
+// SetMinValue sets the "min_value" field.
+func (m *RedeemCodeMutation) SetMinValue(f float64) {
+	m.min_value = &f
+	m.addmin_value = nil
+}
+
+// MinValue returns the value of the "min_value" field in the mutation.
+func (m *RedeemCodeMutation) MinValue() (r float64, exists bool) {
+	v := m.min_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMinValue returns the old "min_value" field's value of the RedeemCode entity.
+// If the RedeemCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RedeemCodeMutation) OldMinValue(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMinValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMinValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMinValue: %w", err)
+	}
+	return oldValue.MinValue, nil
+}
+
+// AddMinValue adds f to the "min_value" field.
+func (m *RedeemCodeMutation) AddMinValue(f float64) {
+	if m.addmin_value != nil {
+		*m.addmin_value += f
+	} else {
+		m.addmin_value = &f
+	}
+}
+
+// AddedMinValue returns the value that was added to the "min_value" field in this mutation.
+func (m *RedeemCodeMutation) AddedMinValue() (r float64, exists bool) {
+	v := m.addmin_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMinValue resets all changes to the "min_value" field.
+func (m *RedeemCodeMutation) ResetMinValue() {
+	m.min_value = nil
+	m.addmin_value = nil
+}
+
+// SetMaxValue sets the "max_value" field.
+func (m *RedeemCodeMutation) SetMaxValue(f float64) {
+	m.max_value = &f
+	m.addmax_value = nil
+}
+
+// MaxValue returns the value of the "max_value" field in the mutation.
+func (m *RedeemCodeMutation) MaxValue() (r float64, exists bool) {
+	v := m.max_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMaxValue returns the old "max_value" field's value of the RedeemCode entity.
+// If the RedeemCode object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RedeemCodeMutation) OldMaxValue(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMaxValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMaxValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMaxValue: %w", err)
+	}
+	return oldValue.MaxValue, nil
+}
+
+// AddMaxValue adds f to the "max_value" field.
+func (m *RedeemCodeMutation) AddMaxValue(f float64) {
+	if m.addmax_value != nil {
+		*m.addmax_value += f
+	} else {
+		m.addmax_value = &f
+	}
+}
+
+// AddedMaxValue returns the value that was added to the "max_value" field in this mutation.
+func (m *RedeemCodeMutation) AddedMaxValue() (r float64, exists bool) {
+	v := m.addmax_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMaxValue resets all changes to the "max_value" field.
+func (m *RedeemCodeMutation) ResetMaxValue() {
+	m.max_value = nil
+	m.addmax_value = nil
 }
 
 // SetStatus sets the "status" field.
@@ -39262,15 +39478,27 @@ func (m *RedeemCodeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *RedeemCodeMutation) Fields() []string {
-	fields := make([]string, 0, 11)
+	fields := make([]string, 0, 15)
 	if m.code != nil {
 		fields = append(fields, redeemcode.FieldCode)
+	}
+	if m.code_hash != nil {
+		fields = append(fields, redeemcode.FieldCodeHash)
+	}
+	if m.batch_id != nil {
+		fields = append(fields, redeemcode.FieldBatchID)
 	}
 	if m._type != nil {
 		fields = append(fields, redeemcode.FieldType)
 	}
 	if m.value != nil {
 		fields = append(fields, redeemcode.FieldValue)
+	}
+	if m.min_value != nil {
+		fields = append(fields, redeemcode.FieldMinValue)
+	}
+	if m.max_value != nil {
+		fields = append(fields, redeemcode.FieldMaxValue)
 	}
 	if m.status != nil {
 		fields = append(fields, redeemcode.FieldStatus)
@@ -39306,10 +39534,18 @@ func (m *RedeemCodeMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case redeemcode.FieldCode:
 		return m.Code()
+	case redeemcode.FieldCodeHash:
+		return m.CodeHash()
+	case redeemcode.FieldBatchID:
+		return m.BatchID()
 	case redeemcode.FieldType:
 		return m.GetType()
 	case redeemcode.FieldValue:
 		return m.Value()
+	case redeemcode.FieldMinValue:
+		return m.MinValue()
+	case redeemcode.FieldMaxValue:
+		return m.MaxValue()
 	case redeemcode.FieldStatus:
 		return m.Status()
 	case redeemcode.FieldUsedBy:
@@ -39337,10 +39573,18 @@ func (m *RedeemCodeMutation) OldField(ctx context.Context, name string) (ent.Val
 	switch name {
 	case redeemcode.FieldCode:
 		return m.OldCode(ctx)
+	case redeemcode.FieldCodeHash:
+		return m.OldCodeHash(ctx)
+	case redeemcode.FieldBatchID:
+		return m.OldBatchID(ctx)
 	case redeemcode.FieldType:
 		return m.OldType(ctx)
 	case redeemcode.FieldValue:
 		return m.OldValue(ctx)
+	case redeemcode.FieldMinValue:
+		return m.OldMinValue(ctx)
+	case redeemcode.FieldMaxValue:
+		return m.OldMaxValue(ctx)
 	case redeemcode.FieldStatus:
 		return m.OldStatus(ctx)
 	case redeemcode.FieldUsedBy:
@@ -39373,6 +39617,20 @@ func (m *RedeemCodeMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCode(v)
 		return nil
+	case redeemcode.FieldCodeHash:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCodeHash(v)
+		return nil
+	case redeemcode.FieldBatchID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBatchID(v)
+		return nil
 	case redeemcode.FieldType:
 		v, ok := value.(string)
 		if !ok {
@@ -39386,6 +39644,20 @@ func (m *RedeemCodeMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetValue(v)
+		return nil
+	case redeemcode.FieldMinValue:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMinValue(v)
+		return nil
+	case redeemcode.FieldMaxValue:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMaxValue(v)
 		return nil
 	case redeemcode.FieldStatus:
 		v, ok := value.(string)
@@ -39454,6 +39726,12 @@ func (m *RedeemCodeMutation) AddedFields() []string {
 	if m.addvalue != nil {
 		fields = append(fields, redeemcode.FieldValue)
 	}
+	if m.addmin_value != nil {
+		fields = append(fields, redeemcode.FieldMinValue)
+	}
+	if m.addmax_value != nil {
+		fields = append(fields, redeemcode.FieldMaxValue)
+	}
 	if m.addvalidity_days != nil {
 		fields = append(fields, redeemcode.FieldValidityDays)
 	}
@@ -39467,6 +39745,10 @@ func (m *RedeemCodeMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case redeemcode.FieldValue:
 		return m.AddedValue()
+	case redeemcode.FieldMinValue:
+		return m.AddedMinValue()
+	case redeemcode.FieldMaxValue:
+		return m.AddedMaxValue()
 	case redeemcode.FieldValidityDays:
 		return m.AddedValidityDays()
 	}
@@ -39485,6 +39767,20 @@ func (m *RedeemCodeMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddValue(v)
 		return nil
+	case redeemcode.FieldMinValue:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMinValue(v)
+		return nil
+	case redeemcode.FieldMaxValue:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMaxValue(v)
+		return nil
 	case redeemcode.FieldValidityDays:
 		v, ok := value.(int)
 		if !ok {
@@ -39500,6 +39796,12 @@ func (m *RedeemCodeMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *RedeemCodeMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(redeemcode.FieldCodeHash) {
+		fields = append(fields, redeemcode.FieldCodeHash)
+	}
+	if m.FieldCleared(redeemcode.FieldBatchID) {
+		fields = append(fields, redeemcode.FieldBatchID)
+	}
 	if m.FieldCleared(redeemcode.FieldUsedBy) {
 		fields = append(fields, redeemcode.FieldUsedBy)
 	}
@@ -39529,6 +39831,12 @@ func (m *RedeemCodeMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *RedeemCodeMutation) ClearField(name string) error {
 	switch name {
+	case redeemcode.FieldCodeHash:
+		m.ClearCodeHash()
+		return nil
+	case redeemcode.FieldBatchID:
+		m.ClearBatchID()
+		return nil
 	case redeemcode.FieldUsedBy:
 		m.ClearUsedBy()
 		return nil
@@ -39555,11 +39863,23 @@ func (m *RedeemCodeMutation) ResetField(name string) error {
 	case redeemcode.FieldCode:
 		m.ResetCode()
 		return nil
+	case redeemcode.FieldCodeHash:
+		m.ResetCodeHash()
+		return nil
+	case redeemcode.FieldBatchID:
+		m.ResetBatchID()
+		return nil
 	case redeemcode.FieldType:
 		m.ResetType()
 		return nil
 	case redeemcode.FieldValue:
 		m.ResetValue()
+		return nil
+	case redeemcode.FieldMinValue:
+		m.ResetMinValue()
+		return nil
+	case redeemcode.FieldMaxValue:
+		m.ResetMaxValue()
 		return nil
 	case redeemcode.FieldStatus:
 		m.ResetStatus()

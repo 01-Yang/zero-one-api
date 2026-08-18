@@ -131,7 +131,7 @@ describe('PricingSection', () => {
     expect(
       screen.queryByText('价格来自公开模型广场配置。官方参考价与零一实付价分列展示，缺失数据保持为空。'),
     ).toBeNull()
-    expect(screen.getAllByText('缓存写 $1.875 · 读 $0.15').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('缓存写 ¥1.875 · 读 ¥0.15').length).toBeGreaterThan(0)
     expect(screen.getByText('0.5×')).toBeTruthy()
     expect(document.querySelectorAll('.price-table .paid-price-column').length).toBeGreaterThan(2)
     expect(mocks.fetchModelPlaza).toHaveBeenCalledWith(

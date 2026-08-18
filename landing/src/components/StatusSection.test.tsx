@@ -25,6 +25,7 @@ const success = (
     latencyMs: 218,
     availability7d: 99.98,
     observedAt: "2026-08-16T08:25:00Z",
+    items: [],
     ...(overrides.status === "success" ? overrides.data : {}),
   },
 });
@@ -42,18 +43,15 @@ describe("StatusSection", () => {
     );
 
     render(<StatusSection />);
-    expect(screen.getByText("正在读取当前真实渠道监控汇总。")).toBeTruthy();
+    expect(screen.getByText("正在读取渠道状态。")).toBeTruthy();
     expect(
-      screen.getByLabelText("渠道状态汇总").getAttribute("aria-busy"),
+      screen.getByLabelText("渠道状态数据").getAttribute("aria-busy"),
     ).toBe("true");
 
     await act(async () => resolveRequest(success()));
-    expect(await screen.findByText("正常")).toBeTruthy();
-    expect(screen.getByText("218 ms")).toBeTruthy();
-    expect(screen.getByText("99.98%")).toBeTruthy();
-    expect(
-      screen.getByRole("link", { name: "查看全部渠道" }).getAttribute("href"),
-    ).toBe("http://127.0.0.1:8080/monitor");
+    expect(screen.getByText("渠道")).toBeTruthy();
+    expect(screen.queryByText("渠道汇总")).toBeNull();
+    expect(screen.getByLabelText("渠道状态数据").querySelectorAll(".status-monitor-row")).toHaveLength(0);
     expect(mocks.fetchChannelStatus).toHaveBeenCalledWith(
       expect.objectContaining({
         enabled: true,
@@ -74,16 +72,16 @@ describe("StatusSection", () => {
           latencyMs: null,
           availability7d: null,
           observedAt: null,
+          items: [],
         },
       }),
     );
     render(<StatusSection />);
 
-    expect(await screen.findByText("暂无监控数据")).toBeTruthy();
-    expect(screen.getAllByText("—")).toHaveLength(2);
     expect(
-      screen.getByText("管理员尚未配置可公开展示的监控渠道。"),
+      await screen.findByText("管理员尚未配置可公开展示的监控渠道。"),
     ).toBeTruthy();
+    expect(screen.queryByText("渠道汇总")).toBeNull();
     expect(screen.queryByText("正常")).toBeNull();
   });
 
@@ -101,6 +99,13 @@ describe("StatusSection", () => {
             latencyMs: 650,
             availability7d: 97.2,
             observedAt: "2026-08-16T08:25:00Z",
+            items: [{
+              name: "OpenAI 主线路",
+              state: "degraded",
+              availability7d: 97.2,
+              observedAt: "2026-08-16T08:25:00Z",
+              timeline: [],
+            }],
           },
         }),
       );
@@ -110,8 +115,10 @@ describe("StatusSection", () => {
       await screen.findByText("读取超时，页面没有显示缓存或示例状态。"),
     ).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "重新读取" }));
+    expect(await screen.findByText("OpenAI 主线路")).toBeTruthy();
     expect(await screen.findByText("降级")).toBeTruthy();
-    expect(screen.getByText("650 ms")).toBeTruthy();
+    expect(screen.getByText("97.20%")).toBeTruthy();
+    expect(screen.getByText("可用率")).toBeTruthy();
     expect(mocks.fetchChannelStatus).toHaveBeenCalledTimes(2);
     expect(mocks.fetchChannelStatus.mock.calls[0]?.[0]?.signal).not.toBe(
       mocks.fetchChannelStatus.mock.calls[1]?.[0]?.signal,
@@ -124,7 +131,7 @@ describe("StatusSection", () => {
     expect(mocks.fetchChannelStatus).not.toHaveBeenCalled();
   });
 
-  it("keeps passive traffic metrics distinct from active probe metrics", async () => {
+  it("does not invent a channel row when the response has only an aggregate", async () => {
     mocks.fetchChannelStatus.mockResolvedValue(
       success({
         status: "success",
@@ -135,15 +142,46 @@ describe("StatusSection", () => {
           latencyMs: 240,
           availability7d: null,
           observedAt: "2026-08-16T08:25:00Z",
+          items: [],
         },
       }),
     );
     render(<StatusSection />);
 
-    expect(await screen.findByText("TTFT P50")).toBeTruthy();
-    expect(screen.getByText("主动探测可用性")).toBeTruthy();
-    expect(screen.getByText("不适用")).toBeTruthy();
-    expect(screen.getByText(/不以流量数据替代主动探测可用性/)).toBeTruthy();
-    expect(screen.queryByText("平均延迟")).toBeNull();
+    await screen.findByText("渠道");
+    expect(screen.queryByText("渠道汇总")).toBeNull();
+    expect(screen.queryByText("中位首字响应 240 ms")).toBeNull();
+    expect(screen.getByLabelText("渠道状态数据").querySelectorAll(".status-monitor-row")).toHaveLength(0);
+    expect(screen.getByText("当前监控模式未提供逐渠道检测记录。")).toBeTruthy();
+  });
+
+  it("keeps active-probe channel rows when they are available", async () => {
+    mocks.fetchChannelStatus.mockResolvedValue(
+      success({
+        status: "success",
+        data: {
+          mode: "active_probe",
+          state: "operational",
+          reason: null,
+          latencyMs: 218,
+          availability7d: 99.98,
+          observedAt: "2026-08-16T08:25:00Z",
+          items: [{
+            name: "OpenAI 主线路",
+            state: "operational",
+            availability7d: 99.92,
+            observedAt: "2026-08-16T08:25:00Z",
+            timeline: [],
+          }],
+        },
+      }),
+    );
+
+    render(<StatusSection />);
+
+    expect(await screen.findByText("OpenAI 主线路")).toBeTruthy();
+    expect(screen.getByText("99.92%")).toBeTruthy();
+    expect(screen.getByText("可用率")).toBeTruthy();
+    expect(screen.queryByText("渠道汇总")).toBeNull();
   });
 });

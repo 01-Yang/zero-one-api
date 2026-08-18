@@ -1,23 +1,39 @@
-import { Activity, ArrowRight, RefreshCw, ReceiptText } from "lucide-react";
+import { Layers, ReceiptText, RefreshCw, ShieldCheck, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   fetchChannelStatus,
+  type ChannelStatusItem,
   type ChannelStatusResult,
-  type ChannelStatusSummary,
 } from "../lib/channelStatus";
+import type { ModelPlazaData } from "../lib/modelPlaza";
 import { consoleUrl, documentUrl } from "../siteConfig";
 import Action from "./Action";
 
 interface ValuePricingSectionProps {
-  modelPlazaEnabled: boolean;
+  modelPlazaData: ModelPlazaData | null;
+}
+
+function lowestPublicRate(data: ModelPlazaData | null): number | null {
+  const rates = (data?.groups ?? [])
+    .map((group) => group.userRateMultiplier ?? group.rateMultiplier)
+    .filter((rate) => Number.isFinite(rate) && rate >= 0);
+  return rates.length ? Math.min(...rates) : null;
+}
+
+function formatDiscount(rate: number): string {
+  return new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(
+    rate * 10,
+  );
 }
 
 export function ValuePricingSection({
-  modelPlazaEnabled,
+  modelPlazaData,
 }: ValuePricingSectionProps) {
-  const priceSummary = modelPlazaEnabled
-    ? "以模型广场和调用记录为准。"
-    : "实际结算请以登录后的调用记录为准。";
+  const lowestRate = lowestPublicRate(modelPlazaData);
+  const priceSummary =
+    lowestRate === null
+      ? "按实际配置结算"
+      : `低至约 ${formatDiscount(lowestRate)} 折`;
 
   return (
     <section
@@ -25,50 +41,72 @@ export function ValuePricingSection({
       className="value-pricing-section"
       aria-labelledby="value-pricing-title"
     >
+      <h2
+        id="value-pricing-title"
+        className="value-pricing-title"
+        data-reveal
+      >
+        每一份 token 按实际配置结算
+      </h2>
       <div className="value-pricing-main section-layer">
         <div className="value-pricing-copy" data-reveal>
-          <p className="value-pricing-kicker">按量计费</p>
-          <h2 id="value-pricing-title">
-            <span>每一份 token</span>
-            <span>按实际配置结算</span>
-          </h2>
-          <p>
-            输入、输出、缓存、按次与图片项目，均以模型和分组的实际配置为准。
+          <p className="value-pricing-description">
+            <span>人民币：美金1:1充值，按量付费，实际用多少付多少。</span>
+            <span>你的账户统一按人民币充值，按模型路由选择对应计费分组。</span>
           </p>
+          <div
+            className="value-pricing-benefits"
+            aria-labelledby="value-pricing-reasons-title"
+          >
+            <h3 id="value-pricing-reasons-title">
+              为什么你的 API 应该选择我们？
+            </h3>
+            <div className="value-pricing-reason-grid">
+              <article className="value-pricing-reason-card">
+                <span className="value-pricing-reason-icon" aria-hidden="true">
+                  <Layers />
+                </span>
+                <h4>一个平台，接全模型。</h4>
+                <p>Claude、Codex、Gemini 等常用模型，一套 API 即可统一接入。</p>
+              </article>
+              <article className="value-pricing-reason-card">
+                <span className="value-pricing-reason-icon" aria-hidden="true">
+                  <Zap />
+                </span>
+                <h4>不再担心限流和 token 焦虑。</h4>
+                <p>按任务选择合适分组，减少限流干扰，调用成本更容易预估。</p>
+              </article>
+              <article className="value-pricing-reason-card">
+                <span className="value-pricing-reason-icon" aria-hidden="true">
+                  <ShieldCheck />
+                </span>
+                <h4>服务稳定，使用无忧。</h4>
+                <p>服务状态持续公开，长期任务运行更安心，问题定位也更直接。</p>
+              </article>
+            </div>
+          </div>
         </div>
 
         <div className="value-pricing-card" data-reveal data-reveal-delay="100">
           <p className="value-pricing-badge">
             <ReceiptText aria-hidden="true" />
-            价格说明 · 实际配置为准
+            价格透明 · 无月费 · 无订阅
           </p>
           <div className="value-pricing-summary">
             <div>
-              <h3>价格清晰可查</h3>
-              <p>{priceSummary}</p>
+              <h3>{priceSummary}</h3>
+              <p>按选择的计费分组自动计价。</p>
             </div>
-            <button
-              className="info-tip"
-              type="button"
-              aria-label="显示计费说明"
-              aria-describedby="billing-pricing-tooltip"
-            >
-              ?
-              <span id="billing-pricing-tooltip" role="tooltip">
-                最终费用以实际模型、分组、倍率和调用记录为准。
-              </span>
-            </button>
           </div>
-          <p className="value-pricing-detail">Token · 按次 · 图片等计费方式</p>
           <div className="value-pricing-action">
             <Action
-              className="button-primary"
-              href={consoleUrl("/redeem")}
+              className="button-primary value-pricing-purchase"
+              href={consoleUrl("/purchase")}
               size="md"
               radius={16}
+              highlight={false}
             >
-              兑换额度
-              <ArrowRight aria-hidden="true" />
+              购买额度
             </Action>
           </div>
         </div>
@@ -79,65 +117,62 @@ export function ValuePricingSection({
 
 type ChannelStatusViewState = { status: "loading" } | ChannelStatusResult;
 
-function statusLabel(summary: ChannelStatusSummary | null): string {
-  if (!summary) return "—";
-  if (summary.state === "operational") return "正常";
-  if (summary.state === "degraded") return "降级";
-  if (summary.reason === "no_monitors") return "暂无监控数据";
-  if (summary.reason === "disabled") return "监控未开启";
-  return "正在收集数据";
+function statusLabel(state: ChannelStatusItem["state"]): string {
+  if (state === "operational") return "正常";
+  if (state === "degraded") return "降级";
+  return "等待数据";
 }
 
 function statusNote(state: ChannelStatusViewState): string {
-  if (state.status === "loading") return "正在读取当前真实渠道监控汇总。";
+  if (state.status === "loading") return "正在读取渠道状态。";
   if (state.status === "success") {
-    if (state.data.mode === "traffic") {
-      return "当前为被动流量监控：展示健康状态与 TTFT P50，不以流量数据替代主动探测可用性。";
-    }
-    if (state.data.reason === "no_monitors")
-      return "管理员尚未配置可公开展示的监控渠道。";
-    if (state.data.reason === "insufficient_data")
-      return "监控已配置，正在等待足够的真实检测数据。";
+    if ((state.data.items ?? []).length > 0) return "";
+    if (state.data.mode === "traffic") return "当前监控模式未提供逐渠道检测记录。";
+    if (state.data.reason === "no_monitors") return "管理员尚未配置可公开展示的监控渠道。";
+    if (state.data.reason === "insufficient_data") return "监控已配置，正在等待足够的真实检测数据。";
     if (state.data.reason === "disabled") return "当前站点未开启渠道监控。";
-    return "数据与控制台的渠道监控使用同一套后端来源。";
+    return "";
   }
   if (state.status === "rate-limited") {
     return state.retryAfter
       ? `读取过于频繁，请在约 ${state.retryAfter} 秒后重试。`
       : "读取过于频繁，请稍后重试。";
   }
-  if (state.status === "not-enabled" || state.status === "disabled")
+  if (state.status === "not-enabled" || state.status === "disabled") {
     return "当前站点未公开渠道状态汇总。";
-  if (state.status === "error" && state.reason === "timeout")
+  }
+  if (state.status === "error" && state.reason === "timeout") {
     return "读取超时，页面没有显示缓存或示例状态。";
+  }
   return "暂时无法读取真实渠道状态，页面没有显示缓存或示例状态。";
 }
 
-function formatMetric(
-  value: number | null,
-  suffix: string,
-  fractionDigits = 0,
-): string {
+function formatAvailability(value: number | null): string {
   if (value === null) return "—";
   return `${new Intl.NumberFormat("zh-CN", {
-    minimumFractionDigits: fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  }).format(value)}${suffix}`;
-}
-
-function formatAvailability(summary: ChannelStatusSummary | null): string {
-  if (summary?.mode === "traffic") return "不适用";
-  return formatMetric(summary?.availability7d ?? null, "%", 2);
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)}%`;
 }
 
 function formatObservedAt(value: string | null): string {
   if (!value) return "";
   const time = Date.parse(value);
   if (!Number.isFinite(time)) return "";
-  return `监控数据截至 ${new Intl.DateTimeFormat("zh-CN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(time))}`;
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(time));
+}
+
+function timelineLabel(item: ChannelStatusItem): string {
+  const availability = formatAvailability(item.availability7d);
+  return `${item.name} 最近 ${item.timeline.length} 次检测记录，近 7 天可用率 ${
+    availability === "—" ? "暂无数据" : availability
+  }`;
 }
 
 export function StatusSection({ enabled = true }: { enabled?: boolean }) {
@@ -163,11 +198,9 @@ export function StatusSection({ enabled = true }: { enabled?: boolean }) {
     return () => controller.abort();
   }, [attempt, enabled]);
 
-  const summary = state.status === "success" ? state.data : null;
-  const shouldRetry =
-    state.status === "error" || state.status === "rate-limited";
-  const observedAt = summary ? formatObservedAt(summary.observedAt) : "";
-  const trafficMode = summary?.mode === "traffic";
+  const shouldRetry = state.status === "error" || state.status === "rate-limited";
+  const note = statusNote(state);
+  const items = state.status === "success" ? (state.data.items ?? []) : [];
 
   return (
     <section
@@ -177,11 +210,7 @@ export function StatusSection({ enabled = true }: { enabled?: boolean }) {
     >
       <div className="status-heading section-layer" data-reveal>
         <div className="section-heading section-heading-wide">
-          <p className="eyebrow">渠道状态</p>
-          <h2 id="status-title">真实汇总，持续呈现渠道健康状态</h2>
-          <p>
-            首页直接读取与控制台同源的匿名汇总，只展示渠道健康状态与口径明确的指标。
-          </p>
+          <h2 id="status-title">渠道状态</h2>
         </div>
       </div>
       <div
@@ -189,32 +218,60 @@ export function StatusSection({ enabled = true }: { enabled?: boolean }) {
         data-reveal
         data-reveal-delay="100"
       >
-        <div className="status-summary">
-          <div
-            className="status-meta"
-            aria-label="渠道状态汇总"
-            aria-busy={state.status === "loading"}
-            aria-live="polite"
-          >
-            <span>
-              <Activity aria-hidden="true" />{" "}
-              {trafficMode ? "渠道健康状态" : "最近检测状态"}
-            </span>
-            <strong className={`status-value--${summary?.state ?? "unknown"}`}>
-              {statusLabel(summary)}
-            </strong>
-            <span>{trafficMode ? "TTFT P50" : "平均延迟"}</span>
-            <strong>{formatMetric(summary?.latencyMs ?? null, " ms")}</strong>
-            <span>{trafficMode ? "主动探测可用性" : "近 7 天可用性"}</span>
-            <strong>{formatAvailability(summary)}</strong>
+        <div
+          className="status-monitor-panel"
+          aria-label="渠道状态数据"
+          aria-busy={state.status === "loading"}
+          aria-live="polite"
+        >
+          <div className="status-monitor-header">
+            <span className="status-monitor-heading">渠道</span>
+            <div className="status-legend" aria-label="状态图例：从运行正常到不可用">
+              <span className="status-legend-boundary">运行正常</span>
+              <span className="status-legend-scale" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+                <i />
+                <i />
+              </span>
+              <span className="status-legend-boundary">不可用</span>
+            </div>
           </div>
-          <p className="status-note" role="status">
-            {statusNote(state)}
-            {observedAt ? ` ${observedAt}。` : ""}
-          </p>
+          {items.map((item) => {
+            const observedAt = formatObservedAt(item.observedAt);
+            return (
+              <div className="status-monitor-row" data-status={item.state} key={item.name}>
+                <div className="status-monitor-row-head">
+                  <div className="status-monitor-name">
+                    <span className={`status-state-dot status-state-dot--${item.state}`} aria-hidden="true" />
+                    <strong>{item.name}</strong>
+                    <span className={`status-value--${item.state}`}>{statusLabel(item.state)}</span>
+                  </div>
+                  <div className="status-monitor-metrics">
+                    <strong>
+                      <span>{formatAvailability(item.availability7d)}</span> <span>可用率</span>
+                    </strong>
+                    {observedAt ? (
+                      <>
+                        <span className="status-metric-divider" aria-hidden="true">/</span>
+                        <span>更新时间 {observedAt}</span>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="status-availability-meter" role="img" aria-label={timelineLabel(item)}>
+                  {item.timeline.map((point, index) => (
+                    <span aria-hidden="true" className={`is-${point.status}`} key={`${point.checkedAt}-${index}`} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <div className="status-actions">
-          {shouldRetry ? (
+        {note ? <p className="status-note" role="status">{note}</p> : null}
+        {shouldRetry ? (
+          <div className="status-actions">
             <Action
               className="button-secondary"
               type="button"
@@ -225,17 +282,8 @@ export function StatusSection({ enabled = true }: { enabled?: boolean }) {
               <RefreshCw aria-hidden="true" />
               重新读取
             </Action>
-          ) : null}
-          <Action
-            className="button-secondary"
-            href={consoleUrl("/monitor")}
-            size="lg"
-            radius={16}
-          >
-            查看全部渠道
-            <ArrowRight aria-hidden="true" />
-          </Action>
-        </div>
+          </div>
+        ) : null}
       </div>
     </section>
   );

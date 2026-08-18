@@ -115,7 +115,6 @@
         "frontend/src/views/user/SubscriptionsView.vue",
         "frontend/src/views/user/UserOrdersView.vue",
         "frontend/tailwind.config.js",
-        "frontend/vite.config.ts",
         "landing/src/components/Action.tsx",
         "landing/src/styles/action.css"
       ]
@@ -295,12 +294,6 @@
       "owner": "Public Capabilities",
       "path": "frontend/src/types/index.ts",
       "immutable_path": "frontend/src/types/"
-    },
-    {
-      "name": "console-skin-versioned-asset-directory",
-      "owner": "Console Skin",
-      "path": "frontend/vite.config.ts",
-      "immutable_path": "frontend/vite.config.ts"
     }
   ]
 }

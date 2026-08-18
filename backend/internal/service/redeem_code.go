@@ -2,7 +2,9 @@ package service
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
+	"strings"
 	"time"
 )
 
@@ -17,12 +19,39 @@ type RedeemCode struct {
 	Notes     string
 	CreatedAt time.Time
 	ExpiresAt *time.Time
+	CodeHash  *string
+	BatchID   *string
+	MinValue  float64
+	MaxValue  float64
 
 	GroupID      *int64
 	ValidityDays int
 
 	User  *User
 	Group *Group
+}
+
+// RedeemCodeHash returns the lookup digest used for newly generated, high-entropy codes.
+// The plaintext is returned once at creation time and is not persisted.
+func RedeemCodeHash(code string) string {
+	sum := sha256.Sum256([]byte(code))
+	return hex.EncodeToString(sum[:])
+}
+
+// RedactedRedeemCode returns a non-redeemable identifier suitable for storage and listings.
+func RedactedRedeemCode(code, hash string) string {
+	prefix := code
+	if len(prefix) > 4 {
+		prefix = prefix[:4]
+	}
+	if len(hash) > 24 {
+		hash = hash[:24]
+	}
+	return strings.ToUpper(prefix) + "-" + hash
+}
+
+func (r *RedeemCode) IsCodeRedacted() bool {
+	return r != nil && r.CodeHash != nil && r.Code == RedactedRedeemCode(r.Code, *r.CodeHash)
 }
 
 func (r *RedeemCode) IsUsed() bool {

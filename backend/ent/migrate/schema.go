@@ -1452,8 +1452,12 @@ var (
 	RedeemCodesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "code", Type: field.TypeString, Unique: true, Size: 32},
+		{Name: "code_hash", Type: field.TypeString, Nullable: true, Size: 64},
+		{Name: "batch_id", Type: field.TypeString, Nullable: true, Size: 32},
 		{Name: "type", Type: field.TypeString, Size: 20, Default: "balance"},
 		{Name: "value", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "min_value", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
+		{Name: "max_value", Type: field.TypeFloat64, Default: 0, SchemaType: map[string]string{"postgres": "decimal(20,8)"}},
 		{Name: "status", Type: field.TypeString, Size: 20, Default: "unused"},
 		{Name: "used_at", Type: field.TypeTime, Nullable: true, SchemaType: map[string]string{"postgres": "timestamptz"}},
 		{Name: "notes", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "text"}},
@@ -1471,13 +1475,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "redeem_codes_groups_redeem_codes",
-				Columns:    []*schema.Column{RedeemCodesColumns[10]},
+				Columns:    []*schema.Column{RedeemCodesColumns[14]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "redeem_codes_users_redeem_codes",
-				Columns:    []*schema.Column{RedeemCodesColumns[11]},
+				Columns:    []*schema.Column{RedeemCodesColumns[15]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1486,22 +1490,38 @@ var (
 			{
 				Name:    "redeemcode_status",
 				Unique:  false,
-				Columns: []*schema.Column{RedeemCodesColumns[4]},
+				Columns: []*schema.Column{RedeemCodesColumns[8]},
 			},
 			{
 				Name:    "redeemcode_used_by",
 				Unique:  false,
-				Columns: []*schema.Column{RedeemCodesColumns[11]},
+				Columns: []*schema.Column{RedeemCodesColumns[15]},
 			},
 			{
 				Name:    "redeemcode_group_id",
 				Unique:  false,
-				Columns: []*schema.Column{RedeemCodesColumns[10]},
+				Columns: []*schema.Column{RedeemCodesColumns[14]},
 			},
 			{
 				Name:    "redeemcode_expires_at",
 				Unique:  false,
-				Columns: []*schema.Column{RedeemCodesColumns[8]},
+				Columns: []*schema.Column{RedeemCodesColumns[12]},
+			},
+			{
+				Name:    "redeemcode_code_hash",
+				Unique:  true,
+				Columns: []*schema.Column{RedeemCodesColumns[2]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "code_hash IS NOT NULL",
+				},
+			},
+			{
+				Name:    "redeemcode_batch_id_used_by",
+				Unique:  true,
+				Columns: []*schema.Column{RedeemCodesColumns[3], RedeemCodesColumns[15]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "batch_id IS NOT NULL AND used_by IS NOT NULL",
+				},
 			},
 		},
 	}

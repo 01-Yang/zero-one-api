@@ -170,3 +170,30 @@ func TestResolveRedeemCodeExpiresAt_RejectsConflictingInputs(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, expiresAt)
 }
+
+func TestGenerateReturnsPlaintextOnceWithNoStoreHeaders(t *testing.T) {
+	service.SetDefaultIdempotencyCoordinator(nil)
+	adminSvc := newStubAdminService()
+	adminSvc.redeems = []service.RedeemCode{{
+		ID: 1, Code: "ONE-TIME-PLAINTEXT-CODE", Type: service.RedeemTypeBenefit,
+		Value: 5, Status: service.StatusUnused,
+	}}
+	handler := NewRedeemHandler(adminSvc, nil)
+
+	gin.SetMode(gin.TestMode)
+	recorder := httptest.NewRecorder()
+	context, _ := gin.CreateTestContext(recorder)
+	context.Request = httptest.NewRequest(
+		http.MethodPost,
+		"/api/v1/admin/redeem-codes/generate",
+		bytes.NewBufferString(`{"count":1,"type":"benefit","value":5}`),
+	)
+	context.Request.Header.Set("Content-Type", "application/json")
+
+	handler.Generate(context)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Equal(t, "no-store", recorder.Header().Get("Cache-Control"))
+	require.Equal(t, "no-cache", recorder.Header().Get("Pragma"))
+	require.Contains(t, recorder.Body.String(), "ONE-TIME-PLAINTEXT-CODE")
+}

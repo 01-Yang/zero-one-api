@@ -5,12 +5,15 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	dbent "github.com/Wei-Shaw/sub2api/ent"
+	"github.com/Wei-Shaw/sub2api/ent/redeemcode"
 	"github.com/Wei-Shaw/sub2api/internal/pkg/pagination"
 	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -30,6 +33,105 @@ func (s *RedeemCodeRepoSuite) SetupTest() {
 
 func TestRedeemCodeRepoSuite(t *testing.T) {
 	suite.Run(t, new(RedeemCodeRepoSuite))
+}
+
+func TestRedeemCodeRepositoryConcurrentBatchClaimOnlyOneSucceeds(t *testing.T) {
+	ctx := context.Background()
+	suffix := fmt.Sprintf("%x", time.Now().UnixNano())
+	user, err := integrationEntClient.User.Create().
+		SetEmail("benefit-concurrent-" + suffix + "@example.com").
+		SetPasswordHash("test-password-hash").
+		Save(ctx)
+	require.NoError(t, err)
+
+	batchID := "batch-" + suffix
+	codes := []service.RedeemCode{
+		{Code: "B1-" + suffix, Type: service.RedeemTypeBenefit, Value: 1, Status: service.StatusUnused, BatchID: &batchID},
+		{Code: "B2-" + suffix, Type: service.RedeemTypeBenefit, Value: 1, Status: service.StatusUnused, BatchID: &batchID},
+	}
+	repo := NewRedeemCodeRepository(integrationEntClient).(*redeemCodeRepository)
+	require.NoError(t, repo.CreateBatch(ctx, codes))
+	t.Cleanup(func() {
+		_, _ = integrationEntClient.RedeemCode.Delete().Where(redeemcode.BatchIDEQ(batchID)).Exec(context.Background())
+		_ = integrationEntClient.User.DeleteOneID(user.ID).Exec(context.Background())
+	})
+
+	start := make(chan struct{})
+	results := make(chan error, 2)
+	for _, code := range codes {
+		codeID := code.ID
+		go func() {
+			<-start
+			results <- repo.Use(ctx, codeID, user.ID)
+		}()
+	}
+	close(start)
+
+	var successes, rejected int
+	for i := 0; i < 2; i++ {
+		err := <-results
+		switch {
+		case err == nil:
+			successes++
+		case errors.Is(err, service.ErrRedeemBatchAlreadyClaimed):
+			rejected++
+		default:
+			require.NoError(t, err)
+		}
+	}
+	require.Equal(t, 1, successes)
+	require.Equal(t, 1, rejected)
+}
+
+func TestRedeemServiceAppliesBenefitAndMysteryBoxRewardsAtomically(t *testing.T) {
+	ctx := context.Background()
+	suffix := fmt.Sprintf("%x", time.Now().UnixNano())
+	user, err := integrationEntClient.User.Create().
+		SetEmail("benefit-service-" + suffix + "@example.com").
+		SetPasswordHash("test-password-hash").
+		Save(ctx)
+	require.NoError(t, err)
+
+	benefitBatch := "benefit-" + suffix
+	mysteryBatch := "mystery-" + suffix
+	codes := []service.RedeemCode{
+		{Code: "BF1-" + suffix, Type: service.RedeemTypeBenefit, Value: 5, Status: service.StatusUnused, BatchID: &benefitBatch},
+		{Code: "BF2-" + suffix, Type: service.RedeemTypeBenefit, Value: 5, Status: service.StatusUnused, BatchID: &benefitBatch},
+		{Code: "MB1-" + suffix, Type: service.RedeemTypeMysteryBox, Status: service.StatusUnused, BatchID: &mysteryBatch, MinValue: 2.34, MaxValue: 2.34},
+	}
+	repo := NewRedeemCodeRepository(integrationEntClient).(*redeemCodeRepository)
+	require.NoError(t, repo.CreateBatch(ctx, codes))
+	t.Cleanup(func() {
+		_, _ = integrationEntClient.RedeemCode.Delete().Where(
+			redeemcode.Or(redeemcode.BatchIDEQ(benefitBatch), redeemcode.BatchIDEQ(mysteryBatch)),
+		).Exec(context.Background())
+		_ = integrationEntClient.User.DeleteOneID(user.ID).Exec(context.Background())
+	})
+
+	userRepo := NewUserRepository(integrationEntClient, integrationDB)
+	redeemService := service.NewRedeemService(
+		repo, userRepo, nil, nil, nil, integrationEntClient, nil, nil,
+	)
+
+	benefit, err := redeemService.Redeem(ctx, user.ID, codes[0].Code)
+	require.NoError(t, err)
+	require.Equal(t, float64(5), benefit.Value)
+
+	_, err = redeemService.Redeem(ctx, user.ID, codes[1].Code)
+	require.ErrorIs(t, err, service.ErrRedeemBatchAlreadyClaimed)
+
+	mystery, err := redeemService.Redeem(ctx, user.ID, codes[2].Code)
+	require.NoError(t, err)
+	require.Equal(t, 2.34, mystery.Value)
+
+	updatedUser, err := integrationEntClient.User.Get(ctx, user.ID)
+	require.NoError(t, err)
+	require.InDelta(t, 7.34, updatedUser.Balance, 0.000001)
+
+	storedMystery, err := repo.GetByID(ctx, mystery.ID)
+	require.NoError(t, err)
+	require.Equal(t, service.StatusUsed, storedMystery.Status)
+	require.Equal(t, 2.34, storedMystery.Value)
 }
 
 func (s *RedeemCodeRepoSuite) createUser(email string) *dbent.User {
@@ -118,6 +220,50 @@ func (s *RedeemCodeRepoSuite) TestGetByCode_NotFound() {
 	s.Require().ErrorIs(err, service.ErrRedeemCodeNotFound)
 }
 
+func (s *RedeemCodeRepoSuite) TestHashedCodeStoresOnlyRedactedIdentifier() {
+	plaintext := "0123456789abcdef0123456789abcdef"
+	hash := service.RedeemCodeHash(plaintext)
+	code := &service.RedeemCode{
+		Code:     plaintext,
+		CodeHash: &hash,
+		Type:     service.RedeemTypeBenefit,
+		Value:    5,
+		Status:   service.StatusUnused,
+	}
+
+	s.Require().NoError(s.repo.Create(s.ctx, code))
+	stored, err := s.repo.GetByCode(s.ctx, plaintext)
+	s.Require().NoError(err)
+	s.Require().NotEqual(plaintext, stored.Code)
+	s.Require().Equal(service.RedactedRedeemCode(plaintext, hash), stored.Code)
+
+	_, err = s.repo.GetByCode(s.ctx, stored.Code)
+	s.Require().ErrorIs(err, service.ErrRedeemCodeNotFound, "the redacted database value must not be redeemable")
+}
+
+func (s *RedeemCodeRepoSuite) TestBatchClaimAllowsDifferentUsersButRejectsSecondClaimBySameUser() {
+	user1 := s.createUser("benefit-one-per-batch-1@example.com")
+	user2 := s.createUser("benefit-one-per-batch-2@example.com")
+	batchID := "benefit-batch-unique-users"
+	codes := []service.RedeemCode{
+		{Code: "BENEFIT-BATCH-1", Type: service.RedeemTypeBenefit, Value: 5, Status: service.StatusUnused, BatchID: &batchID},
+		{Code: "BENEFIT-BATCH-2", Type: service.RedeemTypeBenefit, Value: 5, Status: service.StatusUnused, BatchID: &batchID},
+		{Code: "BENEFIT-BATCH-3", Type: service.RedeemTypeBenefit, Value: 5, Status: service.StatusUnused, BatchID: &batchID},
+	}
+	s.Require().NoError(s.repo.CreateBatch(s.ctx, codes))
+
+	stored1, err := s.repo.GetByCode(s.ctx, codes[0].Code)
+	s.Require().NoError(err)
+	stored2, err := s.repo.GetByCode(s.ctx, codes[1].Code)
+	s.Require().NoError(err)
+	stored3, err := s.repo.GetByCode(s.ctx, codes[2].Code)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.repo.Use(s.ctx, stored1.ID, user1.ID))
+	s.Require().NoError(s.repo.Use(s.ctx, stored2.ID, user2.ID))
+	s.Require().ErrorIs(s.repo.Use(s.ctx, stored3.ID, user1.ID), service.ErrRedeemBatchAlreadyClaimed)
+}
+
 // --- Delete ---
 
 func (s *RedeemCodeRepoSuite) TestDelete() {
@@ -137,6 +283,19 @@ func (s *RedeemCodeRepoSuite) TestDelete() {
 	_, err = s.repo.GetByID(s.ctx, created.ID)
 	s.Require().Error(err, "expected error after delete")
 	s.Require().ErrorIs(err, service.ErrRedeemCodeNotFound)
+}
+
+func (s *RedeemCodeRepoSuite) TestDeletePreservesUsedBatchClaim() {
+	user := s.createUser("benefit-delete-claim@example.com")
+	batchID := "benefit-delete-claim-batch"
+	code := &service.RedeemCode{
+		Code: "BENEFIT-USED-NOT-DELETABLE", Type: service.RedeemTypeBenefit,
+		Value: 5, Status: service.StatusUnused, BatchID: &batchID,
+	}
+	s.Require().NoError(s.repo.Create(s.ctx, code))
+	s.Require().NoError(s.repo.Use(s.ctx, code.ID, user.ID))
+
+	s.Require().ErrorIs(s.repo.Delete(s.ctx, code.ID), service.ErrRedeemCodeUsed)
 }
 
 // --- List / ListWithFilters ---

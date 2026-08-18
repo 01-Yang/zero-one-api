@@ -65,7 +65,7 @@ func RegisterAdminRoutes(
 		registerProxyRoutes(admin, h, stepUpAuth)
 
 		// 卡密管理
-		registerRedeemCodeRoutes(admin, h)
+		registerRedeemCodeRoutes(admin, h, stepUpAuth)
 
 		// 优惠码管理
 		registerPromoCodeRoutes(admin, h)
@@ -517,20 +517,29 @@ func registerProxyRoutes(admin *gin.RouterGroup, h *handler.Handlers, stepUpAuth
 	}
 }
 
-func registerRedeemCodeRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+func registerRedeemCodeRoutes(admin *gin.RouterGroup, h *handler.Handlers, stepUpAuth middleware.StepUpAuthMiddleware) {
 	codes := admin.Group("/redeem-codes")
 	{
 		codes.GET("", h.Admin.Redeem.List)
 		codes.GET("/stats", h.Admin.Redeem.GetStats)
-		codes.GET("/export", h.Admin.Redeem.Export)
+		codes.GET("/export", requireRedeemCodeHumanSession, gin.HandlerFunc(stepUpAuth), h.Admin.Redeem.Export)
 		codes.GET("/:id", h.Admin.Redeem.GetByID)
 		codes.POST("/create-and-redeem", h.Admin.Redeem.CreateAndRedeem)
-		codes.POST("/generate", h.Admin.Redeem.Generate)
+		codes.POST("/generate", requireRedeemCodeHumanSession, gin.HandlerFunc(stepUpAuth), h.Admin.Redeem.Generate)
 		codes.DELETE("/:id", h.Admin.Redeem.Delete)
 		codes.POST("/batch-delete", h.Admin.Redeem.BatchDelete)
 		codes.POST("/batch-update", h.Admin.Redeem.BatchUpdate)
 		codes.POST("/:id/expire", h.Admin.Redeem.Expire)
 	}
+}
+
+func requireRedeemCodeHumanSession(c *gin.Context) {
+	if c.GetString("auth_method") == service.AuditAuthMethodAdminAPIKey {
+		middleware.AbortWithError(c, 403, "STEP_UP_ADMIN_API_KEY_FORBIDDEN",
+			"Admin API key cannot access plaintext redeem codes; an administrator session is required")
+		return
+	}
+	c.Next()
 }
 
 func registerPromoCodeRoutes(admin *gin.RouterGroup, h *handler.Handlers) {

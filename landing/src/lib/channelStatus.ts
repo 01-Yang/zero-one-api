@@ -4,6 +4,7 @@ const DEFAULT_TIMEOUT_MS = 3_000;
 type UnknownRecord = Record<string, unknown>;
 
 export type ChannelStatusState = "operational" | "degraded" | "unknown";
+export type ChannelStatusTimelineState = ChannelStatusState | "failed" | "error";
 export type ChannelStatusMode = "active_probe" | "traffic" | "disabled" | null;
 export type ChannelStatusReason =
   "no_monitors" | "insufficient_data" | "disabled" | null;
@@ -17,6 +18,20 @@ export interface ChannelStatusSummary {
   latencyMs: number | null;
   availability7d: number | null;
   observedAt: string | null;
+  items: ChannelStatusItem[];
+}
+
+export interface ChannelStatusTimelinePoint {
+  status: ChannelStatusTimelineState;
+  checkedAt: string;
+}
+
+export interface ChannelStatusItem {
+  name: string;
+  state: ChannelStatusState;
+  availability7d: number | null;
+  observedAt: string | null;
+  timeline: ChannelStatusTimelinePoint[];
 }
 
 export type ChannelStatusResult =
@@ -80,6 +95,56 @@ function parseMode(value: unknown): ChannelStatusMode | undefined {
     : undefined;
 }
 
+function parseTimeline(value: unknown): ChannelStatusTimelinePoint[] | undefined {
+  if (!Array.isArray(value) || value.length > 200) return undefined;
+  const timeline: ChannelStatusTimelinePoint[] = [];
+  for (const rawPoint of value) {
+    const point = asRecord(rawPoint);
+    const checkedAt = parseNullableTimestamp(point?.checked_at);
+    const status = point?.status;
+    if (
+      checkedAt === undefined ||
+      checkedAt === null ||
+      (status !== "operational" &&
+        status !== "degraded" &&
+        status !== "failed" &&
+        status !== "error" &&
+        status !== "unknown")
+    ) {
+      return undefined;
+    }
+    timeline.push({ status, checkedAt });
+  }
+  return timeline;
+}
+
+function parseItems(value: unknown): ChannelStatusItem[] | undefined {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 100) return undefined;
+  const items: ChannelStatusItem[] = [];
+  for (const rawItem of value) {
+    const item = asRecord(rawItem);
+    const name = item?.name;
+    const state = item?.state;
+    const availability7d = parseNullablePercent(item?.availability_7d);
+    const observedAt = parseNullableTimestamp(item?.observed_at);
+    const timeline = parseTimeline(item?.timeline);
+    if (
+      typeof name !== "string" ||
+      !name.trim() ||
+      name.length > 100 ||
+      (state !== "operational" && state !== "degraded" && state !== "unknown") ||
+      availability7d === undefined ||
+      observedAt === undefined ||
+      timeline === undefined
+    ) {
+      return undefined;
+    }
+    items.push({ name, state, availability7d, observedAt, timeline });
+  }
+  return items;
+}
+
 /** Strictly parses the anonymous aggregate so malformed values never look healthy. */
 export function parseChannelStatusResponse(
   payload: unknown,
@@ -97,17 +162,19 @@ export function parseChannelStatusResponse(
   const latencyMs = parseNullableInteger(data.latency_ms);
   const availability7d = parseNullablePercent(data.availability_7d);
   const observedAt = parseNullableTimestamp(data.observed_at);
+  const items = parseItems(data.items);
   if (
     mode === undefined ||
     reason === undefined ||
     latencyMs === undefined ||
     availability7d === undefined ||
-    observedAt === undefined
+    observedAt === undefined ||
+    items === undefined
   ) {
     return null;
   }
 
-  return { mode, state, reason, latencyMs, availability7d, observedAt };
+  return { mode, state, reason, latencyMs, availability7d, observedAt, items };
 }
 
 function parseRetryAfter(value: string | null): number | null {

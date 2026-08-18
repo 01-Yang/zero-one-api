@@ -1723,28 +1723,44 @@ func init() {
 			return nil
 		}
 	}()
+	// redeemcodeDescCodeHash is the schema descriptor for code_hash field.
+	redeemcodeDescCodeHash := redeemcodeFields[1].Descriptor()
+	// redeemcode.CodeHashValidator is a validator for the "code_hash" field. It is called by the builders before save.
+	redeemcode.CodeHashValidator = redeemcodeDescCodeHash.Validators[0].(func(string) error)
+	// redeemcodeDescBatchID is the schema descriptor for batch_id field.
+	redeemcodeDescBatchID := redeemcodeFields[2].Descriptor()
+	// redeemcode.BatchIDValidator is a validator for the "batch_id" field. It is called by the builders before save.
+	redeemcode.BatchIDValidator = redeemcodeDescBatchID.Validators[0].(func(string) error)
 	// redeemcodeDescType is the schema descriptor for type field.
-	redeemcodeDescType := redeemcodeFields[1].Descriptor()
+	redeemcodeDescType := redeemcodeFields[3].Descriptor()
 	// redeemcode.DefaultType holds the default value on creation for the type field.
 	redeemcode.DefaultType = redeemcodeDescType.Default.(string)
 	// redeemcode.TypeValidator is a validator for the "type" field. It is called by the builders before save.
 	redeemcode.TypeValidator = redeemcodeDescType.Validators[0].(func(string) error)
 	// redeemcodeDescValue is the schema descriptor for value field.
-	redeemcodeDescValue := redeemcodeFields[2].Descriptor()
+	redeemcodeDescValue := redeemcodeFields[4].Descriptor()
 	// redeemcode.DefaultValue holds the default value on creation for the value field.
 	redeemcode.DefaultValue = redeemcodeDescValue.Default.(float64)
+	// redeemcodeDescMinValue is the schema descriptor for min_value field.
+	redeemcodeDescMinValue := redeemcodeFields[5].Descriptor()
+	// redeemcode.DefaultMinValue holds the default value on creation for the min_value field.
+	redeemcode.DefaultMinValue = redeemcodeDescMinValue.Default.(float64)
+	// redeemcodeDescMaxValue is the schema descriptor for max_value field.
+	redeemcodeDescMaxValue := redeemcodeFields[6].Descriptor()
+	// redeemcode.DefaultMaxValue holds the default value on creation for the max_value field.
+	redeemcode.DefaultMaxValue = redeemcodeDescMaxValue.Default.(float64)
 	// redeemcodeDescStatus is the schema descriptor for status field.
-	redeemcodeDescStatus := redeemcodeFields[3].Descriptor()
+	redeemcodeDescStatus := redeemcodeFields[7].Descriptor()
 	// redeemcode.DefaultStatus holds the default value on creation for the status field.
 	redeemcode.DefaultStatus = redeemcodeDescStatus.Default.(string)
 	// redeemcode.StatusValidator is a validator for the "status" field. It is called by the builders before save.
 	redeemcode.StatusValidator = redeemcodeDescStatus.Validators[0].(func(string) error)
 	// redeemcodeDescCreatedAt is the schema descriptor for created_at field.
-	redeemcodeDescCreatedAt := redeemcodeFields[7].Descriptor()
+	redeemcodeDescCreatedAt := redeemcodeFields[11].Descriptor()
 	// redeemcode.DefaultCreatedAt holds the default value on creation for the created_at field.
 	redeemcode.DefaultCreatedAt = redeemcodeDescCreatedAt.Default.(func() time.Time)
 	// redeemcodeDescValidityDays is the schema descriptor for validity_days field.
-	redeemcodeDescValidityDays := redeemcodeFields[10].Descriptor()
+	redeemcodeDescValidityDays := redeemcodeFields[14].Descriptor()
 	// redeemcode.DefaultValidityDays holds the default value on creation for the validity_days field.
 	redeemcode.DefaultValidityDays = redeemcodeDescValidityDays.Default.(int)
 	securitysecretMixin := schema.SecuritySecret{}.Mixin()

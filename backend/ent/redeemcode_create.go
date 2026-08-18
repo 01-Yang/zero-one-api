@@ -30,6 +30,34 @@ func (_c *RedeemCodeCreate) SetCode(v string) *RedeemCodeCreate {
 	return _c
 }
 
+// SetCodeHash sets the "code_hash" field.
+func (_c *RedeemCodeCreate) SetCodeHash(v string) *RedeemCodeCreate {
+	_c.mutation.SetCodeHash(v)
+	return _c
+}
+
+// SetNillableCodeHash sets the "code_hash" field if the given value is not nil.
+func (_c *RedeemCodeCreate) SetNillableCodeHash(v *string) *RedeemCodeCreate {
+	if v != nil {
+		_c.SetCodeHash(*v)
+	}
+	return _c
+}
+
+// SetBatchID sets the "batch_id" field.
+func (_c *RedeemCodeCreate) SetBatchID(v string) *RedeemCodeCreate {
+	_c.mutation.SetBatchID(v)
+	return _c
+}
+
+// SetNillableBatchID sets the "batch_id" field if the given value is not nil.
+func (_c *RedeemCodeCreate) SetNillableBatchID(v *string) *RedeemCodeCreate {
+	if v != nil {
+		_c.SetBatchID(*v)
+	}
+	return _c
+}
+
 // SetType sets the "type" field.
 func (_c *RedeemCodeCreate) SetType(v string) *RedeemCodeCreate {
 	_c.mutation.SetType(v)
@@ -54,6 +82,34 @@ func (_c *RedeemCodeCreate) SetValue(v float64) *RedeemCodeCreate {
 func (_c *RedeemCodeCreate) SetNillableValue(v *float64) *RedeemCodeCreate {
 	if v != nil {
 		_c.SetValue(*v)
+	}
+	return _c
+}
+
+// SetMinValue sets the "min_value" field.
+func (_c *RedeemCodeCreate) SetMinValue(v float64) *RedeemCodeCreate {
+	_c.mutation.SetMinValue(v)
+	return _c
+}
+
+// SetNillableMinValue sets the "min_value" field if the given value is not nil.
+func (_c *RedeemCodeCreate) SetNillableMinValue(v *float64) *RedeemCodeCreate {
+	if v != nil {
+		_c.SetMinValue(*v)
+	}
+	return _c
+}
+
+// SetMaxValue sets the "max_value" field.
+func (_c *RedeemCodeCreate) SetMaxValue(v float64) *RedeemCodeCreate {
+	_c.mutation.SetMaxValue(v)
+	return _c
+}
+
+// SetNillableMaxValue sets the "max_value" field if the given value is not nil.
+func (_c *RedeemCodeCreate) SetNillableMaxValue(v *float64) *RedeemCodeCreate {
+	if v != nil {
+		_c.SetMaxValue(*v)
 	}
 	return _c
 }
@@ -237,6 +293,14 @@ func (_c *RedeemCodeCreate) defaults() {
 		v := redeemcode.DefaultValue
 		_c.mutation.SetValue(v)
 	}
+	if _, ok := _c.mutation.MinValue(); !ok {
+		v := redeemcode.DefaultMinValue
+		_c.mutation.SetMinValue(v)
+	}
+	if _, ok := _c.mutation.MaxValue(); !ok {
+		v := redeemcode.DefaultMaxValue
+		_c.mutation.SetMaxValue(v)
+	}
 	if _, ok := _c.mutation.Status(); !ok {
 		v := redeemcode.DefaultStatus
 		_c.mutation.SetStatus(v)
@@ -261,6 +325,16 @@ func (_c *RedeemCodeCreate) check() error {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.code": %w`, err)}
 		}
 	}
+	if v, ok := _c.mutation.CodeHash(); ok {
+		if err := redeemcode.CodeHashValidator(v); err != nil {
+			return &ValidationError{Name: "code_hash", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.code_hash": %w`, err)}
+		}
+	}
+	if v, ok := _c.mutation.BatchID(); ok {
+		if err := redeemcode.BatchIDValidator(v); err != nil {
+			return &ValidationError{Name: "batch_id", err: fmt.Errorf(`ent: validator failed for field "RedeemCode.batch_id": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "RedeemCode.type"`)}
 	}
@@ -271,6 +345,12 @@ func (_c *RedeemCodeCreate) check() error {
 	}
 	if _, ok := _c.mutation.Value(); !ok {
 		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "RedeemCode.value"`)}
+	}
+	if _, ok := _c.mutation.MinValue(); !ok {
+		return &ValidationError{Name: "min_value", err: errors.New(`ent: missing required field "RedeemCode.min_value"`)}
+	}
+	if _, ok := _c.mutation.MaxValue(); !ok {
+		return &ValidationError{Name: "max_value", err: errors.New(`ent: missing required field "RedeemCode.max_value"`)}
 	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "RedeemCode.status"`)}
@@ -317,6 +397,14 @@ func (_c *RedeemCodeCreate) createSpec() (*RedeemCode, *sqlgraph.CreateSpec) {
 		_spec.SetField(redeemcode.FieldCode, field.TypeString, value)
 		_node.Code = value
 	}
+	if value, ok := _c.mutation.CodeHash(); ok {
+		_spec.SetField(redeemcode.FieldCodeHash, field.TypeString, value)
+		_node.CodeHash = &value
+	}
+	if value, ok := _c.mutation.BatchID(); ok {
+		_spec.SetField(redeemcode.FieldBatchID, field.TypeString, value)
+		_node.BatchID = &value
+	}
 	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(redeemcode.FieldType, field.TypeString, value)
 		_node.Type = value
@@ -324,6 +412,14 @@ func (_c *RedeemCodeCreate) createSpec() (*RedeemCode, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Value(); ok {
 		_spec.SetField(redeemcode.FieldValue, field.TypeFloat64, value)
 		_node.Value = value
+	}
+	if value, ok := _c.mutation.MinValue(); ok {
+		_spec.SetField(redeemcode.FieldMinValue, field.TypeFloat64, value)
+		_node.MinValue = value
+	}
+	if value, ok := _c.mutation.MaxValue(); ok {
+		_spec.SetField(redeemcode.FieldMaxValue, field.TypeFloat64, value)
+		_node.MaxValue = value
 	}
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(redeemcode.FieldStatus, field.TypeString, value)
@@ -447,6 +543,42 @@ func (u *RedeemCodeUpsert) UpdateCode() *RedeemCodeUpsert {
 	return u
 }
 
+// SetCodeHash sets the "code_hash" field.
+func (u *RedeemCodeUpsert) SetCodeHash(v string) *RedeemCodeUpsert {
+	u.Set(redeemcode.FieldCodeHash, v)
+	return u
+}
+
+// UpdateCodeHash sets the "code_hash" field to the value that was provided on create.
+func (u *RedeemCodeUpsert) UpdateCodeHash() *RedeemCodeUpsert {
+	u.SetExcluded(redeemcode.FieldCodeHash)
+	return u
+}
+
+// ClearCodeHash clears the value of the "code_hash" field.
+func (u *RedeemCodeUpsert) ClearCodeHash() *RedeemCodeUpsert {
+	u.SetNull(redeemcode.FieldCodeHash)
+	return u
+}
+
+// SetBatchID sets the "batch_id" field.
+func (u *RedeemCodeUpsert) SetBatchID(v string) *RedeemCodeUpsert {
+	u.Set(redeemcode.FieldBatchID, v)
+	return u
+}
+
+// UpdateBatchID sets the "batch_id" field to the value that was provided on create.
+func (u *RedeemCodeUpsert) UpdateBatchID() *RedeemCodeUpsert {
+	u.SetExcluded(redeemcode.FieldBatchID)
+	return u
+}
+
+// ClearBatchID clears the value of the "batch_id" field.
+func (u *RedeemCodeUpsert) ClearBatchID() *RedeemCodeUpsert {
+	u.SetNull(redeemcode.FieldBatchID)
+	return u
+}
+
 // SetType sets the "type" field.
 func (u *RedeemCodeUpsert) SetType(v string) *RedeemCodeUpsert {
 	u.Set(redeemcode.FieldType, v)
@@ -474,6 +606,42 @@ func (u *RedeemCodeUpsert) UpdateValue() *RedeemCodeUpsert {
 // AddValue adds v to the "value" field.
 func (u *RedeemCodeUpsert) AddValue(v float64) *RedeemCodeUpsert {
 	u.Add(redeemcode.FieldValue, v)
+	return u
+}
+
+// SetMinValue sets the "min_value" field.
+func (u *RedeemCodeUpsert) SetMinValue(v float64) *RedeemCodeUpsert {
+	u.Set(redeemcode.FieldMinValue, v)
+	return u
+}
+
+// UpdateMinValue sets the "min_value" field to the value that was provided on create.
+func (u *RedeemCodeUpsert) UpdateMinValue() *RedeemCodeUpsert {
+	u.SetExcluded(redeemcode.FieldMinValue)
+	return u
+}
+
+// AddMinValue adds v to the "min_value" field.
+func (u *RedeemCodeUpsert) AddMinValue(v float64) *RedeemCodeUpsert {
+	u.Add(redeemcode.FieldMinValue, v)
+	return u
+}
+
+// SetMaxValue sets the "max_value" field.
+func (u *RedeemCodeUpsert) SetMaxValue(v float64) *RedeemCodeUpsert {
+	u.Set(redeemcode.FieldMaxValue, v)
+	return u
+}
+
+// UpdateMaxValue sets the "max_value" field to the value that was provided on create.
+func (u *RedeemCodeUpsert) UpdateMaxValue() *RedeemCodeUpsert {
+	u.SetExcluded(redeemcode.FieldMaxValue)
+	return u
+}
+
+// AddMaxValue adds v to the "max_value" field.
+func (u *RedeemCodeUpsert) AddMaxValue(v float64) *RedeemCodeUpsert {
+	u.Add(redeemcode.FieldMaxValue, v)
 	return u
 }
 
@@ -656,6 +824,48 @@ func (u *RedeemCodeUpsertOne) UpdateCode() *RedeemCodeUpsertOne {
 	})
 }
 
+// SetCodeHash sets the "code_hash" field.
+func (u *RedeemCodeUpsertOne) SetCodeHash(v string) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetCodeHash(v)
+	})
+}
+
+// UpdateCodeHash sets the "code_hash" field to the value that was provided on create.
+func (u *RedeemCodeUpsertOne) UpdateCodeHash() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateCodeHash()
+	})
+}
+
+// ClearCodeHash clears the value of the "code_hash" field.
+func (u *RedeemCodeUpsertOne) ClearCodeHash() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearCodeHash()
+	})
+}
+
+// SetBatchID sets the "batch_id" field.
+func (u *RedeemCodeUpsertOne) SetBatchID(v string) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetBatchID(v)
+	})
+}
+
+// UpdateBatchID sets the "batch_id" field to the value that was provided on create.
+func (u *RedeemCodeUpsertOne) UpdateBatchID() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateBatchID()
+	})
+}
+
+// ClearBatchID clears the value of the "batch_id" field.
+func (u *RedeemCodeUpsertOne) ClearBatchID() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearBatchID()
+	})
+}
+
 // SetType sets the "type" field.
 func (u *RedeemCodeUpsertOne) SetType(v string) *RedeemCodeUpsertOne {
 	return u.Update(func(s *RedeemCodeUpsert) {
@@ -688,6 +898,48 @@ func (u *RedeemCodeUpsertOne) AddValue(v float64) *RedeemCodeUpsertOne {
 func (u *RedeemCodeUpsertOne) UpdateValue() *RedeemCodeUpsertOne {
 	return u.Update(func(s *RedeemCodeUpsert) {
 		s.UpdateValue()
+	})
+}
+
+// SetMinValue sets the "min_value" field.
+func (u *RedeemCodeUpsertOne) SetMinValue(v float64) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetMinValue(v)
+	})
+}
+
+// AddMinValue adds v to the "min_value" field.
+func (u *RedeemCodeUpsertOne) AddMinValue(v float64) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddMinValue(v)
+	})
+}
+
+// UpdateMinValue sets the "min_value" field to the value that was provided on create.
+func (u *RedeemCodeUpsertOne) UpdateMinValue() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateMinValue()
+	})
+}
+
+// SetMaxValue sets the "max_value" field.
+func (u *RedeemCodeUpsertOne) SetMaxValue(v float64) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetMaxValue(v)
+	})
+}
+
+// AddMaxValue adds v to the "max_value" field.
+func (u *RedeemCodeUpsertOne) AddMaxValue(v float64) *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddMaxValue(v)
+	})
+}
+
+// UpdateMaxValue sets the "max_value" field to the value that was provided on create.
+func (u *RedeemCodeUpsertOne) UpdateMaxValue() *RedeemCodeUpsertOne {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateMaxValue()
 	})
 }
 
@@ -1056,6 +1308,48 @@ func (u *RedeemCodeUpsertBulk) UpdateCode() *RedeemCodeUpsertBulk {
 	})
 }
 
+// SetCodeHash sets the "code_hash" field.
+func (u *RedeemCodeUpsertBulk) SetCodeHash(v string) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetCodeHash(v)
+	})
+}
+
+// UpdateCodeHash sets the "code_hash" field to the value that was provided on create.
+func (u *RedeemCodeUpsertBulk) UpdateCodeHash() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateCodeHash()
+	})
+}
+
+// ClearCodeHash clears the value of the "code_hash" field.
+func (u *RedeemCodeUpsertBulk) ClearCodeHash() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearCodeHash()
+	})
+}
+
+// SetBatchID sets the "batch_id" field.
+func (u *RedeemCodeUpsertBulk) SetBatchID(v string) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetBatchID(v)
+	})
+}
+
+// UpdateBatchID sets the "batch_id" field to the value that was provided on create.
+func (u *RedeemCodeUpsertBulk) UpdateBatchID() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateBatchID()
+	})
+}
+
+// ClearBatchID clears the value of the "batch_id" field.
+func (u *RedeemCodeUpsertBulk) ClearBatchID() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.ClearBatchID()
+	})
+}
+
 // SetType sets the "type" field.
 func (u *RedeemCodeUpsertBulk) SetType(v string) *RedeemCodeUpsertBulk {
 	return u.Update(func(s *RedeemCodeUpsert) {
@@ -1088,6 +1382,48 @@ func (u *RedeemCodeUpsertBulk) AddValue(v float64) *RedeemCodeUpsertBulk {
 func (u *RedeemCodeUpsertBulk) UpdateValue() *RedeemCodeUpsertBulk {
 	return u.Update(func(s *RedeemCodeUpsert) {
 		s.UpdateValue()
+	})
+}
+
+// SetMinValue sets the "min_value" field.
+func (u *RedeemCodeUpsertBulk) SetMinValue(v float64) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetMinValue(v)
+	})
+}
+
+// AddMinValue adds v to the "min_value" field.
+func (u *RedeemCodeUpsertBulk) AddMinValue(v float64) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddMinValue(v)
+	})
+}
+
+// UpdateMinValue sets the "min_value" field to the value that was provided on create.
+func (u *RedeemCodeUpsertBulk) UpdateMinValue() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateMinValue()
+	})
+}
+
+// SetMaxValue sets the "max_value" field.
+func (u *RedeemCodeUpsertBulk) SetMaxValue(v float64) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.SetMaxValue(v)
+	})
+}
+
+// AddMaxValue adds v to the "max_value" field.
+func (u *RedeemCodeUpsertBulk) AddMaxValue(v float64) *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.AddMaxValue(v)
+	})
+}
+
+// UpdateMaxValue sets the "max_value" field to the value that was provided on create.
+func (u *RedeemCodeUpsertBulk) UpdateMaxValue() *RedeemCodeUpsertBulk {
+	return u.Update(func(s *RedeemCodeUpsert) {
+		s.UpdateMaxValue()
 	})
 }
 

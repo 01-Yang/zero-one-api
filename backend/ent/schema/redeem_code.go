@@ -39,10 +39,24 @@ func (RedeemCode) Fields() []ent.Field {
 			MaxLen(32).
 			NotEmpty().
 			Unique(),
+		field.String("code_hash").
+			MaxLen(64).
+			Optional().
+			Nillable(),
+		field.String("batch_id").
+			MaxLen(32).
+			Optional().
+			Nillable(),
 		field.String("type").
 			MaxLen(20).
 			Default(domain.RedeemTypeBalance),
 		field.Float("value").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
+			Default(0),
+		field.Float("min_value").
+			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
+			Default(0),
+		field.Float("max_value").
 			SchemaType(map[string]string{dialect.Postgres: "decimal(20,8)"}).
 			Default(0),
 		field.String("status").
@@ -95,5 +109,11 @@ func (RedeemCode) Indexes() []ent.Index {
 		index.Fields("used_by"),
 		index.Fields("group_id"),
 		index.Fields("expires_at"),
+		index.Fields("code_hash").
+			Unique().
+			Annotations(entsql.IndexWhere("code_hash IS NOT NULL")),
+		index.Fields("batch_id", "used_by").
+			Unique().
+			Annotations(entsql.IndexWhere("batch_id IS NOT NULL AND used_by IS NOT NULL")),
 	}
 }

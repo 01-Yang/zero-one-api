@@ -1618,7 +1618,13 @@ export interface CodexSessionImportResult {
 
 // ==================== Usage & Redeem Types ====================
 
-export type RedeemCodeType = 'balance' | 'concurrency' | 'subscription' | 'invitation'
+export type RedeemCodeType =
+  | 'balance'
+  | 'concurrency'
+  | 'subscription'
+  | 'invitation'
+  | 'benefit'
+  | 'mystery_box'
 export type UsageRequestType = 'unknown' | 'sync' | 'stream' | 'ws_v2' | 'cyber' | 'live'
 export type ImageSizeSource = 'output' | 'input' | 'default' | 'legacy'
 export type ImageSizeBreakdown = Record<string, number>
@@ -1753,6 +1759,10 @@ export interface RedeemCode {
   used_at: string | null
   created_at: string
   expires_at?: string | null
+  code_redacted?: boolean
+  batch_id?: string | null
+  min_value?: number
+  max_value?: number
   updated_at?: string
   notes?: string
   group_id?: number | null // 订阅类型专用
@@ -1765,6 +1775,8 @@ export interface GenerateRedeemCodesRequest {
   count: number
   type: RedeemCodeType
   value: number
+  min_value?: number
+  max_value?: number
   group_id?: number | null // 订阅类型专用
   validity_days?: number // 订阅类型专用
   expires_at?: string | null
