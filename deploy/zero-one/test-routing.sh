@@ -7,10 +7,11 @@ preview_caddyfile="$repo_root/deploy/zero-one/Caddyfile.preview"
 shared_caddyfile="$repo_root/deploy/zero-one/Caddyfile.shared"
 recovered_console_index="$repo_root/deploy/zero-one/recovered-frontend/console/index.html"
 recovered_console_entry='await import("/assets/pricing-autofill-fix/index-9xJBhx8B.js")'
-recovered_pricing_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/useKeyedDebouncedSearch-BrW9dWBu.js"
-recovered_console_redeem_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/RedeemView-B-81-jXj.js"
-recovered_console_admin_redeem_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/RedeemView-Bn5PLb3-.js"
-recovered_console_promo_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/PromoCodesView-D-9XRE_y.js"
+recovered_pricing_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/repaired-20260818/useKeyedDebouncedSearch-8ZSLsOsW.js"
+recovered_console_redeem_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/repaired-20260818/RedeemView-DH0TVgR6.js"
+recovered_console_admin_redeem_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/repaired-20260818/RedeemView-PVvUxBqr.js"
+recovered_console_promo_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/repaired-20260818/PromoCodesView-4T6ytmJZ.js"
+recovered_console_locale_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/repaired-20260818/index-C45dYm7d.js"
 recovered_asset_alias="$repo_root/deploy/zero-one/recovered-frontend/console/assets/pricing-autofill-fix"
 
 require() {
@@ -66,11 +67,15 @@ require "$recovered_console_index" 'fetch("/api/v1/settings/public"'
 require "$recovered_console_index" "$recovered_console_entry"
 forbid "$recovered_pricing_chunk" 'getModelDefaultPricing('
 require "$recovered_console_redeem_chunk" 'redeem'
-require "$recovered_console_admin_redeem_chunk" 'box'
+require "$recovered_console_admin_redeem_chunk" 'generate-benefit'
+require "$recovered_console_admin_redeem_chunk" 'generate-mystery-box'
+require "$recovered_console_admin_redeem_chunk" 'mystery_box'
+require "$recovered_console_locale_chunk" '福利兑换码'
+require "$recovered_console_locale_chunk" '盲盒兑换码'
 require "$recovered_console_promo_chunk" 'promo.create'
 
-if [ "$(readlink "$recovered_asset_alias")" != '.' ]; then
-	echo 'recovered Console cache-busting asset alias is missing' >&2
+if [ "$(readlink "$recovered_asset_alias")" != 'repaired-20260818' ]; then
+	echo 'recovered Console cache-busting asset alias is missing or points at the wrong build' >&2
 	exit 1
 fi
 
