@@ -257,10 +257,14 @@ this repository.
 
 Before release, record the deployed Sub2API and edge image digests and take a database backup. Deploy immutable images, run the routing and smoke checks, then announce completion.
 
-The approved UI is a separate release boundary. The current baseline is the
-`ui-approved-2026-08-19` tag at commit `75ea5769f3941c08530831dbbfdf94604efbe33a`.
+The approved UI is a separate release boundary. The current protected snapshot
+is the `ui-approved-2026-08-19-r2` tag at commit
+`742c396dfef89900c9aed4b70110e0c4d0f0d271`. The original
+`ui-approved-2026-08-19` tag remains immutable as the previous accepted UI.
 An upstream version update must not modify `landing/src`, the protected console
-source paths, or `deploy/zero-one/recovered-frontend`. The API and shared type
+source paths, or `deploy/zero-one/recovered-frontend`. This explicitly covers
+the landing page, login/register pages, the console shell, model-plaza pricing,
+and the redeem, benefit-code, and mystery-box surfaces. The API and shared type
 paths under `frontend/src/api` and `frontend/src/types` remain available for
 compatibility work. CI runs `verify-ui-boundary.mjs` and fails before a build if
 the protected UI changes or if `Dockerfile.edge` switches away from the pinned
@@ -268,7 +272,7 @@ recovered landing and console sources.
 
 To approve an intentional UI release, review desktop and mobile visual
 regression output first, commit the reviewed UI, create a new dated
-`ui-approved-YYYY-MM-DD` tag at that commit, and update
+`ui-approved-YYYY-MM-DD[-revision]` tag at that commit, and update
 `.github/scripts/ui-baseline.json` with the tag and commit. Do not move the tag
 as part of an ordinary upstream sync.
 

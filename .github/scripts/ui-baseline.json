@@ -1,9 +1,10 @@
 {
   "schema_version": 1,
-  "baseline_ref": "ui-approved-2026-08-19",
-  "baseline_commit": "75ea5769f3941c08530831dbbfdf94604efbe33a",
+  "baseline_ref": "ui-approved-2026-08-19-r2",
+  "baseline_commit": "742c396dfef89900c9aed4b70110e0c4d0f0d271",
   "protected_paths": [
     "landing/src/",
+    "landing/index.html",
     "frontend/index.html",
     "frontend/src/",
     "frontend/tailwind.config.js",
@@ -15,6 +16,56 @@
   "compatibility_paths": [
     "frontend/src/api/",
     "frontend/src/types/"
+  ],
+  "protected_surfaces": [
+    {
+      "name": "landing-home",
+      "routes": ["/home"],
+      "paths": [
+        "landing/index.html",
+        "landing/src/",
+        "deploy/zero-one/recovered-frontend/landing/"
+      ]
+    },
+    {
+      "name": "auth",
+      "routes": ["/login", "/register"],
+      "paths": [
+        "frontend/src/views/auth/LoginView.vue",
+        "frontend/src/views/auth/RegisterView.vue",
+        "deploy/zero-one/recovered-frontend/console/"
+      ]
+    },
+    {
+      "name": "console-shell",
+      "routes": ["/dashboard", "/admin/dashboard"],
+      "paths": [
+        "frontend/src/components/layout/",
+        "frontend/src/router/index.ts",
+        "deploy/zero-one/recovered-frontend/console/"
+      ]
+    },
+    {
+      "name": "model-plaza-pricing",
+      "routes": ["/model-plaza", "#pricing"],
+      "paths": [
+        "landing/src/components/ContentSections.tsx",
+        "landing/src/components/PricingSection.tsx",
+        "frontend/src/components/admin/channel/PricingEntryCard.vue",
+        "frontend/src/utils/billingMode.ts"
+      ]
+    },
+    {
+      "name": "redeem-benefits-mystery-box",
+      "routes": ["/redeem", "/admin/redeem", "/admin/promo-codes"],
+      "paths": [
+        "frontend/src/features/redeem/",
+        "frontend/src/views/user/RedeemView.vue",
+        "frontend/src/views/admin/RedeemView.vue",
+        "frontend/src/views/admin/PromoCodesView.vue",
+        "deploy/zero-one/recovered-frontend/console/"
+      ]
+    }
   ],
   "edge_build": {
     "dockerfile": "deploy/zero-one/Dockerfile.edge",

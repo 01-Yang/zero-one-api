@@ -129,6 +129,8 @@ test('allows named immutable exceptions while adjacent seam files still fail', (
     evaluateChangedPaths(
       [
         'frontend/src/api/admin/settings.ts',
+        'frontend/src/api/admin/redeem.ts',
+        'frontend/src/api/__tests__/admin.redeem.spec.ts',
         'frontend/src/types/index.ts',
         'frontend/src/api/admin/users.ts',
         'frontend/src/types/admin.ts',
@@ -139,7 +141,6 @@ test('allows named immutable exceptions while adjacent seam files still fail', (
     [
       'frontend/src/api/admin/users.ts modifies immutable upstream path frontend/src/api/',
       'frontend/src/types/admin.ts modifies immutable upstream path frontend/src/types/',
-      'frontend/vite.config.ts modifies immutable upstream path frontend/vite.config.ts',
     ],
   )
   assert.deepEqual(
@@ -156,6 +157,24 @@ test('allows named immutable exceptions while adjacent seam files still fail', (
         owner: 'Public Capabilities',
         path: 'frontend/src/types/index.ts',
         immutable_path: 'frontend/src/types/',
+      },
+      {
+        name: 'public-capabilities-redeem-api',
+        owner: 'Public Capabilities',
+        path: 'frontend/src/api/admin/redeem.ts',
+        immutable_path: 'frontend/src/api/',
+      },
+      {
+        name: 'public-capabilities-redeem-api-test',
+        owner: 'Public Capabilities',
+        path: 'frontend/src/api/__tests__/admin.redeem.spec.ts',
+        immutable_path: 'frontend/src/api/',
+      },
+      {
+        name: 'console-skin-vite-config',
+        owner: 'Console Skin',
+        path: 'frontend/vite.config.ts',
+        immutable_path: 'frontend/vite.config.ts',
       },
     ],
   )
