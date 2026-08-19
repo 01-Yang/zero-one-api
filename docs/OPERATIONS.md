@@ -258,8 +258,8 @@ this repository.
 Before release, record the deployed Sub2API and edge image digests and take a database backup. Deploy immutable images, run the routing and smoke checks, then announce completion.
 
 The approved UI is a separate release boundary. The current protected snapshot
-is the `ui-approved-2026-08-19-r2` tag at commit
-`742c396dfef89900c9aed4b70110e0c4d0f0d271`. The original
+is the `ui-approved-2026-08-20-r4` tag at commit
+`c4a0744ecd8099c24b755318da0f2bab5b09f2f3`. The original
 `ui-approved-2026-08-19` tag remains immutable as the previous accepted UI.
 An upstream version update must not modify `landing/src`, the protected console
 source paths, or `deploy/zero-one/recovered-frontend`. This explicitly covers

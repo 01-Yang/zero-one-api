@@ -6,12 +6,13 @@ production_caddyfile="$repo_root/deploy/zero-one/Caddyfile"
 preview_caddyfile="$repo_root/deploy/zero-one/Caddyfile.preview"
 shared_caddyfile="$repo_root/deploy/zero-one/Caddyfile.shared"
 recovered_console_index="$repo_root/deploy/zero-one/recovered-frontend/console/index.html"
-recovered_console_entry='await import("/assets/redeem-cachebust-20260819/index-9xJBhx8B.js")'
+recovered_console_entry='await import("/assets/redeem-cachebust-20260820-fix6/index-9xJBhx8B.js")'
+recovered_console_entry_asset="$repo_root/deploy/zero-one/recovered-frontend/console/assets/index-9xJBhx8B.js"
 recovered_pricing_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/useKeyedDebouncedSearch-BrW9dWBu.js"
 recovered_console_redeem_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/RedeemView-B-81-jXj.js"
 recovered_console_admin_redeem_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/RedeemView-Bn5PLb3-.js"
 recovered_console_promo_chunk="$repo_root/deploy/zero-one/recovered-frontend/console/assets/PromoCodesView-D-9XRE_y.js"
-recovered_asset_alias="$repo_root/deploy/zero-one/recovered-frontend/console/assets/redeem-cachebust-20260819"
+recovered_asset_alias="$repo_root/deploy/zero-one/recovered-frontend/console/assets/redeem-cachebust-20260820-fix6"
 
 require() {
 	file=$1
@@ -67,12 +68,17 @@ require "$recovered_console_index" "$recovered_console_entry"
 forbid "$recovered_pricing_chunk" 'getModelDefaultPricing('
 require "$recovered_console_redeem_chunk" 'redeem'
 require "$recovered_console_admin_redeem_chunk" 'box'
+require "$recovered_console_entry_asset" 'i.min_value=l,i.max_value=d'
+require "$recovered_console_entry_asset" 'ModelPlaza'
 require "$recovered_console_promo_chunk" 'promo.create'
 
 if [ "$(readlink "$recovered_asset_alias")" != '.' ]; then
 	echo 'recovered Console cache-busting asset alias is missing' >&2
 	exit 1
 fi
+
+node "$repo_root/deploy/zero-one/verify-console-asset-closure.mjs" \
+	"$repo_root/deploy/zero-one/recovered-frontend/console"
 
 for shell_caddyfile in "$production_caddyfile" "$preview_caddyfile"; do
 	if grep -Fq 'reverse_proxy sub2api:8080' "$shell_caddyfile" ||
