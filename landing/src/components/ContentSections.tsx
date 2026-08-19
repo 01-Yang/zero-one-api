@@ -116,6 +116,7 @@ export function ValuePricingSection({
 }
 
 type ChannelStatusViewState = { status: "loading" } | ChannelStatusResult;
+const CHANNEL_STATUS_REFRESH_MS = 30_000;
 
 function statusLabel(state: ChannelStatusItem["state"]): string {
   if (state === "operational") return "正常";
@@ -186,16 +187,63 @@ export function StatusSection({ enabled = true }: { enabled?: boolean }) {
       setState({ status: "disabled" });
       return;
     }
-    const controller = new AbortController();
-    setState({ status: "loading" });
-    void fetchChannelStatus({
-      enabled: true,
-      timeoutMs: 3_000,
-      signal: controller.signal,
-    }).then((result) => {
-      if (!controller.signal.aborted) setState(result);
-    });
-    return () => controller.abort();
+
+    let active = true;
+    let controller: AbortController | null = null;
+    let refreshTimer: number | null = null;
+
+    const clearRefreshTimer = () => {
+      if (refreshTimer === null) return;
+      window.clearTimeout(refreshTimer);
+      refreshTimer = null;
+    };
+
+    const scheduleRefresh = () => {
+      clearRefreshTimer();
+      refreshTimer = window.setTimeout(() => {
+        if (document.hidden) {
+          scheduleRefresh();
+          return;
+        }
+        void loadStatus(false);
+      }, CHANNEL_STATUS_REFRESH_MS);
+    };
+
+    const loadStatus = async (showLoading: boolean) => {
+      controller?.abort();
+      const requestController = new AbortController();
+      controller = requestController;
+      if (showLoading) setState({ status: "loading" });
+
+      const result = await fetchChannelStatus({
+        enabled: true,
+        timeoutMs: 3_000,
+        signal: requestController.signal,
+      });
+      if (!active || requestController.signal.aborted || controller !== requestController) return;
+
+      setState((current) =>
+        !showLoading && current.status === "success" && result.status !== "success"
+          ? current
+          : result,
+      );
+      scheduleRefresh();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState !== "visible") return;
+      clearRefreshTimer();
+      void loadStatus(false);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    void loadStatus(true);
+    return () => {
+      active = false;
+      clearRefreshTimer();
+      controller?.abort();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [attempt, enabled]);
 
   const shouldRetry = state.status === "error" || state.status === "rate-limited";

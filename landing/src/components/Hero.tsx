@@ -120,7 +120,7 @@ export default function Hero({
             </Action>
           )}
           {modelPlazaEnabled ? (
-            <a className="text-action" href={consoleUrl('/model-plaza')}>
+            <a className="text-action" href="#pricing">
               查看模型
               <ArrowRight aria-hidden="true" />
             </a>

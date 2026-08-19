@@ -48,7 +48,25 @@
               <Icon name="edit" size="md" class="mr-2" />
               {{ t('admin.redeem.batchUpdate') }}
             </button>
-            <button @click="showGenerateDialog = true" class="btn btn-primary">
+            <button
+              data-test="generate-benefit"
+              type="button"
+              class="btn btn-secondary"
+              @click="openGenerateDialog('benefit')"
+            >
+              <Icon name="badge" size="md" class="mr-2" />
+              {{ t('admin.redeem.benefit') }}
+            </button>
+            <button
+              data-test="generate-mystery-box"
+              type="button"
+              class="btn btn-secondary"
+              @click="openGenerateDialog('mystery_box')"
+            >
+              <Icon name="gift" size="md" class="mr-2" />
+              {{ t('admin.redeem.mysteryBox') }}
+            </button>
+            <button type="button" class="btn btn-primary" @click="openGenerateDialog()">
               {{ t('admin.redeem.generateCodes') }}
             </button>
           </div>
@@ -298,7 +316,11 @@
           <form @submit.prevent="handleGenerateCodes" class="space-y-4">
             <div>
               <label class="input-label">{{ t('admin.redeem.codeType') }}</label>
-              <Select v-model="generateForm.type" :options="typeOptions" />
+              <Select
+                v-model="generateForm.type"
+                data-test="generate-type-select"
+                :options="typeOptions"
+              />
             </div>
             <!-- 余额/并发类型：显示数值输入 -->
             <div
@@ -924,6 +946,11 @@ const generateForm = reactive({
   expiry_option: 'never' as RedeemCodeExpiryOption,
   custom_expiry_days: 7
 })
+
+const openGenerateDialog = (type?: RedeemCodeType) => {
+  if (type) generateForm.type = type
+  showGenerateDialog.value = true
+}
 
 // 监听类型变化，邀请码类型时自动设置 value 为 0
 watch(

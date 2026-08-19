@@ -66,7 +66,7 @@ const autoRefresh = useAutoRefresh({
   storageKey: 'channel-status-auto-refresh',
   intervals: [30, 60, 120] as const,
   defaultInterval: DEFAULT_INTERVAL_SECONDS,
-  onRefresh: () => reload(true),
+  onRefresh: autoReload,
   shouldPause: () => document.hidden || loading.value,
 })
 const countdown = autoRefresh.countdown
@@ -105,19 +105,27 @@ async function reload(silent = false) {
   } finally {
     if (abortController === ctrl) {
       if (!silent) loading.value = false
-      countdown.value = DEFAULT_INTERVAL_SECONDS
+      autoRefresh.resetCountdown()
       abortController = null
     }
   }
+}
+
+async function refreshDetailsForCurrentWindow(force = false) {
+  if (currentWindow.value === '7d') return
+  await Promise.all(items.value.map(it => loadDetail(it.id, force)))
+}
+
+async function autoReload() {
+  await reload(true)
+  await refreshDetailsForCurrentWindow(true)
 }
 
 async function manualReload() {
   await reload(false)
   // After base reload, refresh any cached detail records so non-7d availability
   // values stay in sync without forcing the user to switch tabs again.
-  if (currentWindow.value !== '7d') {
-    await Promise.all(items.value.map(it => loadDetail(it.id, true)))
-  }
+  await refreshDetailsForCurrentWindow(true)
 }
 
 async function loadDetail(id: number, force = false) {
@@ -130,8 +138,7 @@ async function loadDetail(id: number, force = false) {
 }
 
 async function ensureDetailsForWindow() {
-  if (currentWindow.value === '7d') return
-  await Promise.all(items.value.map(it => loadDetail(it.id)))
+  await refreshDetailsForCurrentWindow(false)
 }
 
 // ── Handlers ──
@@ -150,6 +157,12 @@ function closeDetail() {
   detailTarget.value = null
 }
 
+function handleVisibilityChange() {
+  if (document.visibilityState === 'visible' && autoRefresh.enabled.value) {
+    void autoReload()
+  }
+}
+
 watch(items, () => {
   void ensureDetailsForWindow()
 })
@@ -164,6 +177,7 @@ watch(
 
 onMounted(() => {
   void reload(false)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
   if (appStore.cachedPublicSettings?.channel_monitor_enabled !== false) {
     autoRefresh.setEnabled(true)
   }
@@ -171,5 +185,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   if (abortController) abortController.abort()
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 </script>

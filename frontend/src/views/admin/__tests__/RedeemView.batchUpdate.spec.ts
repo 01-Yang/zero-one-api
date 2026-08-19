@@ -184,4 +184,37 @@ describe('admin RedeemView batch update', () => {
     })
     expect(showSuccess).toHaveBeenCalledWith('admin.redeem.batchUpdateSuccess')
   })
+
+  it('exposes direct benefit and mystery-box generation actions', async () => {
+    const wrapper = mount(RedeemView, {
+      attachTo: document.body,
+      global: {
+        stubs: {
+          AppLayout: { template: '<div><slot /></div>' },
+          TablePageLayout: {
+            template: '<div><slot name="filters" /><slot name="table" /><slot name="pagination" /></div>'
+          },
+          DataTable: DataTableStub,
+          Pagination: true,
+          ConfirmDialog: true,
+          Select: SelectStub,
+          GroupBadge: true,
+          GroupOptionItem: true,
+          Icon: true,
+          Teleport: true
+        }
+      }
+    })
+
+    await flushPromises()
+    expect(wrapper.find('[data-test="generate-benefit"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="generate-mystery-box"]').exists()).toBe(true)
+
+    await wrapper.get('[data-test="generate-mystery-box"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-test="generate-type-select"]').element).toHaveProperty(
+      'value',
+      'mystery_box'
+    )
+  })
 })

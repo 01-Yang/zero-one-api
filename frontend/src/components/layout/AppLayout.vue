@@ -12,7 +12,7 @@
       <AppHeader />
 
       <!-- Main Content -->
-      <main class="p-4 md:p-6 lg:p-8">
+      <main class="console-route-content p-4 md:p-6 lg:p-8">
         <slot />
       </main>
     </div>
@@ -47,3 +47,26 @@ onMounted(() => {
 
 defineExpose({ replayTour })
 </script>
+
+<style scoped>
+.console-route-content {
+  animation: console-route-content-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes console-route-content-in {
+  from {
+    opacity: 0.92;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .console-route-content {
+    animation: none;
+  }
+}
+</style>

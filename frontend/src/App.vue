@@ -138,35 +138,8 @@ onMounted(async () => {
 
 <template>
   <NavigationProgress />
-  <RouterView v-slot="{ Component }">
-    <Transition name="console-route-enter">
-      <component :is="Component" />
-    </Transition>
-  </RouterView>
+  <RouterView />
   <Toast />
   <AnnouncementPopup />
   <AdminComplianceDialog />
 </template>
-
-<style>
-.console-route-enter-active {
-  will-change: opacity, transform;
-  transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.console-route-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .console-route-enter-active {
-    transition: none;
-  }
-
-  .console-route-enter-from {
-    opacity: 1;
-    transform: none;
-  }
-}
-</style>

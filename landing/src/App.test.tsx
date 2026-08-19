@@ -262,7 +262,10 @@ describe("public site", () => {
     expect(screen.queryByRole("button", { name: "显示计费说明" })).toBeNull();
   });
 
-  it("merges pricing and model plaza navigation without a separate advantages entry", () => {
+  it("merges pricing and model plaza navigation without a separate advantages entry", async () => {
+    mocks.fetchPublicSettings.mockResolvedValue(
+      settings({ modelPlazaEnabled: true }),
+    );
     render(<App />);
 
     const navigation = within(
@@ -273,6 +276,9 @@ describe("public site", () => {
     expect(navigation.queryByRole("link", { name: "模型广场" })).toBeNull();
     expect(navigation.queryByRole("link", { name: "优势" })).toBeNull();
     expect(document.querySelector('a[href="#advantages"]')).toBeNull();
+    expect(
+      (await screen.findByRole("link", { name: "查看模型" })).getAttribute("href"),
+    ).toBe("#pricing");
   });
 
   it("uses configured documentation and brand imagery in local development", async () => {

@@ -55,4 +55,13 @@ describe('Console Skin module boundary', () => {
     expect(skinStyles).toBeGreaterThan(baseStyles)
     expect(read('src/style.css')).not.toContain("@import './styles/console-skin.css';")
   })
+
+  it('animates console content without hiding the entire route shell', () => {
+    const app = read('src/App.vue')
+    const layout = read('src/components/layout/AppLayout.vue')
+
+    expect(app).not.toContain('console-route-enter-from')
+    expect(layout).toContain('console-route-content')
+    expect(layout).toContain('@media (prefers-reduced-motion: reduce)')
+  })
 })

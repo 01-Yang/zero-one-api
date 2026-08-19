@@ -32,7 +32,10 @@ const success = (
 
 describe("StatusSection", () => {
   beforeEach(() => mocks.fetchChannelStatus.mockReset());
-  afterEach(cleanup);
+  afterEach(() => {
+    vi.useRealTimers();
+    cleanup();
+  });
 
   it("shows loading until the real channel summary resolves", async () => {
     let resolveRequest: (value: ChannelStatusResult) => void = () => {};
@@ -183,5 +186,49 @@ describe("StatusSection", () => {
     expect(screen.getByText("99.92%")).toBeTruthy();
     expect(screen.getByText("可用率")).toBeTruthy();
     expect(screen.queryByText("渠道汇总")).toBeNull();
+  });
+
+  it("refreshes visible status without clearing the last successful result", async () => {
+    vi.useFakeTimers();
+    let resolveRefresh: (value: ChannelStatusResult) => void = () => {};
+    mocks.fetchChannelStatus
+      .mockResolvedValueOnce(
+        success({
+          status: "success",
+          data: {
+            mode: "active_probe",
+            state: "operational",
+            reason: null,
+            latencyMs: 218,
+            availability7d: 99.92,
+            observedAt: "2026-08-16T08:25:00Z",
+            items: [{
+              name: "OpenAI 主线路",
+              state: "operational",
+              availability7d: 99.92,
+              observedAt: "2026-08-16T08:25:00Z",
+              timeline: [],
+            }],
+          },
+        }),
+      )
+      .mockReturnValueOnce(
+        new Promise<ChannelStatusResult>((resolve) => {
+          resolveRefresh = resolve;
+        }),
+      );
+
+    render(<StatusSection />);
+    await act(async () => Promise.resolve());
+    expect(screen.getByText("OpenAI 主线路")).toBeTruthy();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+    });
+    expect(mocks.fetchChannelStatus).toHaveBeenCalledTimes(2);
+    expect(screen.getByText("OpenAI 主线路")).toBeTruthy();
+    expect(screen.queryByText("正在读取渠道状态。")).toBeNull();
+
+    await act(async () => resolveRefresh(success()));
   });
 });
