@@ -23,6 +23,10 @@ jobs:
           git fetch --no-tags --force https://github.com/Wei-Shaw/sub2api.git "refs/tags/$release:refs/tags/$release"
       - name: Test upstream-boundary policy
         run: node --test .github/scripts/*.test.mjs
+      - name: Verify approved UI baseline
+        run: node .github/scripts/verify-ui-boundary.mjs
+      - name: Verify complete worktree UI baseline
+        run: node .github/scripts/verify-ui-boundary.mjs --worktree
       - name: Verify committed upstream boundary
         run: node .github/scripts/verify-upstream-boundary.mjs
       - name: Verify complete worktree upstream boundary

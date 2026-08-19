@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "baseline_ref": "ui-approved-2026-08-19",
+  "baseline_commit": "75ea5769f3941c08530831dbbfdf94604efbe33a",
+  "protected_paths": [
+    "landing/src/",
+    "frontend/index.html",
+    "frontend/src/",
+    "frontend/tailwind.config.js",
+    "deploy/docker-compose.preview.yml",
+    "deploy/zero-one/Caddyfile.shared",
+    "deploy/zero-one/Dockerfile.edge",
+    "deploy/zero-one/recovered-frontend/"
+  ],
+  "compatibility_paths": [
+    "frontend/src/api/",
+    "frontend/src/types/"
+  ],
+  "edge_build": {
+    "dockerfile": "deploy/zero-one/Dockerfile.edge",
+    "landing_source": "deploy/zero-one/recovered-frontend/landing",
+    "console_source": "deploy/zero-one/recovered-frontend/console"
+  }
+}

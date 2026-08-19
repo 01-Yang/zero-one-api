@@ -57,6 +57,10 @@ jobs:
 
       - name: Test release guards
         run: node --test .github/scripts/*.test.mjs
+      - name: Verify approved UI baseline
+        run: node .github/scripts/verify-ui-boundary.mjs
+      - name: Verify complete worktree UI baseline
+        run: node .github/scripts/verify-ui-boundary.mjs --worktree
 
       - name: Verify source commit and successful CI
         id: source
