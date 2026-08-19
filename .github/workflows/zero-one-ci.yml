@@ -2,7 +2,12 @@ name: Zero One CI
 
 on:
   push:
+    branches:
+      - main
+      - 'codex/**'
   pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read

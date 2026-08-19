@@ -138,6 +138,121 @@ const health = {
   },
 }
 
+const modelPlaza = {
+  description: '公开模型价格以当前生效倍率计算。',
+  groups: [
+    {
+      id: 11,
+      name: 'Claude 标准组',
+      description: '稳定的 Anthropic 模型线路。',
+      platform: 'anthropic',
+      subscription_type: 'standard',
+      rate_multiplier: 0.5,
+      peak_rate_enabled: false,
+      peak_start: '',
+      peak_end: '',
+      peak_rate_multiplier: 1,
+      is_exclusive: false,
+      image_rate_independent: false,
+      image_rate_multiplier: 1,
+      models: [{
+        name: 'claude-sonnet-4-6',
+        platform: 'anthropic',
+        pricing: {
+          billing_mode: 'token',
+          input_price: 3e-6,
+          output_price: 15e-6,
+          cache_write_price: 3.75e-6,
+          cache_read_price: 0.3e-6,
+          image_input_price: null,
+          image_output_price: null,
+          per_request_price: null,
+          intervals: [],
+        },
+        official_pricing: {
+          input_price: 3e-6,
+          output_price: 15e-6,
+          cache_write_price: 3.75e-6,
+          cache_write_1h_price: 6e-6,
+          cache_read_price: 0.3e-6,
+        },
+      }],
+    },
+    {
+      id: 12,
+      name: 'OpenAI 标准组',
+      description: '稳定的 OpenAI 模型线路。',
+      platform: 'openai',
+      subscription_type: 'standard',
+      rate_multiplier: 0.4,
+      peak_rate_enabled: false,
+      peak_start: '',
+      peak_end: '',
+      peak_rate_multiplier: 1,
+      is_exclusive: false,
+      image_rate_independent: false,
+      image_rate_multiplier: 1,
+      models: [{
+        name: 'gpt-5.4',
+        platform: 'openai',
+        pricing: {
+          billing_mode: 'token',
+          input_price: 2.5e-6,
+          output_price: 15e-6,
+          cache_write_price: null,
+          cache_read_price: null,
+          image_input_price: null,
+          image_output_price: null,
+          per_request_price: null,
+          intervals: [],
+        },
+        official_pricing: {
+          input_price: 2.5e-6,
+          output_price: 15e-6,
+          cache_write_price: null,
+          cache_write_1h_price: null,
+          cache_read_price: null,
+        },
+      }],
+    },
+  ],
+}
+
+const redeemCodes = {
+  items: [
+    {
+      id: 91,
+      code: 'BENEFIT-2026',
+      type: 'benefit',
+      value: 12.5,
+      status: 'unused',
+      used_by: null,
+      used_at: null,
+      created_at: observedAt,
+      expires_at: null,
+      batch_id: 'benefit-20260820',
+    },
+    {
+      id: 92,
+      code: 'MYSTERY-2026',
+      type: 'mystery_box',
+      value: 0,
+      min_value: 1.25,
+      max_value: 8.75,
+      status: 'unused',
+      used_by: null,
+      used_at: null,
+      created_at: observedAt,
+      expires_at: null,
+      batch_id: 'mystery-20260820',
+    },
+  ],
+  total: 2,
+  page: 1,
+  page_size: 20,
+  pages: 1,
+}
+
 function envelope(data: unknown) {
   return JSON.stringify({ code: 0, message: 'ok', data })
 }
@@ -157,7 +272,12 @@ export async function seedConsole(page: Page, mode: 'v1' | 'v2' = 'v2') {
     localStorage.setItem('auth_user', JSON.stringify(user))
     localStorage.setItem('sub2api_locale', 'zh')
     localStorage.setItem('theme', 'light')
+    localStorage.setItem('admin_guide_1_admin_v4_interactive', 'true')
   }, { user: adminUser })
+
+  await page.route('**/setup/status', (route) =>
+    fulfill(route, { needs_setup: false, step: 'completed' }),
+  )
 
   await page.route('**/api/v1/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api\/v1/, '')
@@ -165,6 +285,9 @@ export async function seedConsole(page: Page, mode: 'v1' | 'v2' = 'v2') {
     if (path === '/settings/public') return fulfill(route, publicSettings(mode))
     if (path === '/admin/settings') return fulfill(route, publicSettings(mode))
     if (path === '/admin/groups/all') return fulfill(route, [])
+    if (path === '/admin/redeem-codes') return fulfill(route, redeemCodes)
+    if (path === '/model-plaza') return fulfill(route, modelPlaza)
+    if (path === '/redeem/history') return fulfill(route, [])
     if (path === '/admin/announcements') {
       return fulfill(route, { items: [announcement], total: 1, page: 1, page_size: 20, pages: 1 })
     }
@@ -272,6 +395,7 @@ export async function seedLanding(page: Page, options: LandingFixtureOptions = {
       { id: 41, title: '公开状态说明', content: '首页状态仅展示匿名聚合，不包含渠道、模型或请求详情。' },
     ]),
   )
+  await page.route('**/api/v1/model-plaza', (route) => fulfill(route, modelPlaza))
   await page.route('**/api/v1/channel-status/summary', async (route) => {
     if (status === 'error') {
       await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ message: 'unavailable' }) })
@@ -295,6 +419,15 @@ export async function seedLanding(page: Page, options: LandingFixtureOptions = {
       latency_ms: status === 'traffic' ? 1120 : 826,
       availability_7d: status === 'traffic' ? null : 99.92,
       observed_at: observedAt,
+      items: status === 'active_probe'
+        ? [{
+            name: 'OpenAI 主线路',
+            state: 'operational',
+            availability_7d: 99.92,
+            observed_at: observedAt,
+            timeline: [],
+          }]
+        : [],
     })
   })
 }

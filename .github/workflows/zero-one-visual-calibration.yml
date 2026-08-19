@@ -2,7 +2,12 @@ name: Zero One Visual Calibration
 
 on:
   push:
+    branches:
+      - main
+      - 'codex/**'
   pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -10,9 +15,8 @@ permissions:
 
 jobs:
   chromium-calibration:
-    name: Chromium calibration (non-blocking)
+    name: Chromium visual regression
     runs-on: ubuntu-24.04
-    continue-on-error: true
     timeout-minutes: 30
     container:
       image: mcr.microsoft.com/playwright:v1.55.1-noble
