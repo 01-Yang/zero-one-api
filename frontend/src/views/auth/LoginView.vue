@@ -101,7 +101,7 @@
         <button
           type="submit"
           :disabled="authActionDisabled || (turnstileEnabled && !turnstileToken)"
-          class="btn btn-primary w-full"
+          class="btn btn-primary btn-specular w-full"
         >
           <svg
             v-if="isLoading"
@@ -198,15 +198,10 @@
 
     <!-- Footer -->
     <template v-if="!backendModeEnabled" #footer>
-      <p class="text-gray-500 dark:text-dark-400">
-        {{ t('auth.dontHaveAccount') }}
-        <router-link
-          to="/register"
-          class="font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
-        >
-          {{ t('auth.signUp') }}
-        </router-link>
-      </p>
+      <router-link to="/register" class="btn btn-secondary btn-specular w-full py-3">
+        <span>{{ t('auth.dontHaveAccount') }}</span>
+        <span>{{ t('auth.signUp') }}</span>
+      </router-link>
     </template>
   </AuthLayout>
 

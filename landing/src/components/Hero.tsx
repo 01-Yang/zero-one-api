@@ -9,12 +9,14 @@ interface HeroProps {
   docUrl: string
   registrationEnabled: boolean
   modelPlazaEnabled: boolean
+  consoleHomePath: '/dashboard' | '/admin/dashboard' | null
 }
 
 export default function Hero({
   docUrl,
   registrationEnabled,
   modelPlazaEnabled,
+  consoleHomePath,
 }: HeroProps) {
   const heroRef = useRef<HTMLElement>(null)
   const [endpointCopied, setEndpointCopied] = useState(false)
@@ -82,7 +84,18 @@ export default function Hero({
         </h1>
 
         <div className="hero-actions" data-hero-reveal="2">
-          {registrationEnabled ? (
+          {consoleHomePath ? (
+            <Action
+              className="button-primary"
+              href={consoleUrl(consoleHomePath)}
+              size="lg"
+              radius={16}
+              intensity={1.3}
+              thickness={1.15}
+            >
+              登录控制台
+            </Action>
+          ) : registrationEnabled ? (
             <Action
               className="button-primary"
               href={consoleUrl('/register')}

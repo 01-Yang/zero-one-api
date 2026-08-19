@@ -20,11 +20,25 @@ import {
 import type { ModelPlazaData } from './lib/modelPlaza'
 import { canLoadBrandImage } from './siteConfig'
 
+function readConsoleHomePath(): '/dashboard' | '/admin/dashboard' | null {
+  try {
+    if (!window.localStorage.getItem('auth_token')) return null
+    const user = JSON.parse(window.localStorage.getItem('auth_user') ?? 'null') as {
+      role?: unknown
+    } | null
+    if (!user || typeof user !== 'object') return null
+    return user.role === 'admin' ? '/admin/dashboard' : '/dashboard'
+  } catch {
+    return null
+  }
+}
+
 export default function App() {
   const [settings, setSettings] = useState<PublicSettings>({ ...DEFAULT_PUBLIC_SETTINGS })
   const [modelPlazaData, setModelPlazaData] = useState<ModelPlazaData | null>(null)
   const [failedLogoUrls, setFailedLogoUrls] = useState<ReadonlySet<string>>(() => new Set())
   const [publicAnnouncementsOpen, setPublicAnnouncementsOpen] = useState(false)
+  const [consoleHomePath, setConsoleHomePath] = useState(readConsoleHomePath)
   const shellRef = useRef<HTMLDivElement>(null)
 
   const openPublicAnnouncements = useCallback(() => setPublicAnnouncementsOpen(true), [])
@@ -37,6 +51,16 @@ export default function App() {
     })
     return () => {
       active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    const refreshSession = () => setConsoleHomePath(readConsoleHomePath())
+    window.addEventListener('storage', refreshSession)
+    window.addEventListener('focus', refreshSession)
+    return () => {
+      window.removeEventListener('storage', refreshSession)
+      window.removeEventListener('focus', refreshSession)
     }
   }, [])
 
@@ -103,6 +127,7 @@ export default function App() {
           siteLogo={siteSettings.siteLogo}
           docUrl={siteSettings.docUrl}
           registrationEnabled={siteSettings.registrationEnabled}
+          consoleHomePath={consoleHomePath}
           channelMonitorEnabled={siteSettings.publicChannelStatusEnabled}
           announcementsOpen={publicAnnouncementsOpen}
           onOpenAnnouncements={openPublicAnnouncements}
@@ -118,6 +143,7 @@ export default function App() {
               docUrl={siteSettings.docUrl}
               registrationEnabled={siteSettings.registrationEnabled}
               modelPlazaEnabled={siteSettings.modelPlazaEnabled}
+              consoleHomePath={consoleHomePath}
             />
             <QuickStart docUrl={siteSettings.docUrl} />
           </div>
@@ -140,6 +166,7 @@ export default function App() {
           docUrl={siteSettings.docUrl}
           modelPlazaEnabled={siteSettings.modelPlazaEnabled}
           channelMonitorEnabled={siteSettings.publicChannelStatusEnabled}
+          consoleHomePath={consoleHomePath}
         />
       </div>
       <PublicAnnouncementsDialog

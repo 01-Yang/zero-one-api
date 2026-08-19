@@ -261,7 +261,7 @@
         <button
           type="submit"
           :disabled="registrationActionDisabled || (turnstileEnabled && !turnstileToken)"
-          class="btn btn-primary w-full"
+          class="btn btn-primary btn-specular w-full"
         >
           <svg
             v-if="isLoading"
@@ -340,15 +340,10 @@
 
     <!-- Footer -->
     <template #footer>
-      <p class="text-gray-500 dark:text-dark-400">
-        {{ t('auth.alreadyHaveAccount') }}
-        <router-link
-          to="/login"
-          class="font-medium text-primary-600 transition-colors hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300"
-        >
-          {{ t('auth.signIn') }}
-        </router-link>
-      </p>
+      <router-link to="/login" class="btn btn-secondary btn-specular w-full py-3">
+        <span>{{ t('auth.alreadyHaveAccount') }}</span>
+        <span>{{ t('auth.signIn') }}</span>
+      </router-link>
     </template>
   </AuthLayout>
 </template>

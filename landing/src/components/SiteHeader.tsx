@@ -8,6 +8,7 @@ interface SiteHeaderProps {
   siteLogo: string
   docUrl: string
   registrationEnabled: boolean
+  consoleHomePath: '/dashboard' | '/admin/dashboard' | null
   channelMonitorEnabled: boolean
   announcementsOpen: boolean
   onOpenAnnouncements: () => void
@@ -17,6 +18,7 @@ interface SiteHeaderProps {
 interface NavigationLinksProps {
   docUrl: string
   registrationEnabled: boolean
+  consoleHomePath: '/dashboard' | '/admin/dashboard' | null
   channelMonitorEnabled: boolean
   announcementsOpen: boolean
   onOpenAnnouncements: () => void
@@ -26,6 +28,7 @@ interface NavigationLinksProps {
 function NavigationLinks({
   docUrl,
   registrationEnabled,
+  consoleHomePath,
   channelMonitorEnabled,
   announcementsOpen,
   onOpenAnnouncements,
@@ -53,7 +56,18 @@ function NavigationLinks({
       >
         公告
       </button>
-      {registrationEnabled ? (
+      {consoleHomePath ? (
+        <Action
+          className="nav-primary"
+          href={consoleUrl(consoleHomePath)}
+          size="sm"
+          baseColor="#52525b"
+          radius={8}
+          onClick={onNavigate}
+        >
+          登录控制台
+        </Action>
+      ) : registrationEnabled ? (
         <a href={consoleUrl('/login')} onClick={onNavigate}>登录</a>
       ) : (
         <Action
@@ -67,7 +81,7 @@ function NavigationLinks({
           登录控制台
         </Action>
       )}
-      {registrationEnabled ? (
+      {!consoleHomePath && registrationEnabled ? (
         <Action
           className="nav-primary"
           href={consoleUrl('/register')}
@@ -88,6 +102,7 @@ export default function SiteHeader({
   siteLogo,
   docUrl,
   registrationEnabled,
+  consoleHomePath,
   channelMonitorEnabled,
   announcementsOpen,
   onOpenAnnouncements,
@@ -210,6 +225,7 @@ export default function SiteHeader({
           <NavigationLinks
             docUrl={docUrl}
             registrationEnabled={registrationEnabled}
+            consoleHomePath={consoleHomePath}
             channelMonitorEnabled={channelMonitorEnabled}
             announcementsOpen={announcementsOpen}
             onOpenAnnouncements={onOpenAnnouncements}
@@ -239,6 +255,7 @@ export default function SiteHeader({
         <NavigationLinks
           docUrl={docUrl}
           registrationEnabled={registrationEnabled}
+          consoleHomePath={consoleHomePath}
           channelMonitorEnabled={channelMonitorEnabled}
           announcementsOpen={announcementsOpen}
           onOpenAnnouncements={onOpenAnnouncements}

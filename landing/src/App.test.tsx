@@ -222,6 +222,33 @@ describe("public site", () => {
     expect(screen.queryByRole("link", { name: "获取 API Key" })).toBeNull();
   });
 
+  it.each([
+    ["user", "/dashboard"],
+    ["admin", "/admin/dashboard"],
+  ])(
+    "replaces login and registration with the %s console entry for a saved session",
+    async (role, path) => {
+      localStorage.setItem("auth_token", "saved-token");
+      localStorage.setItem("auth_user", JSON.stringify({ role }));
+      mocks.fetchPublicSettings.mockResolvedValue(
+        settings({ registrationEnabled: true }),
+      );
+
+      render(<App />);
+      await waitFor(() => expect(mocks.fetchPublicSettings).toHaveBeenCalledOnce());
+
+      expect(screen.queryByRole("link", { name: "登录" })).toBeNull();
+      expect(screen.queryByRole("link", { name: "注册账号" })).toBeNull();
+      const consoleLinks = screen.getAllByRole("link", { name: "登录控制台" });
+      expect(consoleLinks.length).toBeGreaterThanOrEqual(3);
+      expect(
+        consoleLinks.every(
+          (link) => link.getAttribute("href") === `http://127.0.0.1:8080${path}`,
+        ),
+      ).toBe(true);
+    },
+  );
+
   it("does not request or render public status when only the authenticated monitor is enabled", async () => {
     mocks.fetchPublicSettings.mockResolvedValue(
       settings({

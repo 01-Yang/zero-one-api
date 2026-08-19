@@ -344,6 +344,7 @@ interface FooterProps {
   docUrl: string;
   modelPlazaEnabled: boolean;
   channelMonitorEnabled: boolean;
+  consoleHomePath: "/dashboard" | "/admin/dashboard" | null;
 }
 
 export function SiteFooter({
@@ -353,6 +354,7 @@ export function SiteFooter({
   docUrl,
   modelPlazaEnabled,
   channelMonitorEnabled,
+  consoleHomePath,
 }: FooterProps) {
   return (
     <footer className="site-footer">
@@ -401,8 +403,14 @@ export function SiteFooter({
       </div>
       <div className="footer-column">
         <strong>账户</strong>
-        <a href={consoleUrl("/login")}>登录</a>
-        <a href={consoleUrl("/dashboard")}>控制台</a>
+        {consoleHomePath ? (
+          <a href={consoleUrl(consoleHomePath)}>登录控制台</a>
+        ) : (
+          <>
+            <a href={consoleUrl("/login")}>登录</a>
+            <a href={consoleUrl("/dashboard")}>控制台</a>
+          </>
+        )}
         <a href={consoleUrl("/keys")}>配置密钥</a>
       </div>
     </footer>
