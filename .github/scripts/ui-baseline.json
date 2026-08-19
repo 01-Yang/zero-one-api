@@ -6,6 +6,7 @@
     "landing/src/",
     "landing/index.html",
     "frontend/index.html",
+    "frontend/vite.config.ts",
     "frontend/src/",
     "frontend/tailwind.config.js",
     "deploy/docker-compose.preview.yml",
@@ -51,7 +52,9 @@
       "paths": [
         "landing/src/components/ContentSections.tsx",
         "landing/src/components/PricingSection.tsx",
+        "landing/src/lib/modelPlaza.ts",
         "frontend/src/components/admin/channel/PricingEntryCard.vue",
+        "frontend/src/components/modelPlaza/",
         "frontend/src/utils/billingMode.ts"
       ]
     },
