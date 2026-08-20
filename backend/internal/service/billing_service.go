@@ -1195,10 +1195,11 @@ func (s *BillingService) CalculateCostUnified(input CostInput) (*CostBreakdown, 
 func (s *BillingService) calculateTokenCost(resolved *ResolvedPricing, input CostInput) (*CostBreakdown, error) {
 	totalContext := input.Tokens.InputTokens + input.Tokens.CacheCreationTokens + input.Tokens.CacheReadTokens
 
-	// 分组开关是统一入口；账号 API 开关保留为额外开启能力，但 false 不否决分组配置。
+	// Zero One 保留既有账单口径：OpenAI 长上下文阶梯要求分组与账号同时开启。
+	// 非 OpenAI 调用不会传账号门控，仍仅由分组开关控制。
 	contextTierPricingEnabled := resolved.longContextPricingEnabled
-	if input.LongContextBillingEnabled != nil && *input.LongContextBillingEnabled {
-		contextTierPricingEnabled = true
+	if input.LongContextBillingEnabled != nil {
+		contextTierPricingEnabled = contextTierPricingEnabled && *input.LongContextBillingEnabled
 	}
 
 	pricingContext := totalContext
