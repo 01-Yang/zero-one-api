@@ -265,6 +265,51 @@ func TestStart_LoadsAllEnabledMonitors(t *testing.T) {
 	stoppedWithin(t, r, 3*time.Second)
 }
 
+func TestStart_StaggersInitialChecks(t *testing.T) {
+	svc := &stubMonitorSvc{
+		runCalled: make(chan int64, 3),
+		enabled: []*ChannelMonitor{
+			{ID: 1, Enabled: true, IntervalSeconds: 3},
+			{ID: 2, Enabled: true, IntervalSeconds: 12},
+			{ID: 3, Enabled: true, IntervalSeconds: 6},
+		},
+	}
+	r := newRunnerForTest(svc)
+	t.Cleanup(r.Stop)
+
+	r.Start()
+
+	select {
+	case id := <-svc.runCalled:
+		if id != 1 {
+			t.Fatalf("expected monitor 1 to run first, got %d", id)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("expected one startup check promptly")
+	}
+	select {
+	case id := <-svc.runCalled:
+		t.Fatalf("startup checks burst together; unexpected monitor %d", id)
+	case <-time.After(250 * time.Millisecond):
+	}
+	select {
+	case id := <-svc.runCalled:
+		if id != 2 {
+			t.Fatalf("expected monitor 2 to run second, got %d", id)
+		}
+	case <-time.After(1250 * time.Millisecond):
+		t.Fatal("expected the next staggered startup check")
+	}
+	select {
+	case id := <-svc.runCalled:
+		if id != 3 {
+			t.Fatalf("expected monitor 3 to run third, got %d", id)
+		}
+	case <-time.After(1250 * time.Millisecond):
+		t.Fatal("expected the final staggered startup check")
+	}
+}
+
 func TestStart_SkipsDecryptFailedMonitor(t *testing.T) {
 	svc := &stubMonitorSvc{
 		enabled: []*ChannelMonitor{

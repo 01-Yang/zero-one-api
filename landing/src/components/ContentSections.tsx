@@ -22,7 +22,7 @@ function lowestPublicRate(data: ModelPlazaData | null): number | null {
 
 function formatDiscount(rate: number): string {
   return new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 2 }).format(
-    rate * 10,
+    rate,
   );
 }
 

@@ -184,7 +184,7 @@ const modelPlaza = {
       description: '稳定的 OpenAI 模型线路。',
       platform: 'openai',
       subscription_type: 'standard',
-      rate_multiplier: 0.4,
+      rate_multiplier: 0.19,
       peak_rate_enabled: false,
       peak_start: '',
       peak_end: '',
