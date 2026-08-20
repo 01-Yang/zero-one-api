@@ -50,6 +50,8 @@ function baselineWithApprovedBackport() {
 
 const approvedLegacyHotfixPaths = [
   'backend/cmd/server/VERSION',
+  'backend/cmd/server/wire.go',
+  'backend/internal/handler/auth_current_user_test.go',
   'backend/internal/handler/admin/admin_basic_handlers_test.go',
   'backend/internal/handler/admin/admin_service_stub_test.go',
   'backend/internal/handler/admin/group_handler.go',
@@ -69,11 +71,18 @@ const approvedLegacyHotfixPaths = [
   'backend/internal/service/batch_image_public_test.go',
   'backend/internal/service/billing_service.go',
   'backend/internal/service/billing_service_unified_test.go',
+  'backend/internal/service/billing_cache_service_user_platform_quota_test.go',
   'backend/internal/service/channel_plaza.go',
   'backend/internal/service/channel_plaza_test.go',
   'backend/internal/service/model_pricing_resolver.go',
   'backend/internal/service/openai_gateway_record_usage_test.go',
   'backend/internal/service/channel_pricing_multipliers_test.go',
+  'backend/internal/service/content_moderation.go',
+  'backend/internal/service/content_moderation_cyber_test.go',
+  'backend/internal/service/content_moderation_runtime_cache_test.go',
+  'backend/internal/service/grok_oauth_service_test.go',
+  'backend/internal/service/sticky_session_test.go',
+  'backend/internal/service/usage_cleanup_service_test.go',
   'backend/migrations/222_group_pricing_auth_cache_invalidation.sql',
   'backend/migrations/group_pricing_auth_cache_migration_test.go',
 ].sort()
@@ -96,7 +105,7 @@ test('assigns additive surfaces to the five named overlays', () => {
   )
 })
 
-test('keeps temporary correctness files in expiring legacy hotfix blocks', () => {
+test('keeps temporary release-quality files in expiring legacy hotfix blocks', () => {
   assert.deepEqual(evaluateChangedPaths(approvedLegacyHotfixPaths, baseline), [])
   assert.deepEqual(
     baseline.legacy_hotfixes.flatMap((hotfix) => hotfix.paths).sort(),

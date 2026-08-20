@@ -52,6 +52,29 @@
       "paths": [
         "backend/cmd/server/VERSION"
       ]
+    },
+    {
+      "name": "approved-v0.1.179-race-safety",
+      "valid_for_release": "v0.1.179",
+      "exit_condition": "Remove each path when the first stable upstream release contains the equivalent race-safe runtime cache and asynchronous test fixture handling.",
+      "paths": [
+        "backend/internal/service/content_moderation.go",
+        "backend/internal/service/content_moderation_cyber_test.go",
+        "backend/internal/service/content_moderation_runtime_cache_test.go",
+        "backend/internal/service/usage_cleanup_service_test.go"
+      ]
+    },
+    {
+      "name": "approved-v0.1.179-go-format-normalization",
+      "valid_for_release": "v0.1.179",
+      "exit_condition": "Remove each path when the first stable upstream release contains the same Go 1.26 formatting normalization.",
+      "paths": [
+        "backend/cmd/server/wire.go",
+        "backend/internal/handler/auth_current_user_test.go",
+        "backend/internal/service/billing_cache_service_user_platform_quota_test.go",
+        "backend/internal/service/grok_oauth_service_test.go",
+        "backend/internal/service/sticky_session_test.go"
+      ]
     }
   ],
   "overlays": [
@@ -306,20 +329,6 @@
         "frontend/src/api/admin/channels.ts",
         "frontend/.eslintignore",
         "tools/check_pnpm_audit_exceptions.py"
-      ]
-    },
-    {
-      "owner": "Release Quality",
-      "paths": [
-        "backend/cmd/server/wire.go",
-        "backend/internal/handler/auth_current_user_test.go",
-        "backend/internal/service/billing_cache_service_user_platform_quota_test.go",
-        "backend/internal/service/content_moderation.go",
-        "backend/internal/service/content_moderation_cyber_test.go",
-        "backend/internal/service/content_moderation_runtime_cache_test.go",
-        "backend/internal/service/grok_oauth_service_test.go",
-        "backend/internal/service/sticky_session_test.go",
-        "backend/internal/service/usage_cleanup_service_test.go"
       ]
     },
     {
