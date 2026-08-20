@@ -8,7 +8,7 @@
 配置为 `origin`，官方仓库 `Wei-Shaw/sub2api` 配置为只读
 `upstream`。`main` 是零一 API 唯一产品、CI 和发布分支；不保留第二产品分支。
 
-`.github/upstream-baseline.json` 是 schema v3 Overlay Registry，所有常规回放路径必须唯一归属 `Console Skin`、`Public Capabilities`、`Supported Preview`、`Visual Regression` 或 `Marketing Source Assets`。Registry 只接受精确文件或精确目录，不接受 glob 或未命名的顺带改动。临时生产正确性修补保留在带退出条件的独立 legacy hotfix 区块；安全 backport 继续锁定逐文件 SHA-256 与 Git mode。`frontend/src/api/` 与 `frontend/src/types/` 默认不可变，只有 Registry 中绑定 `Public Capabilities` owner 的两个命名单文件例外可以通过，相邻文件仍被拒绝。
+`.github/upstream-baseline.json` 是 schema v3 Overlay Registry，所有常规回放路径必须唯一归属 `Console Skin`、`Public Capabilities`、`Supported Preview`、`Visual Regression` 或 `Marketing Source Assets`。Registry 只接受精确文件或精确目录，不接受 glob 或未命名的顺带改动。临时生产正确性修补保留在带退出条件的独立 legacy hotfix 区块；安全 backport 继续锁定逐文件 SHA-256 与 Git mode。`frontend/src/api/` 与 `frontend/src/types/` 默认不可变，只有 Registry 中精确命名并绑定 owner 的兼容文件例外可以通过，相邻文件仍被拒绝。v179 的渠道定价 API 例外只把数据库可空的 multiplier 字段表达为可选且可空，使已批准 Console 能继续构建，不改变请求或响应字段。
 
 | Overlay owner | Interface and seam |
 | --- | --- |

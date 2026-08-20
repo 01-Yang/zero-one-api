@@ -179,6 +179,12 @@ test('allows named immutable exceptions while adjacent seam files still fail', (
         path: 'frontend/vite.config.ts',
         immutable_path: 'frontend/vite.config.ts',
       },
+      {
+        name: 'supported-preview-v179-channel-pricing-api-compatibility',
+        owner: 'Supported Preview',
+        path: 'frontend/src/api/admin/channels.ts',
+        immutable_path: 'frontend/src/api/',
+      },
     ],
   )
 })
