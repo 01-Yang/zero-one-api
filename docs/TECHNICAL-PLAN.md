@@ -43,7 +43,7 @@ Internet
        -> Redis
 ```
 
-Sub2API remains one Go process with the Vue SPA embedded by the official root `Dockerfile`. Because the Vue theme is customized, production must build a project-owned image from this repository rather than use the stock `weishaw/sub2api` image.
+Sub2API remains one Go process and keeps its embedded Vue SPA as an unmatched-route fallback. The approved Console routes and assets are served from the recovered UI snapshot in the project-owned edge image, while Sub2API remains authoritative for every API, authentication, authorization and persistence operation. See [ADR 0004](adr/0004-approved-ui-snapshot-at-edge.md).
 
 The React app lives in `landing/`, uses Vite with base `/_landing/`, and is built into the edge image. It is not embedded in Vue and does not add a second frontend runtime to the Console.
 
@@ -58,7 +58,8 @@ The React app lives in `landing/`, uses Vite with base `/_landing/`, and is buil
 | `GET /api/v1/channel-status/summary` | Anonymous aggregate only when its independent public switch is enabled |
 | Every other `api.01yapi.com` request | Transparent Sub2API proxy |
 | `app.01yapi.com`, exact `GET/HEAD /` | Non-cacheable 307 redirect to `https://api.01yapi.com/` with URI retained |
-| Every other `app.01yapi.com` request | Sub2API and embedded Vue Console |
+| Approved `app.01yapi.com` Console page and asset routes | Recovered Approved UI Snapshot in the edge image |
+| Every other `app.01yapi.com` request | Transparent Sub2API proxy and embedded fallback |
 | Exact `GET/HEAD api.01yapi.cc/` | No-store backup metadata JSON |
 | Every other `api.01yapi.cc` request | Transparent Sub2API proxy |
 | `01yapi.com` and `www.01yapi.com` | 308 redirect to the primary host with URI retained |

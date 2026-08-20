@@ -72,6 +72,8 @@ const approvedLegacyHotfixPaths = [
   'backend/internal/service/channel_plaza.go',
   'backend/internal/service/channel_plaza_test.go',
   'backend/internal/service/model_pricing_resolver.go',
+  'backend/internal/service/openai_gateway_record_usage_test.go',
+  'backend/internal/service/channel_pricing_multipliers_test.go',
   'backend/migrations/222_group_pricing_auth_cache_invalidation.sql',
   'backend/migrations/group_pricing_auth_cache_migration_test.go',
 ].sort()
