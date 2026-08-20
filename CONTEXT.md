@@ -8,6 +8,18 @@ _Avoid_: 首页后台、控制台首页
 用户和管理员登录后管理密钥、用量、兑换及系统资源的产品界面。
 _Avoid_: 官网、React 后台
 
+**Upstream Baseline（上游基线）**:
+由正式稳定标签及其解引用后的完整提交共同固定的 Sub2API 源码边界；升级和差异归属均以该提交为准。
+_Avoid_: upstream/main、latest、浮动版本
+
+**Approved UI Snapshot（已批准 UI 快照）**:
+完成桌面与移动端视觉审核后，以不可移动标签固定的 Landing、Console 与恢复版静态资源集合；普通上游升级不得改变它。
+_Avoid_: 最新前端、自动构建产物、临时截图
+
+**Coherent Release（一致发布）**:
+由同一源码提交构建的 Sub2API 与 Edge 两个不可变镜像及其迁移账本；必须按 Backend-first 顺序部署并共同记录。
+_Avoid_: latest 发布、混合版本、独立前端发布
+
 **Primary API Domain（主 API 域名）**:
 零一 API 唯一公开推荐的模型调用地址。
 _Avoid_: 主线路组、官网域名

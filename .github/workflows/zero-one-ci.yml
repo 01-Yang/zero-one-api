@@ -26,6 +26,7 @@ jobs:
         run: |
           release="$(jq -er '.release | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))' .github/upstream-baseline.json)"
           git fetch --no-tags --force https://github.com/Wei-Shaw/sub2api.git "refs/tags/$release:refs/tags/$release"
+          git fetch --no-tags --force https://github.com/Wei-Shaw/sub2api.git "refs/tags/v0.1.178:refs/tags/v0.1.178"
       - name: Test upstream-boundary policy
         run: node --test .github/scripts/*.test.mjs
       - name: Verify approved UI baseline
@@ -36,6 +37,8 @@ jobs:
         run: node .github/scripts/verify-upstream-boundary.mjs
       - name: Verify complete worktree upstream boundary
         run: node .github/scripts/verify-upstream-boundary.mjs --worktree
+      - name: Verify complete v179 upgrade readiness
+        run: node .github/scripts/verify-upgrade-readiness.mjs --old-ref v0.1.178 --new-ref v0.1.179 --worktree
 
   landing:
     runs-on: ubuntu-latest
@@ -121,8 +124,10 @@ jobs:
           sh -n deploy/zero-one/test-live-routing.sh
           sh -n deploy/zero-one/test-routing.sh
           node --check deploy/zero-one/test-upstream.mjs
+          node --check deploy/zero-one/benchmark-ttft.mjs
           node --check deploy/zero-one/verify-marketing-sources.mjs
           node --check deploy/zero-one/verify-public-settings.mjs
+          node --test deploy/zero-one/benchmark-ttft.test.mjs
       - name: Verify Caddy routing contract
         run: sh deploy/zero-one/test-routing.sh
       - name: Verify direct-upstream contract

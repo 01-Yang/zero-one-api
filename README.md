@@ -2,7 +2,7 @@
 > **零一 API** is the branded distribution maintained at
 > [01-Yang/zero-one-api](https://github.com/01-Yang/zero-one-api). Its technical
 > baseline is the stable upstream release
-> [Wei-Shaw/sub2api v0.1.178@e0c48a19ed794a565e3858662520afe0a1f9f0ba](https://github.com/Wei-Shaw/sub2api/tree/e0c48a19ed794a565e3858662520afe0a1f9f0ba).
+> [Wei-Shaw/sub2api v0.1.179@75f88be5f75c27771836b586f7de1503afa0e3bc](https://github.com/Wei-Shaw/sub2api/tree/75f88be5f75c27771836b586f7de1503afa0e3bc).
 > Only stable upstream tags are synchronized. The original Sub2API documentation,
 > license, and disclaimer continue below unchanged. For Zero One, do not deploy
 > from `upstream/main`, a generic `latest` image, the Admin one-click updater, or
@@ -560,12 +560,6 @@ default:
   rate_multiplier: 1.0
 ```
 
-### Sora Status (Temporarily Unavailable)
-
-> ⚠️ Sora-related features are temporarily unavailable due to technical issues in upstream integration and media delivery.
-> Please do not rely on Sora in production at this time.
-> Existing `gateway.sora_*` configuration keys are reserved and may not take effect until these issues are resolved.
-
 Additional security-related options are available in `config.yaml`:
 
 - `cors.allowed_origins` for CORS allowlist
@@ -876,11 +870,11 @@ sub2api/
 
 ## Star History
 
-<a href="https://star-history.com/#Wei-Shaw/sub2api&Date">
+<a href="https://star-history.dera.page/#Wei-Shaw/sub2api&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Wei-Shaw/sub2api&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Wei-Shaw/sub2api&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Wei-Shaw/sub2api&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=Wei-Shaw/sub2api&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=Wei-Shaw/sub2api&type=Date" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=Wei-Shaw/sub2api&type=Date" />
  </picture>
 </a>
 

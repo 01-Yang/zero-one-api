@@ -1,13 +1,13 @@
 {
   "schema_version": 3,
   "repository": "Wei-Shaw/sub2api",
-  "release": "v0.1.178",
-  "commit": "e0c48a19ed794a565e3858662520afe0a1f9f0ba",
+  "release": "v0.1.179",
+  "commit": "75f88be5f75c27771836b586f7de1503afa0e3bc",
   "approved_backports": [],
   "legacy_hotfixes": [
     {
-      "name": "approved-v0.1.178-production-correctness",
-      "valid_for_release": "v0.1.178",
+      "name": "approved-v0.1.179-production-correctness-and-billing-compatibility",
+      "valid_for_release": "v0.1.179",
       "exit_condition": "Remove each path when the first stable upstream release containing its equivalent production-correctness fix becomes the baseline; remove the entire block when no listed path remains.",
       "paths": [
         "backend/internal/handler/admin/admin_basic_handlers_test.go",
@@ -31,24 +31,49 @@
         "backend/internal/service/channel_plaza.go",
         "backend/internal/service/channel_plaza_test.go",
         "backend/internal/service/model_pricing_resolver.go",
+        "backend/internal/service/openai_gateway_record_usage_test.go",
+        "backend/internal/service/channel_pricing_multipliers_test.go",
         "backend/migrations/222_group_pricing_auth_cache_invalidation.sql",
         "backend/migrations/group_pricing_auth_cache_migration_test.go"
       ]
     },
     {
-      "name": "approved-v0.1.178-ci-timezone-correctness",
-      "valid_for_release": "v0.1.178",
+      "name": "approved-v0.1.179-ci-timezone-correctness",
+      "valid_for_release": "v0.1.179",
       "exit_condition": "Remove this test-only hotfix when the first stable upstream release makes the group usage rollup trigger tests session-timezone relative.",
       "paths": [
         "backend/internal/repository/group_usage_rollup_trigger_integration_test.go"
       ]
     },
     {
-      "name": "approved-v0.1.178-version-metadata-alignment",
-      "valid_for_release": "v0.1.178",
+      "name": "approved-v0.1.179-version-metadata-alignment",
+      "valid_for_release": "v0.1.179",
       "exit_condition": "Remove this metadata alignment when the first stable upstream release makes backend/cmd/server/VERSION match the baseline release.",
       "paths": [
         "backend/cmd/server/VERSION"
+      ]
+    },
+    {
+      "name": "approved-v0.1.179-race-safety",
+      "valid_for_release": "v0.1.179",
+      "exit_condition": "Remove each path when the first stable upstream release contains the equivalent race-safe runtime cache and asynchronous test fixture handling.",
+      "paths": [
+        "backend/internal/service/content_moderation.go",
+        "backend/internal/service/content_moderation_cyber_test.go",
+        "backend/internal/service/content_moderation_runtime_cache_test.go",
+        "backend/internal/service/usage_cleanup_service_test.go"
+      ]
+    },
+    {
+      "name": "approved-v0.1.179-go-format-normalization",
+      "valid_for_release": "v0.1.179",
+      "exit_condition": "Remove each path when the first stable upstream release contains the same Go 1.26 formatting normalization.",
+      "paths": [
+        "backend/cmd/server/wire.go",
+        "backend/internal/handler/auth_current_user_test.go",
+        "backend/internal/service/billing_cache_service_user_platform_quota_test.go",
+        "backend/internal/service/grok_oauth_service_test.go",
+        "backend/internal/service/sticky_session_test.go"
       ]
     }
   ],
@@ -62,11 +87,17 @@
         "frontend/src/components/",
         "frontend/src/composables/useChannelMonitorFormat.ts",
         "frontend/src/composables/useModelWhitelist.ts",
+        "frontend/src/constants/__tests__/platforms.spec.ts",
+        "frontend/src/constants/platforms.ts",
         "frontend/src/features/channel-monitor-v2/",
         "frontend/src/features/prompt-audit/",
         "frontend/src/features/redeem/",
         "frontend/src/i18n/__tests__/openaiFastPolicyLocales.spec.ts",
         "frontend/src/i18n/locales/en/admin/accounts.ts",
+        "frontend/src/i18n/locales/en/admin/channels.ts",
+        "frontend/src/i18n/locales/en/admin/overview.ts",
+        "frontend/src/i18n/locales/zh/admin/channels.ts",
+        "frontend/src/i18n/locales/zh/admin/overview.ts",
         "frontend/src/i18n/locales/en/dashboard.ts",
         "frontend/src/i18n/locales/en/landing.ts",
         "frontend/src/i18n/locales/en/misc.ts",
@@ -102,6 +133,11 @@
         "frontend/src/views/admin/RiskControlView.vue",
         "frontend/src/views/admin/SubscriptionsView.vue",
         "frontend/src/views/admin/UsersView.vue",
+        "frontend/src/views/admin/__tests__/ChannelMonitorView.checkModeBadge.spec.ts",
+        "frontend/src/views/admin/__tests__/GroupsView.compositePlatforms.spec.ts",
+        "frontend/src/views/admin/__tests__/MonitorFormDialog.accountSelector.spec.ts",
+        "frontend/src/views/admin/__tests__/channelPlatformOptions.spec.ts",
+        "frontend/src/views/admin/__tests__/platformFilterCatalogUsage.spec.ts",
         "frontend/src/views/admin/__tests__/RedeemView.batchUpdate.spec.ts",
         "frontend/src/views/admin/affiliates/",
         "frontend/src/views/admin/ops/",
@@ -289,6 +325,8 @@
         "docs/TECHNICAL-PLAN.md",
         "docs/adr/0001-separate-public-site-and-console.md",
         "docs/adr/0002-exact-root-routing-on-primary-api-domain.md",
+        "docs/adr/0004-approved-ui-snapshot-at-edge.md",
+        "frontend/src/api/admin/channels.ts",
         "frontend/.eslintignore",
         "tools/check_pnpm_audit_exceptions.py"
       ]
@@ -356,6 +394,12 @@
       "owner": "Console Skin",
       "path": "frontend/vite.config.ts",
       "immutable_path": "frontend/vite.config.ts"
+    },
+    {
+      "name": "supported-preview-v179-channel-pricing-api-compatibility",
+      "owner": "Supported Preview",
+      "path": "frontend/src/api/admin/channels.ts",
+      "immutable_path": "frontend/src/api/"
     }
   ]
 }

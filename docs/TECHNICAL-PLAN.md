@@ -3,12 +3,12 @@
 ## Baseline And Change Boundary
 
 项目的稳定技术基线为
-[`Wei-Shaw/sub2api v0.1.178@e0c48a19ed794a565e3858662520afe0a1f9f0ba`](https://github.com/Wei-Shaw/sub2api/tree/e0c48a19ed794a565e3858662520afe0a1f9f0ba)。
+[`Wei-Shaw/sub2api v0.1.179@75f88be5f75c27771836b586f7de1503afa0e3bc`](https://github.com/Wei-Shaw/sub2api/tree/75f88be5f75c27771836b586f7de1503afa0e3bc)。
 公开 fork [`01-Yang/zero-one-api`](https://github.com/01-Yang/zero-one-api)
 配置为 `origin`，官方仓库 `Wei-Shaw/sub2api` 配置为只读
 `upstream`。`main` 是零一 API 唯一产品、CI 和发布分支；不保留第二产品分支。
 
-`.github/upstream-baseline.json` 是 schema v3 Overlay Registry，所有常规回放路径必须唯一归属 `Console Skin`、`Public Capabilities`、`Supported Preview`、`Visual Regression` 或 `Marketing Source Assets`。Registry 只接受精确文件或精确目录，不接受 glob 或未命名的顺带改动。临时生产正确性修补保留在带退出条件的独立 legacy hotfix 区块；安全 backport 继续锁定逐文件 SHA-256 与 Git mode。`frontend/src/api/` 与 `frontend/src/types/` 默认不可变，只有 Registry 中绑定 `Public Capabilities` owner 的两个命名单文件例外可以通过，相邻文件仍被拒绝。
+`.github/upstream-baseline.json` 是 schema v3 Overlay Registry，所有常规回放路径必须唯一归属 `Console Skin`、`Public Capabilities`、`Supported Preview`、`Visual Regression` 或 `Marketing Source Assets`。Registry 只接受精确文件或精确目录，不接受 glob 或未命名的顺带改动。临时生产正确性修补保留在带退出条件的独立 legacy hotfix 区块；安全 backport 继续锁定逐文件 SHA-256 与 Git mode。`frontend/src/api/` 与 `frontend/src/types/` 默认不可变，只有 Registry 中精确命名并绑定 owner 的兼容文件例外可以通过，相邻文件仍被拒绝。v179 的渠道定价 API 例外只把数据库可空的 multiplier 字段表达为可选且可空，使已批准 Console 能继续构建，不改变请求或响应字段。
 
 | Overlay owner | Interface and seam |
 | --- | --- |
@@ -43,7 +43,7 @@ Internet
        -> Redis
 ```
 
-Sub2API remains one Go process with the Vue SPA embedded by the official root `Dockerfile`. Because the Vue theme is customized, production must build a project-owned image from this repository rather than use the stock `weishaw/sub2api` image.
+Sub2API remains one Go process and keeps its embedded Vue SPA as an unmatched-route fallback. The approved Console routes and assets are served from the recovered UI snapshot in the project-owned edge image, while Sub2API remains authoritative for every API, authentication, authorization and persistence operation. See [ADR 0004](adr/0004-approved-ui-snapshot-at-edge.md).
 
 The React app lives in `landing/`, uses Vite with base `/_landing/`, and is built into the edge image. It is not embedded in Vue and does not add a second frontend runtime to the Console.
 
@@ -58,7 +58,8 @@ The React app lives in `landing/`, uses Vite with base `/_landing/`, and is buil
 | `GET /api/v1/channel-status/summary` | Anonymous aggregate only when its independent public switch is enabled |
 | Every other `api.01yapi.com` request | Transparent Sub2API proxy |
 | `app.01yapi.com`, exact `GET/HEAD /` | Non-cacheable 307 redirect to `https://api.01yapi.com/` with URI retained |
-| Every other `app.01yapi.com` request | Sub2API and embedded Vue Console |
+| Approved `app.01yapi.com` Console page and asset routes | Recovered Approved UI Snapshot in the edge image |
+| Every other `app.01yapi.com` request | Transparent Sub2API proxy and embedded fallback |
 | Exact `GET/HEAD api.01yapi.cc/` | No-store backup metadata JSON |
 | Every other `api.01yapi.cc` request | Transparent Sub2API proxy |
 | `01yapi.com` and `www.01yapi.com` | 308 redirect to the primary host with URI retained |
@@ -112,11 +113,11 @@ edge image. Image rollback does not reverse a database migration; see
 合回 `main`。每次同步同时更新本节的 tag 与完整提交 SHA。
 主题改动保持集中，使新增上游页面继承设计系统，避免逐页分叉。
 
-`v0.1.178` 已包含上游的分组定价认证快照修复，因此已与上游一致的 `api_key_auth_cache.go` legacy path 退出。Zero One 仍携带本地验证的深拷贝隔离、分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复；`billing_service.go` 还保留本 Tag 未包含的分组定价传播加固。后端权限仅限 `.github/upstream-baseline.json` 的 `legacy_hotfixes` 区块所列精确文件。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应 legacy path，不得将临时权限永久化。
+`v0.1.179` 保留 Zero One 已验证的深拷贝隔离、分组定价快照 v20、创建默认值、复制/校验、durable cache invalidation、Batch Image 和 Model Plaza 传播修复。上游本版本将长上下文计费门控改为分组或账号任一启用即生效；Zero One 为避免存量账号静默改变账单，继续采用分组与账号同时启用的口径，同时兼容 v179 的渠道区间倍率。后端权限仅限 `.github/upstream-baseline.json` 的 `legacy_hotfixes` 区块所列精确文件。下一个稳定 tag 一旦包含等价修复，同步 PR 必须删除重复 backport 和对应 legacy path，不得将临时权限永久化。
 
-`v0.1.178` 已在 `backend/go.mod`、CI workflow 和三个 Dockerfile 中包含 Go `1.26.6` 的等价更新，因此 [PR #5639](https://github.com/Wei-Shaw/sub2api/pull/5639) 的剩余 backport 已全部退出，`.github/upstream-baseline.json` 的 `approved_backports` 恢复为空列表。退出判定依据是稳定 Tag 中的等价内容，而不是将精确 commit 误记为已合并。
+`v0.1.179` 延续 Go `1.26.6` 基线，`.github/upstream-baseline.json` 的 `approved_backports` 保持为空列表。退出判定依据是稳定 Tag 中的等价内容，而不是将精确 commit 误记为已合并。
 
-`v0.1.178` 仍未包含分组用量汇总触发器测试的 session-timezone 等价修复。Zero One 只将这两项测试的“今日”改为 DB session 的 `CURRENT_DATE`，不修改 migration 或运行时语义。该精确测试路径位于独立的 CI timezone legacy hotfix 区块，下一个包含等价修复的稳定 Tag 必须将其移除。
+`v0.1.179` 仍未包含分组用量汇总触发器测试的 session-timezone 等价修复。Zero One 只将这两项测试的“今日”改为 DB session 的 `CURRENT_DATE`，不修改 migration 或运行时语义。该精确测试路径位于独立的 CI timezone legacy hotfix 区块，下一个包含等价修复的稳定 Tag 必须将其移除。
 
 The repository's dedicated Zero One CI job validates React, Vue, Go unit and
 integration suites, Compose,

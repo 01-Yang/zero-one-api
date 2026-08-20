@@ -147,6 +147,28 @@ Roll out one Provider Account at a time. Record its previous Base URL before
 the change, then compare same-model, same-reasoning-effort native Responses
 traffic. Roll back that Base URL if TTFT P50/P90 or provider 5xx does not improve.
 
+Measure user-perceived TTFT with the repository benchmark. It starts at the
+client request and stops at the first semantic text or tool event, while still
+draining the short response so usage recording can complete. It ignores SSE
+keepalives, preambles, usage-only events and terminal metadata. The API key is
+accepted only from `ZERO_ONE_API_KEY` or stdin and is never printed:
+
+```bash
+ZERO_ONE_API_KEY='REDACTED' node deploy/zero-one/benchmark-ttft.mjs \
+  --base-url https://api.01yapi.com \
+  --endpoint /v1/responses \
+  --model gpt-5.6-sol \
+  --reasoning high \
+  --requests 50 \
+  --warmup 3 \
+  --max-output-tokens 16
+```
+
+Use a disposable key and remove it from the shell environment immediately
+afterward. Compare identical cohorts. Keep a route change only when both P50
+and P90 improve by at least 10%, provider-owned 5xx stays at or below 2%, and
+the controlled time window has no missing usage or billing records.
+
 ## Encrypted Backups
 
 Install [`age`](https://age-encryption.org/), `flock` and `mountpoint` (the last
