@@ -49,6 +49,7 @@ function baselineWithApprovedBackport() {
 }
 
 const approvedLegacyHotfixPaths = [
+  'backend/cmd/server/VERSION',
   'backend/internal/handler/admin/admin_basic_handlers_test.go',
   'backend/internal/handler/admin/admin_service_stub_test.go',
   'backend/internal/handler/admin/group_handler.go',
