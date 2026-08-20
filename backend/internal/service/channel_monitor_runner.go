@@ -67,11 +67,12 @@ type ChannelMonitorRunner struct {
 
 // scheduledMonitor 单个监控的运行时上下文。
 type scheduledMonitor struct {
-	id       int64
-	name     string
-	interval time.Duration
-	jitter   time.Duration // 每轮 ± [0, jitter] 的均匀随机偏移；0 = 固定间隔
-	cancel   context.CancelFunc
+	id           int64
+	name         string
+	interval     time.Duration
+	jitter       time.Duration // 每轮 ± [0, jitter] 的均匀随机偏移；0 = 固定间隔
+	initialDelay time.Duration // 仅启动恢复时错开首次检测；CRUD 调度保持立即触发
+	cancel       context.CancelFunc
 }
 
 // nextDelay 计算下一次触发的等待时长：interval ± [0, jitter] 的均匀随机偏移。
@@ -133,8 +134,16 @@ func (r *ChannelMonitorRunner) Start() {
 		slog.Error("channel_monitor: load enabled monitors failed at startup", "error", err)
 		return
 	}
+	var staggerWindow time.Duration
 	for _, m := range enabled {
-		r.Schedule(m)
+		interval := time.Duration(m.IntervalSeconds) * time.Second
+		if interval > 0 && (staggerWindow == 0 || interval < staggerWindow) {
+			staggerWindow = interval
+		}
+	}
+	for i, m := range enabled {
+		initialDelay := time.Duration(i) * staggerWindow / time.Duration(len(enabled))
+		r.schedule(m, initialDelay)
 	}
 	slog.Info("channel_monitor: runner started", "scheduled_tasks", len(enabled))
 }
@@ -144,6 +153,12 @@ func (r *ChannelMonitorRunner) Start() {
 //   - 已存在的任务会先被取消再重建（适用于 IntervalSeconds 变更场景）
 //   - 新任务立即触发首次检测，之后按 IntervalSeconds 周期触发
 func (r *ChannelMonitorRunner) Schedule(m *ChannelMonitor) {
+	r.schedule(m, 0)
+}
+
+// schedule 创建（或重置）任务。initialDelay 只供 Start 错开启动恢复任务；
+// 外部 Schedule 始终传 0，保持新建、启用或编辑后立即检测。
+func (r *ChannelMonitorRunner) schedule(m *ChannelMonitor, initialDelay time.Duration) {
 	if r == nil || m == nil {
 		return
 	}
@@ -184,11 +199,12 @@ func (r *ChannelMonitorRunner) Schedule(m *ChannelMonitor) {
 	}
 	ctx, cancel := context.WithCancel(r.parentCtx)
 	task := &scheduledMonitor{
-		id:       m.ID,
-		name:     m.Name,
-		interval: interval,
-		jitter:   jitter,
-		cancel:   cancel,
+		id:           m.ID,
+		name:         m.Name,
+		interval:     interval,
+		jitter:       jitter,
+		initialDelay: initialDelay,
+		cancel:       cancel,
 	}
 	r.tasks[m.ID] = task
 	r.wg.Add(1)
@@ -233,12 +249,21 @@ func (r *ChannelMonitorRunner) Stop() {
 	r.pool.StopAndWait()
 }
 
-// runScheduled 单个监控的循环：立即触发首次（满足"新建/启用即跑"），
-// 之后按 interval ± jitter 周期触发；ctx 取消即退出。
+// runScheduled 单个监控的循环：CRUD 调度立即触发首次，启动恢复任务可先等待
+// initialDelay 以避免同时冲击上游；之后按 interval ± jitter 周期触发。
 // 用 timer 而非 ticker：jitter > 0 时每轮等待时长都需要重新随机化。
 func (r *ChannelMonitorRunner) runScheduled(ctx context.Context, task *scheduledMonitor) {
 	defer r.wg.Done()
 
+	if task.initialDelay > 0 {
+		timer := time.NewTimer(task.initialDelay)
+		defer timer.Stop()
+		select {
+		case <-ctx.Done():
+			return
+		case <-timer.C:
+		}
+	}
 	r.fire(ctx, task)
 
 	timer := time.NewTimer(task.nextDelay())

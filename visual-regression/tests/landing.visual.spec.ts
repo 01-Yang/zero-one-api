@@ -58,4 +58,24 @@ test.describe('Landing visual contracts', () => {
     await expect(pricing.getByText('claude-sonnet-4-6')).toBeVisible()
     await expect(pricing).toHaveScreenshot('landing-model-plaza-pricing.png')
   })
+
+  test('desktop configured token discount', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-desktop')
+    await seedLanding(page)
+    await page.goto('http://127.0.0.1:4174/#billing')
+    await page.evaluate(() => document.fonts.ready)
+    const billing = page.locator('#billing')
+    await expect(billing.getByRole('heading', { name: '低至约 0.19 折' })).toBeVisible()
+    await expect(billing).toHaveScreenshot('landing-token-discount.png')
+  })
+
+  test('mobile configured token discount', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium-mobile')
+    await seedLanding(page)
+    await page.goto('http://127.0.0.1:4174/#billing')
+    await page.evaluate(() => document.fonts.ready)
+    const billing = page.locator('#billing')
+    await expect(billing.getByRole('heading', { name: '低至约 0.19 折' })).toBeVisible()
+    await expect(billing).toHaveScreenshot('landing-mobile-token-discount.png')
+  })
 })
